@@ -1,0 +1,45 @@
+.floating-social {
+  position: fixed;
+  top: 70%;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 999;
+  /* apply animation only on larger screens */
+}
+ 
+.floating-social a {
+  display: flex;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+ 
+.floating-social a img {
+  width: 64px;
+  height: 64px;
+}
+ 
+.floating-social a:hover {
+  transform: translateY(-5px) scale(1.1) rotate(10deg);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+ 
+@keyframes floatUpDown {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+ 
+/* Apply animation only for screens larger than 768px */
+@media (min-width: 769px) {
+  .floating-social {
+    transform: translateY(-50%);
+    animation: floatUpDown 3s ease-in-out infinite;
+  }
+}
+ 

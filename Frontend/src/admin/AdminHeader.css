@@ -1,0 +1,202 @@
+.admin-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px; /* slightly taller for better spacing */
+  background: #ffffff;
+  border-bottom: 1px solid #e5e5e5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 1000;
+}
+ 
+/* Left section (Logo + optional text) */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+ 
+.logo-img {
+  width: 200px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+ 
+.logo-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: #1c9edc;
+  margin: 0;
+}
+ 
+/* Right section (Visit + Logout) */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: nowrap; /* keep buttons in one line */
+}
+ 
+.visit-btn {
+  background: #1c9edc;
+  color: #fff;
+  padding: 8px 15px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  transition: background 0.3s ease;
+  white-space: nowrap; /* prevent breaking */
+}
+ 
+.visit-btn:hover {
+  background: #147bb0;
+}
+ 
+.logout-btn {
+  background: #f44336;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+  white-space: nowrap;
+}
+ 
+.logout-btn:hover {
+  background: #d32f2f;
+}
+ 
+/* ✅ Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+    padding: 10px 15px;
+  }
+ 
+  .header-left {
+    margin-bottom: 10px;
+  }
+ 
+  .header-right {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: nowrap; /* keep buttons side by side */
+  }
+ 
+  .visit-btn,
+  .logout-btn {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+ 
+  .logo-img {
+    width: 150px;
+    margin-left: 67px; /* shrink logo for smaller screens */
+  }
+  .user-email{
+        font-size: 11px;
+ 
+  }
+}
+ 
+@media (max-width: 480px) {
+  .header-right {
+    justify-content: center;
+    gap: 8px;
+  }
+ 
+  .visit-btn,
+  .logout-btn {
+    width: auto; /* keep buttons side by side */
+    text-align: center;
+    flex: 0 1 auto;
+  }
+}
+ 
+ .user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 5px 0;
+  z-index: 100;
+}
+ 
+/* Dropdown buttons */
+.dropdown-btn {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s, color 0.2s;
+}
+ 
+.dropdown-btn:hover {
+  background: #f5f5f5;
+}
+ 
+/* Logout special style */
+.logout-btn {
+  color: #d9534f;
+}
+ 
+.logout-btn:hover {
+  background: #fbeaea;
+}
+ 
+/* Responsive tweaks */
+@media (max-width: 768px) {
+ 
+  .dropdown-btn {
+    padding: 14px;
+    font-size: 16px;
+    justify-content: center;  /* Center align text + icons */
+    text-align: center;
+  }
+}
+.visit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px; /* space between icon and text */
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: #fff;
+  font-weight: 500;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: background 0.3s;
+}
+ 
+.visit-btn:hover {
+  background-color: #0056b3;
+}
+.user-info{
+  background: #007bff;
+    padding: 5px;
+    border-radius: 5px;
+    color: white;
+    font-weight: 500;
+}
+ 
