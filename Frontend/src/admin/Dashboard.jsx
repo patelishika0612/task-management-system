@@ -17,12 +17,12 @@ import {
 
 const Dashboard = () => {
   const sections = [
-    // {
-    //   title: "Home",
-    //   description: "Add Admin Home",
-    //   path: "/adminhome",
-    //   icon: <User size={30} />,
-    // },
+    {
+      title: "Home ishika ",
+      description: "Add Admin Home",
+      path: "/adminhome",
+      icon: <User size={30} />,
+    },
     // {
     //   title: "About",
     //   description: "Add About Content",
