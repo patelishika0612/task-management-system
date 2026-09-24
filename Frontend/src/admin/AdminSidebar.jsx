@@ -11,9 +11,9 @@ import {
   Image as ImageIcon,
   Menu,
   User,
-  CalendarCheck ,
+  CalendarCheck,
   X,
-  Home,Type
+  Home, Type
 } from "lucide-react";
 import "./AdminSidebar.css";
 
@@ -46,12 +46,12 @@ const Sidebar = () => {
 
   const menuItems = [
     { title: "Dashboard", path: "/dashboard", icon: <Home size={20} /> },
-  //     { 
-  //   title: "Hero Slider", 
-  //   path: "/admin/hero-slider", 
-  //   icon: <Home size={20} /> 
-  // },
-// das
+    //     { 
+    //   title: "Hero Slider", 
+    //   path: "/admin/hero-slider", 
+    //   icon: <Home size={20} /> 
+    // },
+    // das
     // { title: "Profiles", path: "/adminProfile", icon: <User size={20} /> },
     { title: "Home", path: "/adminhome", icon: <Home size={20} /> },
     { title: "About", path: "/adminabout", icon: <Info size={20} /> },
@@ -62,7 +62,7 @@ const Sidebar = () => {
     { title: "Reviews", path: "/adminReviews", icon: <Star size={20} /> },
     { title: "Gallery", path: "/addgallery", icon: <ImageIcon size={20} /> },
     { title: "Contact Info", path: "/admincontact", icon: <PhoneCall size={20} /> },
-        { title: "Adminappointments", path: "/adminappointments", icon: <CalendarCheck  size={20} /> },
+    { title: "Adminappointments", path: "/adminappointments", icon: <CalendarCheck size={20} /> },
 
   ];
 
@@ -75,34 +75,33 @@ const Sidebar = () => {
         </button>
       )}
 
-    <aside className={`sidebar ${isOpen ? "open" : ""}`}>
-  <h2 className="sidebar-title" onClick={goToDashboard}>
-    Admin Panel
-  </h2>
+      <aside className={`sidebar ${isOpen ? "open" : ""}`}>
+        <h2 className="sidebar-title" onClick={goToDashboard}>
+          Admin Panel
+        </h2>
 
-  <ul className="sidebar-list">
-    {menuItems.map((item, i) => (
-      <li
-        key={i}
-        className={`sidebar-item ${
-          location.pathname === item.path ? "active" : ""
-        }`}
-      >
-        <Link
-          to={item.path}
-          className="sidebar-link"
-          onClick={() => isMobile && setIsOpen(false)}
-        >
-          <span className="sidebar-icon">
-            {item.icon}
-          </span>
+        <ul className="sidebar-list">
+          {menuItems.map((item, i) => (
+            <li
+              key={i}
+              className={`sidebar-item ${location.pathname === item.path ? "active" : ""
+                }`}
+            >
+              <Link
+                to={item.path}
+                className="sidebar-link"
+                onClick={() => isMobile && setIsOpen(false)}
+              >
+                <span className="sidebar-icon">
+                  {item.icon}
+                </span>
 
-          <span>{item.title}</span>
-        </Link>
-      </li>
-    ))}
-  </ul>
-</aside>
+                <span>{item.title}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </aside>
     </>
   );
 };
