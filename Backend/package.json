@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-   "type": "module",
+  "type": "module",
   "description": "",
   "main": "server.js",
   "scripts": {
@@ -17,10 +17,21 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "express-validator": "^7.3.2",
     "googleapis": "^173.0.0",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.6.3",
-    "multer": "^2.1.1",
-    "mysql2": "^3.22.5"
+    "morgan": "^1.12.1",
+    "multer": "^2.4.0",
+    "mysql2": "^3.24.4",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2",
+    "supertest": "^7.3.0"
   }
 }
