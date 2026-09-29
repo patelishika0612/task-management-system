@@ -27,10 +27,10 @@ router.put(
     departmentController.updateDepartment
 );
 
-// DELETE
-router.delete(
-    "/:id",
-    departmentController.deleteDepartment
-);
+// // DELETE
+// router.delete(
+//     "/:id",
+//     departmentController.deleteDepartment
+// );
 
 export default router;
