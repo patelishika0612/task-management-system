@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import db from "../db.js";
 
 // =====================================================
@@ -127,32 +128,33 @@ const createEmployee = async (req, res) => {
             });
         }
 
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         const [result] = await db.query(`
-            INSERT INTO employe
-            (
-                emp_name,
-                email,
-                phone,
-                department_id,
-                password,
-                Date_of_join,
-                image,
-                status,
-                employee_code
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
+    INSERT INTO employe 
+    (
+        emp_name,
+        email,
+        phone,
+        department_id,
+        password,
+        Date_of_join,
+        image,
+        status,
+        employee_code
+    ) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+`, [
             emp_name,
             email,
             phone,
             department_id,
-            password,
+            hashedPassword,
             Date_of_join,
             image || null,
             status || "active",
             employee_code
         ]);
-
         res.status(201).json({
             success: true,
             message: "Employee created successfully",
@@ -276,7 +278,7 @@ const deleteEmployee = async (req, res) => {
 // EXPORTS
 // =====================================================
 
-export default  {
+export default {
     getAllEmployees,
     getEmployeeById,
     createEmployee,

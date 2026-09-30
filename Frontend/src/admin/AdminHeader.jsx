@@ -238,7 +238,7 @@ const Header = () => {
             </span>
 
             <span>
-              Profile
+             My Profile
             </span>
           </button>
 

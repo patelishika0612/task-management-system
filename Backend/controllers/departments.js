@@ -14,7 +14,7 @@ const departmentIdValidation = [
     param("id")
         .isInt({ min: 1 })
         .withMessage("Department ID must be a valid positive number")
-];
+]; 
 
 // Department name validation
 const departmentNameValidation = [
