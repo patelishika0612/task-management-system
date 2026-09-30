@@ -5,40 +5,28 @@
 
 .dashboard-title {
   position: relative;
-
   font-size: 28px;
   font-weight: 800;
-
   color: #1c9edc;
-
   margin-bottom: 25px;
-
   letter-spacing: 0.5px;
-
   display: inline-block;
 }
-
 
 /* Underline Effect */
 .dashboard-title::after {
   content: "";
-
   position: absolute;
-
   left: 0;
   bottom: -8px;
-
   width: 60px;
   height: 4px;
-
   border-radius: 10px;
-
   background: linear-gradient(
     90deg,
     #1c9edc,
     #67d3ff
   );
-
   transition: width .3s ease;
 }
 
@@ -57,6 +45,7 @@
 .card-link {
   text-decoration: none;
 }
+
 .admin-card {
   position: relative;
   padding: 24px;
@@ -75,7 +64,6 @@
   cursor: pointer;
 }
 
-
 .admin-card:hover {
   transform: translateY(-8px);
   box-shadow:
@@ -90,27 +78,21 @@
   margin-bottom: 18px;
 }
 
-
 .admin-card-icon {
   width: 58px;
   height: 58px;
   border-radius: 16px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   background: linear-gradient(
     135deg,
     #1c9edc,
     #67d3ff
   );
-
   color: #fff;
-
   box-shadow:
     0 8px 20px rgba(28,158,220,0.35);
-
   transition: 0.3s ease;
 }
 
@@ -119,14 +101,12 @@
   transform: scale(1.1) rotate(6deg);
 }
 
-
 .admin-card h3 {
   margin: 0;
   font-size: 20px;
   font-weight: 700;
   color: #1c9edc;
 }
-
 
 .admin-card p {
   margin: 0;
@@ -135,7 +115,6 @@
   line-height: 1.7;
 }
 
-
 /* Background Glow */
 .card-shine {
   position: absolute;
@@ -143,14 +122,9 @@
   height: 140px;
   right: -50px;
   bottom: -50px;
-
   background: rgba(28,158,220,0.12);
   border-radius: 50%;
 }
-
-
-
-
 
 
 /* Responsive */

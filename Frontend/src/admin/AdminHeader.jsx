@@ -18,11 +18,37 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // =====================================================
+  // STATES
+  // =====================================================
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const [adminEmail, setAdminEmail] = useState(() => {
+    return localStorage.getItem("adminEmail") || "";
+  });
 
   const dropdownRef = useRef(null);
 
-  const adminEmail = localStorage.getItem("adminEmail");
+  // =====================================================
+  // UPDATE EMAIL FROM LOCAL STORAGE
+  // =====================================================
+
+  useEffect(() => {
+    const updateAdminEmail = () => {
+      const email = localStorage.getItem("adminEmail") || "";
+      setAdminEmail(email);
+    };
+
+    updateAdminEmail();
+
+    // Listen for localStorage changes
+    window.addEventListener("storage", updateAdminEmail);
+
+    return () => {
+      window.removeEventListener("storage", updateAdminEmail);
+    };
+  }, []);
 
   // =====================================================
   // PAGE TITLE
@@ -40,6 +66,7 @@ const Header = () => {
       "/hospital": "Departments",
       "/emergency": "Settings",
       "/adduser": "Add User",
+      "/profile": "Profile",
     };
 
     return pageTitles[path] || "Admin Dashboard";
@@ -54,6 +81,7 @@ const Header = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("keepLogged");
 
+    setAdminEmail("");
     setDropdownOpen(false);
 
     navigate("/adminLogin");
@@ -77,6 +105,28 @@ const Header = () => {
     setDropdownOpen(false);
 
     navigate("/profile");
+  };
+
+  // =====================================================
+  // SETTINGS
+  // =====================================================
+
+  const handleSettings = () => {
+    setDropdownOpen(false);
+
+    navigate("/emergency");
+  };
+
+  // =====================================================
+  // WEBSITE
+  // =====================================================
+
+  const handleWebsite = () => {
+    window.open(
+      "https://nirvanzainfotech.co.in/#gsc.tab=0",
+      "_blank",
+      "noopener,noreferrer"
+    );
   };
 
   // =====================================================
@@ -117,6 +167,7 @@ const Header = () => {
       <div className="admin-header-left">
 
         <div className="admin-header-title-wrapper">
+
           <h1 className="admin-header-title">
             {getPageTitle()}
           </h1>
@@ -124,6 +175,7 @@ const Header = () => {
           <p className="admin-header-subtitle">
             Welcome back, Admin
           </p>
+
         </div>
 
       </div>
@@ -133,175 +185,208 @@ const Header = () => {
           RIGHT SIDE
       ================================================= */}
 
+      <div className="admin-header-right">
 
-<div className="admin-header-right">
+        {/* WEBSITE BUTTON */}
 
-<button
-  type="button"
-  className="admin-header-globe"
-  onClick={() => {
-    window.open(
-      "https://nirvanzainfotech.co.in/#gsc.tab=0",
-      "_blank",
-      "noopener,noreferrer"
-    );
-  }}
-  title="Visit Nirvanza Infotech"
->
-  <Globe size={20} />
-</button>
-
-  {adminEmail && (
-    <div
-      className={`admin-user-wrapper ${
-        dropdownOpen
-          ? "admin-user-wrapper-open"
-          : ""
-      }`}
-      ref={dropdownRef}
-    >
-
-      {/* USER BUTTON */}
-
-      <button
-        type="button"
-        className="admin-user-btn"
-        onClick={() =>
-          setDropdownOpen(!dropdownOpen)
-        }
-      >
-
-        <div className="admin-user-avatar">
-          <User size={18} />
-        </div>
-
-        <div className="admin-user-details">
-
-          <span className="admin-user-name">
-            Admin
-          </span>
-
-          <span className="admin-user-email">
-            {adminEmail}
-          </span>
-
-        </div>
-
-        <ChevronDown
-          size={17}
-          className={`admin-user-arrow ${
-            dropdownOpen
-              ? "admin-user-arrow-open"
-              : ""
-          }`}
-        />
-
-      </button>
+        <button
+          type="button"
+          className="admin-header-globe"
+          onClick={handleWebsite}
+          title="Visit Nirvanza Infotech"
+        >
+          <Globe size={20} />
+        </button>
 
 
-      {/* DROPDOWN */}
+        {/* =================================================
+            ADMIN PROFILE
+        ================================================= */}
 
-      {dropdownOpen && (
-        <div className="admin-user-dropdown">
+        {adminEmail && (
+          <div
+            className={`admin-user-wrapper ${dropdownOpen
+                ? "admin-user-wrapper-open"
+                : ""
+              }`}
+            ref={dropdownRef}
+          >
 
-          <div className="admin-dropdown-header">
+            {/* USER BUTTON */}
 
-            <div className="admin-dropdown-avatar">
-              <User size={20} />
-            </div>
+            <button
+              type="button"
+              className="admin-user-btn"
+              onClick={() => {
+                setDropdownOpen((prev) => !prev);
+              }}
+            >
 
-            <div className="admin-dropdown-user">
+              {/* AVATAR */}
 
-              <strong>
-                Admin
-              </strong>
+              <div className="admin-user-avatar">
+                <User size={18} />
+              </div>
 
-              <span>
-                {adminEmail}
-              </span>
 
-            </div>
+              {/* USER DETAILS */}
+
+              <div className="admin-user-details">
+
+                <span className="admin-user-name">
+                  Admin
+                </span>
+
+                <span className="admin-user-email">
+                  {adminEmail}
+                </span>
+
+              </div>
+
+
+              {/* ARROW */}
+
+              <ChevronDown
+                size={17}
+                className={`admin-user-arrow ${dropdownOpen
+                    ? "admin-user-arrow-open"
+                    : ""
+                  }`}
+              />
+
+            </button>
+
+
+            {/* =================================================
+                DROPDOWN
+            ================================================= */}
+
+            {dropdownOpen && (
+              <div className="admin-user-dropdown">
+
+                {/* DROPDOWN HEADER */}
+
+                <div className="admin-dropdown-header">
+
+                  <div className="admin-dropdown-avatar">
+                    <User size={20} />
+                  </div>
+
+                  <div className="admin-dropdown-user">
+
+                    <strong>
+                      Admin
+                    </strong>
+
+                    <span>
+                      {adminEmail}
+                    </span>
+
+                  </div>
+
+                </div>
+
+
+                {/* DIVIDER */}
+
+                <div className="admin-dropdown-divider" />
+
+
+                {/* =================================================
+                    MY PROFILE
+                ================================================= */}
+
+                <button
+                  type="button"
+                  className="admin-dropdown-item"
+                  onClick={handleProfile}
+                >
+
+                  <span className="admin-dropdown-item-icon">
+                    <User size={17} />
+                  </span>
+
+                  <span>
+                    My Profile
+                  </span>
+
+                </button>
+
+
+                {/* =================================================
+                    ADD USER
+                ================================================= */}
+
+                <button
+                  type="button"
+                  className="admin-dropdown-item"
+                  onClick={handleAddUser}
+                >
+
+                  <span className="admin-dropdown-item-icon">
+                    <UserPlus size={17} />
+                  </span>
+
+                  <span>
+                    Add User
+                  </span>
+
+                </button>
+
+
+                {/* =================================================
+                    SETTINGS
+                ================================================= */}
+
+                <button
+                  type="button"
+                  className="admin-dropdown-item"
+                  onClick={handleSettings}
+                >
+
+                  <span className="admin-dropdown-item-icon">
+                    <Settings size={17} />
+                  </span>
+
+                  <span>
+                    Settings
+                  </span>
+
+                </button>
+
+
+                {/* DIVIDER */}
+
+                <div className="admin-dropdown-divider" />
+
+
+                {/* =================================================
+                    LOGOUT
+                ================================================= */}
+
+                <button
+                  type="button"
+                  className="admin-dropdown-item admin-dropdown-logout"
+                  onClick={handleLogout}
+                >
+
+                  <span className="admin-dropdown-item-icon">
+                    <LogOut size={17} />
+                  </span>
+
+                  <span>
+                    Logout
+                  </span>
+
+                </button>
+
+              </div>
+            )}
 
           </div>
+        )}
 
-          <div className="admin-dropdown-divider" />
-
-          {/* Profile */}
-
-          <button
-            type="button"
-            className="admin-dropdown-item"
-            onClick={handleProfile}
-          >
-            <span className="admin-dropdown-item-icon">
-              <User size={17} />
-            </span>
-
-            <span>
-              Profile
-            </span>
-          </button>
-
-          {/* Add User */}
-
-          <button
-            type="button"
-            className="admin-dropdown-item"
-            onClick={handleAddUser}
-          >
-            <span className="admin-dropdown-item-icon">
-              <UserPlus size={17} />
-            </span>
-
-            <span>
-              Add User
-            </span>
-          </button>
-
-          {/* Settings */}
-
-          <button
-            type="button"
-            className="admin-dropdown-item"
-            onClick={() => {
-              setDropdownOpen(false);
-              navigate("/emergency");
-            }}
-          >
-            <span className="admin-dropdown-item-icon">
-              <Settings size={17} />
-            </span>
-
-            <span>
-              Settings
-            </span>
-          </button>
-
-          <div className="admin-dropdown-divider" />
-
-          {/* Logout */}
-
-          <button
-            type="button"
-            className="admin-dropdown-item admin-dropdown-logout"
-            onClick={handleLogout}
-          >
-            <span className="admin-dropdown-item-icon">
-              <LogOut size={17} />
-            </span>
-
-            <span>
-              Logout
-            </span>
-          </button>
-
-        </div>
-      )}
-
-    </div>
-  )}
-
-</div>
+      </div>
 
     </header>
   );
