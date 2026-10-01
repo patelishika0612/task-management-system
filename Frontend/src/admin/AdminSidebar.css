@@ -344,7 +344,7 @@ font-weight: 600;
 
   /* background: #c54747; */
 
-  color: #1557f5;
+  color: #ffffff;
 
   font-weight: 600;
 
@@ -360,7 +360,7 @@ font-weight: 600;
 .admin-sidebar-item-active
 .admin-sidebar-icon {
 
-  color: #272a6c;
+  color: var(--theme-color);
 
   transform: scale(1.05);
 }
@@ -373,7 +373,7 @@ font-weight: 600;
 .admin-sidebar-item-active
 .admin-sidebar-label {
 
-  color: #272a6c;
+  color: var(--theme-color);
 }
 
 
@@ -393,7 +393,7 @@ font-weight: 600;
 
   background: rgba(21, 87, 245, 0.08);
 
-  color: #272a6c;
+  color: #272a6c !important;
 
   opacity: 0;
 
@@ -799,4 +799,8 @@ font-weight: 600;
     padding-right: 12px;
   }
 
+}
+.admin-sidebar-item-active .admin-sidebar-arrow {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }

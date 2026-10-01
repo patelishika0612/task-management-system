@@ -1,6 +1,9 @@
 .dashboard-container {
   padding: 20px;
+<<<<<<< HEAD
   /* margin-left: 250px; */
+=======
+>>>>>>> ccbaef3cd0dd6c47bfff7c715093abe0b9da57c2
 }
 
 .dashboard-title {
@@ -130,6 +133,6 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .dashboard-container {
-    margin-left: 0; /* no sidebar shift */
+    padding: 16px;
   }
 }
