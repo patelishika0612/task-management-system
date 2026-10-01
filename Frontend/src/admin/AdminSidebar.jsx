@@ -80,7 +80,7 @@ const Sidebar = () => {
     },
     {
       title: "Departments",
-      path: "/hospital",
+      path: "/departments",
       icon: <Building2 size={19} strokeWidth={2} />,
     },
     {

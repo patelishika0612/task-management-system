@@ -345,9 +345,9 @@ white;
 
 .admin-sidebar-item-active .admin-sidebar-link {
 
-  background: #c54747;
+  background: rgb(47 51 135);
 
-  color: #1557f5;
+  color: #ffffff;
 
   font-weight: 600;
 
@@ -365,7 +365,7 @@ white;
 .admin-sidebar-item-active
 .admin-sidebar-icon {
 
-  color: #1557f5;
+  color: #ffffff;
 
   transform: scale(1.05);
 }
@@ -378,7 +378,7 @@ white;
 .admin-sidebar-item-active
 .admin-sidebar-label {
 
-  color: #1557f5;
+  color: #ffffff;
 }
 
 
@@ -790,4 +790,8 @@ white;
     padding-right: 12px;
   }
 
+}
+.admin-sidebar-item-active .admin-sidebar-arrow {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
 }

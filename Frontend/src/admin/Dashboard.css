@@ -1,6 +1,5 @@
 .dashboard-container {
   padding: 20px;
-  margin-left: 250px; /* shift content for sidebar */
 }
 
 .dashboard-title {
@@ -130,6 +129,6 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .dashboard-container {
-    margin-left: 0; /* no sidebar shift */
+    padding: 16px;
   }
 }
