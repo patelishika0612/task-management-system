@@ -2,14 +2,14 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-
+import UserImg from "../img/user.png";
 import {
   User,
   LogOut,
   Globe,
   ChevronDown,
-  UserPlus,
-  Settings,
+  BriefcaseBusiness ,
+  Settings, Bell
 } from "lucide-react";
 
 import "./AdminHeader.css";
@@ -114,7 +114,7 @@ const Header = () => {
   const handleSettings = () => {
     setDropdownOpen(false);
 
-    navigate("/emergency");
+    navigate("/settings");
   };
 
   // =====================================================
@@ -164,7 +164,7 @@ const Header = () => {
           LEFT SIDE
       ================================================= */}
 
-      <div className="admin-header-left">
+      {/* <div className="admin-header-left">
 
         <div className="admin-header-title-wrapper">
 
@@ -178,7 +178,7 @@ const Header = () => {
 
         </div>
 
-      </div>
+      </div> */}
 
 
       {/* =================================================
@@ -189,13 +189,22 @@ const Header = () => {
 
         {/* WEBSITE BUTTON */}
 
+
         <button
           type="button"
-          className="admin-header-globe"
+          className="admin-header-globe globe2"
           onClick={handleWebsite}
           title="Visit Nirvanza Infotech"
         >
           <Globe size={20} />
+        </button>
+        <button
+          type="button"
+          className="admin-header-globe "
+      
+          title="Visit Nirvanza Infotech"
+        >
+          <Bell size={20} />
         </button>
 
 
@@ -206,8 +215,8 @@ const Header = () => {
         {adminEmail && (
           <div
             className={`admin-user-wrapper ${dropdownOpen
-                ? "admin-user-wrapper-open"
-                : ""
+              ? "admin-user-wrapper-open"
+              : ""
               }`}
             ref={dropdownRef}
           >
@@ -225,7 +234,12 @@ const Header = () => {
               {/* AVATAR */}
 
               <div className="admin-user-avatar">
-                <User size={18} />
+                {/* <User size={18} /> */}
+                <img
+                  src={UserImg}
+                  alt="Admin Avatar"
+                  className="admin-avatar-image"
+                />
               </div>
 
 
@@ -249,8 +263,8 @@ const Header = () => {
               <ChevronDown
                 size={17}
                 className={`admin-user-arrow ${dropdownOpen
-                    ? "admin-user-arrow-open"
-                    : ""
+                  ? "admin-user-arrow-open"
+                  : ""
                   }`}
               />
 
@@ -269,7 +283,11 @@ const Header = () => {
                 <div className="admin-dropdown-header">
 
                   <div className="admin-dropdown-avatar">
-                    <User size={20} />
+                <img
+                  src={UserImg}
+                  alt="Admin Avatar"
+                  className="admin-avatar-image"
+                />
                   </div>
 
                   <div className="admin-dropdown-user">
@@ -292,10 +310,6 @@ const Header = () => {
                 <div className="admin-dropdown-divider" />
 
 
-                {/* =================================================
-                    MY PROFILE
-                ================================================= */}
-
                 <button
                   type="button"
                   className="admin-dropdown-item"
@@ -312,10 +326,7 @@ const Header = () => {
 
                 </button>
 
-
-                {/* =================================================
-                    ADD USER
-                ================================================= */}
+ <div className="admin-dropdown-divider" />
 
                 <button
                   type="button"
@@ -324,11 +335,11 @@ const Header = () => {
                 >
 
                   <span className="admin-dropdown-item-icon">
-                    <UserPlus size={17} />
+                    <BriefcaseBusiness   size={17} />
                   </span>
 
                   <span>
-                    Add User
+                    Company Profile
                   </span>
 
                 </button>

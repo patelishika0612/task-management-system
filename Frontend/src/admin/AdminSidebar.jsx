@@ -55,39 +55,35 @@ const Sidebar = () => {
   const menuItems = [
     {
       title: "Dashboard",
-      path: "/dashboard",
+      path: "/",
       icon: <LayoutDashboard size={19} strokeWidth={2} />,
     },
     {
       title: "Employee",
-      path: "/adminhome",
+      path: "/#",
       icon: <Users size={19} strokeWidth={2} />,
     },
     {
       title: "Projects",
-      path: "/adminabout",
+      path: "/#",
       icon: <FolderKanban size={19} strokeWidth={2} />,
     },
     {
       title: "Calendar",
-      path: "/serviceview",
+      path: "/#",
       icon: <CalendarDays size={19} strokeWidth={2} />,
     },
     {
       title: "Clients",
-      path: "/adminPatientguide",
+      path: "/#",
       icon: <UserRound size={19} strokeWidth={2} />,
     },
     {
       title: "Departments",
-      path: "/hospital",
+      path: "/#",
       icon: <Building2 size={19} strokeWidth={2} />,
     },
-    {
-      title: "Settings",
-      path: "/emergency",
-      icon: <Settings size={19} strokeWidth={2} />,
-    },
+   
   ];
 
   // -----------------------------------------
@@ -189,11 +185,9 @@ const Sidebar = () => {
                       {item.title}
                     </span>
 
-                    {isActive && (
-                      <span className="admin-sidebar-arrow">
+                    <span className="admin-sidebar-arrow">
                         <ChevronRight size={16} />
                       </span>
-                    )}
                   </Link>
                 </li>
               );

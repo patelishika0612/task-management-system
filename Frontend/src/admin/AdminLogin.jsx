@@ -7,14 +7,11 @@ import {
   EyeOff,
   LogIn,
   ShieldCheck,
-  Users,
-  ClipboardCheck,
-  CheckCircle2,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import "./AdminLogin.css";
 
-const Login = () => {
+const AdminLogin = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -23,9 +20,9 @@ const Login = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -35,15 +32,14 @@ const Login = () => {
     }));
   };
 
+  // Handle HR/Admin Login
   const handleLogin = async (e) => {
     e.preventDefault();
 
     const email = formData.email.trim();
     const password = formData.password.trim();
 
-    // ================================
-    // BASIC VALIDATION
-    // ================================
+    // Required validation
     if (!email || !password) {
       Swal.fire({
         icon: "warning",
@@ -55,6 +51,7 @@ const Login = () => {
       return;
     }
 
+    // Email validation
     if (!email.includes("@")) {
       Swal.fire({
         icon: "warning",
@@ -69,46 +66,18 @@ const Login = () => {
     try {
       setLoading(true);
 
-      // ==================================================
-      // DEMO LOGIN
-      // ==================================================
-      // Replace this section with your backend API call
-      // when your login API is ready.
-      //
-      // Example:
-      //
-      // const response = await axios.post(
-      //   "YOUR_API_URL/api/admin/login",
-      //   {
-      //     email,
-      //     password,
-      //   }
-      // );
-      //
-      // const { token, admin } = response.data;
-      // localStorage.setItem("token", token);
-      // localStorage.setItem("adminEmail", admin.email);
-
-      // Demo delay
+      // Demo loading
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      /*
-       * DEMO CREDENTIALS
-       *
-       * Email:
-       * admin@gmail.com
-       *
-       * Password:
-       * admin123
-       *
-       * Remove this condition when connecting your backend API.
-       */
-
-      if (email !== "admin@gmail.com" || password !== "admin123") {
+      // Demo HR credentials
+      if (
+        email !== "admin@gmail.com" ||
+        password !== "admin123"
+      ) {
         Swal.fire({
           icon: "error",
           title: "Login Failed",
-          text: "Invalid email or password.",
+          text: "Invalid HR email or password.",
           confirmButtonColor: "#1557f5",
         });
 
@@ -116,36 +85,24 @@ const Login = () => {
         return;
       }
 
-      // ==================================================
-      // SAVE LOGIN INFORMATION
-      // ==================================================
-
+      // Store HR/Admin login data
       localStorage.setItem("adminEmail", email);
-
-      if (rememberMe) {
-        localStorage.setItem("keepLogged", "true");
-      } else {
-        localStorage.removeItem("keepLogged");
-      }
-
-      // Demo token
       localStorage.setItem("token", "demo-admin-token");
+      localStorage.setItem("role", "admin");
 
-      // ==================================================
-      // SUCCESS
-      // ==================================================
-
+      // Success message
       await Swal.fire({
         icon: "success",
         title: "Welcome Back!",
-        text: "Login successful.",
+        text: "HR login successful.",
         showConfirmButton: false,
         timer: 1200,
       });
 
+      // Go to HR dashboard
       navigate("/dashboard");
     } catch (error) {
-      console.error("LOGIN ERROR:", error);
+      console.error("ADMIN LOGIN ERROR:", error);
 
       Swal.fire({
         icon: "error",
@@ -160,51 +117,53 @@ const Login = () => {
 
   return (
     <div className="admin-login-page">
-      {/* ==================================================
-          LEFT SIDE
-      ================================================== */}
+
+      {/* ================= LEFT SIDE ================= */}
       <div className="admin-login-left">
 
-
-        {/* Decorative Shapes */}
         <div className="admin-login-decoration admin-login-decoration-one"></div>
+
         <div className="admin-login-decoration admin-login-decoration-two"></div>
+
         <div className="admin-login-decoration admin-login-decoration-three"></div>
+
       </div>
 
-      {/* ==================================================
-          RIGHT SIDE
-      ================================================== */}
+      {/* ================= RIGHT SIDE ================= */}
       <div className="admin-login-right">
 
         <div className="admin-login-card">
 
-          {/* Mobile Logo */}
-     <div className="admin-login-mobile-brand">
-  <div className="admin-login-mobile-icon">
-    <ShieldCheck size={26} />
-  </div>
+          {/* Mobile Brand */}
+          <div className="admin-login-mobile-brand">
 
-  <div>
-    <h3>Employee Management</h3>
-    <span>Employee Portal</span>
-  </div>
-</div>
+            <div className="admin-login-mobile-icon">
+              <ShieldCheck size={26} />
+            </div>
+
+            <div>
+              <h3>HR Management</h3>
+              <span>Admin Portal</span>
+            </div>
+
+          </div>
 
           {/* Heading */}
           <div className="admin-login-heading">
-         <div className="admin-login-welcome">
-  Welcome Employee
-</div>
 
-<h1>Sign in to your account</h1>
+            <div className="admin-login-welcome">
+              Welcome Back
+            </div>
 
-<p>
-  Enter your credentials to access your employee dashboard.
-</p>
+            <h1>Sign in to your account</h1>
+
+            <p>
+              Enter your credentials to access the HR dashboard.
+            </p>
+
           </div>
 
-          {/* Login Form */}
+          {/* ================= LOGIN FORM ================= */}
           <form
             className="admin-login-form"
             onSubmit={handleLogin}
@@ -212,11 +171,13 @@ const Login = () => {
 
             {/* Email */}
             <div className="admin-login-form-group">
+
               <label htmlFor="email">
                 Email Address
               </label>
 
               <div className="admin-login-input-wrapper">
+
                 <Mail
                   size={19}
                   className="admin-login-input-icon"
@@ -231,16 +192,20 @@ const Login = () => {
                   onChange={handleChange}
                   autoComplete="email"
                 />
+
               </div>
+
             </div>
 
             {/* Password */}
             <div className="admin-login-form-group">
+
               <label htmlFor="password">
                 Password
               </label>
 
               <div className="admin-login-input-wrapper">
+
                 <Lock
                   size={19}
                   className="admin-login-input-icon"
@@ -274,27 +239,13 @@ const Login = () => {
                     <Eye size={19} />
                   )}
                 </button>
+
               </div>
+
             </div>
 
-            {/* Remember Me */}
+            {/* Forgot Password */}
             <div className="admin-login-options">
-
-              {/* <label className="admin-login-checkbox">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) =>
-                    setRememberMe(e.target.checked)
-                  }
-                />
-
-                <span className="admin-login-custom-checkbox">
-                  <CheckCircle2 size={13} />
-                </span>
-
-                <span>Remember me</span>
-              </label> */}
 
               <button
                 type="button"
@@ -312,6 +263,7 @@ const Login = () => {
               className="admin-login-submit"
               disabled={loading}
             >
+
               {loading ? (
                 <>
                   <span className="admin-login-spinner"></span>
@@ -320,44 +272,79 @@ const Login = () => {
               ) : (
                 <>
                   <LogIn size={19} />
-                  Sign In
+                   Sign In
                 </>
               )}
+
             </button>
 
-       <button
-  type="button"
-  className="hr-login"
-  onClick={() => navigate("/adminLogin")}
->
-  HR Login
-</button>
+            {/* Employee Login */}
+            <button
+              type="button"
+              className="hr-login"
+              onClick={() => navigate("/login")}
+            >
+              Employee Login
+            </button>
 
           </form>
 
           {/* Security Information */}
           <div className="admin-login-security">
+
             <ShieldCheck size={18} />
 
             <div>
-              <strong>Secure Login</strong>
+
+              <strong>
+                Secure HR Login
+              </strong>
+
               <span>
-                Your account information is protected.
+                Your HR account information is protected.
               </span>
+
             </div>
+
           </div>
 
-          {/* Footer */}
-          {/* <div className="admin-login-card-footer">
-            <span>© 2026 HR Management System</span>
-            <span className="admin-login-footer-dot">•</span>
-            <span>Admin Portal</span>
+          {/* Demo Credentials */}
+          {/* <div
+            style={{
+              marginTop: "18px",
+              padding: "12px 14px",
+              borderRadius: "10px",
+              background: "#f5f8ff",
+              border: "1px solid #e2e9f7",
+              fontSize: "13px",
+              color: "#667085",
+            }}
+          >
+            <strong
+              style={{
+                display: "block",
+                marginBottom: "5px",
+                color: "#1557f5",
+              }}
+            >
+              Demo HR Login
+            </strong>
+
+            <div>
+              Email: admin@gmail.com
+            </div>
+
+            <div>
+              Password: admin123
+            </div>
           </div> */}
 
         </div>
+
       </div>
+
     </div>
   );
 };
 
-export default Login;
+export default AdminLogin;

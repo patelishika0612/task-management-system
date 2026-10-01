@@ -18,6 +18,7 @@ import {
     IdCard,
 } from "lucide-react";
 
+import AdminLayout from "../components/AdminLayout";
 import "./AdminProfile.css";
 
 const Profile = () => {
@@ -55,6 +56,7 @@ const Profile = () => {
     };
 
     return (
+        <AdminLayout>
         <div className="hr-profile-page">
 
             {/* =====================================================
@@ -63,7 +65,7 @@ const Profile = () => {
 
             <section className="hr-profile-top">
 
-                <div className="hr-profile-heading">
+                {/* <div className="hr-profile-heading">
 
                     <div className="hr-profile-breadcrumb">
                         <button
@@ -85,7 +87,7 @@ const Profile = () => {
                         Manage your HR account information and professional details.
                     </p>
 
-                </div>
+                </div> */}
 
                 <div className="hr-profile-actions">
 
@@ -558,6 +560,7 @@ const Profile = () => {
             </section>
 
         </div>
+        </AdminLayout>
     );
 };
 

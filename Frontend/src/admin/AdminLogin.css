@@ -1,4 +1,3 @@
-
 * {
   box-sizing: border-box;
 }
@@ -279,7 +278,7 @@
   display: inline-flex;
   align-items: center;
   margin-bottom: 10px;
-  color: #1557f5;
+  color: var(--theme-color);
   font-size: 13px;
   font-weight: 700;
 }
@@ -310,7 +309,7 @@
 }
 
 .admin-login-form-group {
-  margin-bottom: 22px;
+  margin-bottom: 5px;
 }
 
 .admin-login-form-group label {
@@ -376,15 +375,14 @@
 
 .admin-login-input-wrapper input:focus {
   background: #ffffff;
-  border-color: #1557f5;
+  border-color: var(--theme-color);
 
   box-shadow:
     0 0 0 4px rgba(21, 87, 245, 0.09);
 }
 
-.admin-login-input-wrapper:focus-within
-  .admin-login-input-icon {
-  color: #1557f5;
+.admin-login-input-wrapper:focus-within .admin-login-input-icon {
+  color: var(--theme-color);
 }
 
 /* =========================================================
@@ -407,14 +405,14 @@
   border-radius: 8px;
   background: transparent;
   color: #8d97a8;
-  cursor: pointer; 
+  cursor: pointer;
   transition:
     color 0.2s ease,
     background 0.2s ease;
 }
 
 .admin-login-password-toggle:hover {
-  color: #1557f5;
+  color: var(--theme-color);
   background: #eef3ff;
 }
 
@@ -426,9 +424,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-
+  justify-self: right;
   gap: 15px;
-
   margin-top: 3px;
   margin-bottom: 26px;
 }
@@ -471,10 +468,9 @@
     border-color 0.2s ease;
 }
 
-.admin-login-checkbox input:checked
-  + .admin-login-custom-checkbox {
-  background: #1557f5;
-  border-color: #1557f5;
+.admin-login-checkbox input:checked+.admin-login-custom-checkbox {
+  background: var(--theme-color);
+  border-color: var(--theme-color);
   color: #ffffff;
 }
 
@@ -484,7 +480,7 @@
   border: 0;
   background: transparent;
 
-  color: #1557f5;
+  color: var(--theme-color);
 
   font-size: 12px;
   font-weight: 650;
@@ -495,6 +491,19 @@
 .admin-login-forgot:hover {
   text-decoration: underline;
 }
+.hr-login {
+  display: block;
+  margin: 12px auto 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--theme-color);
+  text-decoration: underline;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
 
 /* =========================================================
    LOGIN BUTTON
@@ -513,11 +522,9 @@
   border-radius: 12px;
 
   background:
-    linear-gradient(
-      135deg,
-      #1557f5 0%,
-      #2468f8 100%
-    );
+    linear-gradient(135deg,
+      var(--theme-color) 0%,
+      #2468f8 100%);
 
   color: #ffffff;
 
@@ -590,10 +597,10 @@
 
   background: #f8faff;
 
-  color: #1557f5;
+  color: var(--theme-color);
 }
 
-.admin-login-security > svg {
+.admin-login-security>svg {
   flex-shrink: 0;
 }
 
@@ -747,11 +754,9 @@
     border-radius: 13px;
 
     background:
-      linear-gradient(
-        135deg,
-        #1557f5,
-        #2468f8
-      );
+      linear-gradient(135deg,
+        var(--theme-color),
+        #2468f8);
 
     color: #ffffff;
 
@@ -839,5 +844,90 @@
 
   .admin-login-security {
     padding: 12px;
+  }
+}
+
+
+
+/* OTP */
+
+/* ==================================================
+   OTP VERIFICATION
+================================================== */
+
+.admin-otp-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.admin-otp-input {
+  width: 52px;
+  height: 56px;
+  border: 1.5px solid #d7deea;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #172033;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.admin-otp-input:focus {
+  border-color: #1557f5;
+  box-shadow: 0 0 0 4px rgba(21, 87, 245, 0.1);
+}
+
+.admin-otp-input:not(:placeholder-shown) {
+  border-color: #1557f5;
+}
+
+.admin-otp-helper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #7b8495;
+}
+
+.admin-otp-helper .admin-login-forgot {
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0;
+  font-size: 13px;
+}
+
+/* ==================================================
+   OTP RESPONSIVE
+================================================== */
+
+@media (max-width: 480px) {
+  .admin-otp-container {
+    gap: 7px;
+  }
+
+  .admin-otp-input {
+    width: 45px;
+    height: 50px;
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 360px) {
+  .admin-otp-container {
+    gap: 5px;
+  }
+
+  .admin-otp-input {
+    width: 40px;
+    height: 46px;
+    font-size: 18px;
   }
 }
