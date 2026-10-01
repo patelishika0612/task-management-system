@@ -83,11 +83,7 @@ const Sidebar = () => {
       path: "/departments",
       icon: <Building2 size={19} strokeWidth={2} />,
     },
-    {
-      title: "Settings",
-      path: "/#",
-      icon: <Settings size={19} strokeWidth={2} />,
-    },
+  
   ];
 
   // -----------------------------------------

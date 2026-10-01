@@ -13,11 +13,14 @@ import {
     ShieldCheck,
     Pencil,
     LockKeyhole,
-    Camera,
     CheckCircle2,
     IdCard,
+    X,
+    Clock,
+    BadgeCheck,
+    CircleCheck,
 } from "lucide-react";
-
+import UserImg from "../img/user.png";
 import AdminLayout from "../components/AdminLayout";
 import "./AdminProfile.css";
 
@@ -25,8 +28,13 @@ const Profile = () => {
     const adminEmail =
         localStorage.getItem("adminEmail") || "hr@nirvanza.com";
 
-    const [isEditing, setIsEditing] = useState(false);
     const navigate = useNavigate();
+
+    const [isEditing, setIsEditing] = useState(false);
+
+    // =====================================================
+    // PROFILE DATA
+    // =====================================================
     const [profile, setProfile] = useState({
         firstName: "HR",
         lastName: "Manager",
@@ -37,8 +45,25 @@ const Profile = () => {
         designation: "HR Manager",
         joiningDate: "01 January 2025",
         location: "Ahmedabad, Gujarat",
+
+        // Email Verification
+        // true  = Verified
+        // false = Not Verified
+        emailVerified: false,
+
+        // Account Status
+        // "Active"     = Active
+        // "Not Active" = Not Active
+        accountStatus: "Active",
     });
 
+    const [savedProfile, setSavedProfile] = useState({
+        ...profile,
+    });
+
+    // =====================================================
+    // HANDLE INPUT CHANGE
+    // =====================================================
     const handleChange = (e) => {
         const { name, value } = e.target;
 
@@ -48,518 +73,609 @@ const Profile = () => {
         }));
     };
 
+    // =====================================================
+    // SAVE PROFILE
+    // =====================================================
     const handleSave = () => {
-        setIsEditing(false);
+        setSavedProfile({
+            ...profile,
+        });
 
-        // You can connect API here later
-        console.log("Updated HR Profile:", profile);
+        setIsEditing(false);
     };
+
+    // =====================================================
+    // OPEN EDIT MODAL
+    // =====================================================
+    const handleEditOpen = () => {
+        setIsEditing(true);
+    };
+
+    // =====================================================
+    // CANCEL EDIT
+    // =====================================================
+    const handleCancel = () => {
+        setProfile({
+            ...savedProfile,
+        });
+
+        setIsEditing(false);
+    };
+
+    // =====================================================
+    // WORK INFORMATION
+    // =====================================================
+    const profItems = [
+        {
+            icon: <IdCard size={16} />,
+            label: "Employee ID",
+            value: profile.employeeId,
+        },
+        {
+            icon: <BriefcaseBusiness size={16} />,
+            label: "Designation",
+            value: profile.designation,
+        },
+        {
+            icon: <Building2 size={16} />,
+            label: "Department",
+            value: profile.department,
+        },
+        {
+            icon: <CalendarDays size={16} />,
+            label: "Joining Date",
+            value: profile.joiningDate,
+        },
+    ];
+
+    // =====================================================
+    // ACCOUNT INFORMATION
+    // =====================================================
+    const accountItems = [
+        {
+            icon: <CalendarDays size={18} />,
+            label: "Account Created",
+            value: "01 January 2025",
+            color: "#6366f1",
+            bg: "#eef2ff",
+        },
+
+        {
+            icon: <Clock size={18} />,
+            label: "Last Login",
+            value: "Today, 09:42 AM",
+            color: "#0ea5e9",
+            bg: "#e0f2fe",
+        },
+
+        // =================================================
+        // EMAIL VERIFICATION
+        // =================================================
+        {
+            icon: <BadgeCheck size={18} />,
+            label: "Email Verification",
+
+            value: profile.emailVerified
+                ? "Verified"
+                : "Not Verified",
+
+            badge: true,
+
+            badgeColor: profile.emailVerified
+                ? "#16a34a"
+                : "#dc2626",
+
+            badgeBg: profile.emailVerified
+                ? "#dcfce7"
+                : "#fee2e2",
+
+            color: profile.emailVerified
+                ? "#16a34a"
+                : "#dc2626",
+
+            bg: profile.emailVerified
+                ? "#dcfce7"
+                : "#fee2e2",
+        },
+
+
+    ];
 
     return (
         <AdminLayout>
-        <div className="hr-profile-page">
 
-            {/* =====================================================
-          PROFILE HEADER
-      ===================================================== */}
+            <div className="hr-profile-page">
 
-            <section className="hr-profile-top">
+                {/* =====================================================
+                    TOP BAR
+                ===================================================== */}
+                <section className="hr-profile-top">
 
-                {/* <div className="hr-profile-heading">
+                    <div className="hr-profile-actions">
 
-                    <div className="hr-profile-breadcrumb">
+                        {/* CHANGE PASSWORD */}
                         <button
+                            className="hr-profile-password-btn"
                             type="button"
-                            className="hr-profile-breadcrumb-dashboard"
-                            onClick={() => navigate("/")}
+                            onClick={() => navigate("/resetpassword")}
                         >
-                            Dashboard
+                            <LockKeyhole size={15} />
+                            Change Password
                         </button>
 
-                        <span>/</span>
+                        {/* EDIT PROFILE */}
+                        <button
+                            className="hr-profile-edit-btn"
+                            type="button"
+                            onClick={handleEditOpen}
+                        >
+                            <Pencil size={15} />
+                            Edit Profile
+                        </button>
 
-                        <span>Profile</span>
                     </div>
 
-                    <h1>My Profile</h1>
-
-                    <p>
-                        Manage your HR account information and professional details.
-                    </p>
-
-                </div> */}
-
-                <div className="hr-profile-actions">
-
-                    {!isEditing ? (
-                        <>
-                            <button
-                                className="hr-profile-password-btn"
-                                type="button"
-                            >
-                                <LockKeyhole size={17} />
-                                Change Password
-                            </button>
-
-                            <button
-                                className="hr-profile-edit-btn"
-                                type="button"
-                                onClick={() => setIsEditing(true)}
-                            >
-                                <Pencil size={17} />
-                                Edit Profile
-                            </button>
-                        </>
-                    ) : (
-                        <>
-                            <button
-                                className="hr-profile-cancel-btn"
-                                type="button"
-                                onClick={() => setIsEditing(false)}
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                className="hr-profile-save-btn"
-                                type="button"
-                                onClick={handleSave}
-                            >
-                                <CheckCircle2 size={17} />
-                                Save Changes
-                            </button>
-                        </>
-                    )}
-
-                </div>
-
-            </section>
+                </section>
 
 
-            {/* =====================================================
-          MAIN PROFILE CONTENT
-      ===================================================== */}
+                {/* =====================================================
+                    MAIN GRID
+                ===================================================== */}
+                <section className="hr-profile-grid">
 
-            <section className="hr-profile-grid">
+                    {/* =================================================
+                        LEFT PROFILE CARD
+                    ================================================= */}
+                    <div className="hr-profile-card hr-profile-main-card">
 
-                {/* =================================================
-            LEFT PROFILE CARD
-        ================================================= */}
-
-                <div className="hr-profile-card hr-profile-main-card">
-
-                    {/* Blue Cover */}
-
-                    <div className="hr-profile-cover">
-                        <div className="hr-cover-pattern"></div>
-                    </div>
-
-
-                    {/* Avatar */}
-
-                    <div className="hr-profile-avatar-wrapper">
-
-                        <div className="hr-profile-avatar">
-                            <User size={42} />
+                        {/* COVER */}
+                        <div className="hr-profile-cover">
+                            <div className="hr-cover-pattern"></div>
                         </div>
 
-                        {isEditing && (
-                            <button
-                                type="button"
-                                className="hr-avatar-camera"
-                                title="Change profile photo"
-                            >
-                                <Camera size={15} />
-                            </button>
-                        )}
 
-                    </div>
+                        {/* AVATAR */}
+                        <div className="hr-profile-avatar-wrapper">
 
-
-                    {/* Basic Info */}
-
-                    <div className="hr-profile-basic">
-
-                        <h2>
-                            {profile.firstName} {profile.lastName}
-                        </h2>
-
-                        <p className="hr-profile-designation">
-                            {profile.designation}
-                        </p>
-
-                        <div className="hr-profile-role">
-                            <ShieldCheck size={15} />
-                            HR / Human Resources
-                        </div>
-
-                    </div>
-
-
-                    {/* Profile Status */}
-
-                    <div className="hr-profile-status">
-                        <span className="hr-status-dot"></span>
-                        Active Account
-                    </div>
-
-
-                    {/* Quick Details */}
-
-                    <div className="hr-profile-quick-info">
-
-                        <div className="hr-quick-item">
-
-                            <div className="hr-quick-icon">
-                                <Mail size={17} />
+                            <div className="hr-profile-avatar">
+                                <img
+                                    src={UserImg}
+                                    alt="Admin Avatar"
+                                    className="admin-avatar-image"
+                                />
                             </div>
+
+                        </div>
+
+
+                        {/* BASIC INFORMATION */}
+                        <div className="hr-profile-basic">
+
+                            <h2>
+                                {profile.firstName}{" "}
+                                {profile.lastName}
+                            </h2>
+
+                            <p className="hr-profile-designation">
+                                {profile.designation}
+                            </p>
+
+                            <div className="hr-profile-role">
+                                <ShieldCheck size={15} />
+                                HR / Human Resources
+                            </div>
+
+                        </div>
+
+
+                        {/* ACTIVE ACCOUNT STATUS */}
+                        <div className="hr-profile-status">
+
+                            <span className="hr-status-dot"></span>
+
+                            {profile.accountStatus === "Active"
+                                ? "Active Account"
+                                : "Not Active"}
+
+                        </div>
+
+
+                        {/* =================================================
+                            QUICK INFORMATION
+                        ================================================= */}
+                        <div className="hr-profile-quick-info">
+
+                            {/* EMAIL */}
+                            <div className="hr-quick-item">
+
+                                <div className="hr-quick-icon">
+                                    <Mail size={17} />
+                                </div>
+
+                                <div>
+                                    <span>Email</span>
+
+                                    <strong>
+                                        {profile.email}
+                                    </strong>
+                                </div>
+
+                            </div>
+
+
+                            {/* PHONE */}
+                            <div className="hr-quick-item">
+
+                                <div className="hr-quick-icon">
+                                    <Phone size={17} />
+                                </div>
+
+                                <div>
+                                    <span>Phone</span>
+
+                                    <strong>
+                                        {profile.phone}
+                                    </strong>
+                                </div>
+
+                            </div>
+
+
+                            {/* DEPARTMENT */}
+                            <div className="hr-quick-item">
+
+                                <div className="hr-quick-icon">
+                                    <Building2 size={17} />
+                                </div>
+
+                                <div>
+                                    <span>Department</span>
+
+                                    <strong>
+                                        {profile.department}
+                                    </strong>
+                                </div>
+
+                            </div>
+
+
+                            {/* LOCATION */}
+                            <div className="hr-quick-item">
+
+                                <div className="hr-quick-icon">
+                                    <MapPin size={17} />
+                                </div>
+
+                                <div>
+                                    <span>Location</span>
+
+                                    <strong>
+                                        {profile.location}
+                                    </strong>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    {/* =================================================
+                        RIGHT CONTENT
+                    ================================================= */}
+                    <div className="hr-profile-right">
+
+                        {/* =================================================
+                            WORK INFORMATION
+                        ================================================= */}
+                        <div className="hr-profile-card">
+
+                            <div className="hr-section-header">
+
+                                <div>
+
+                                    <h3>
+                                        Work Information
+                                    </h3>
+
+                                    <p>
+                                        Your HR role and employment details
+                                    </p>
+
+                                </div>
+
+                                <div className="hr-section-icon">
+                                    <BriefcaseBusiness size={18} />
+                                </div>
+
+                            </div>
+
+
+                            <div className="hr-prof-info-grid">
+
+                                {profItems.map((item, i) => (
+
+                                    <div
+                                        className="hr-prof-info-item"
+                                        key={i}
+                                    >
+
+                                        <div className="hr-prof-info-icon">
+                                            {item.icon}
+                                        </div>
+
+                                        <div className="hr-prof-info-text">
+
+                                            <span>
+                                                {item.label}
+                                            </span>
+
+                                            <strong>
+                                                {item.value}
+                                            </strong>
+
+                                        </div>
+
+                                    </div>
+
+                                ))}
+
+                            </div>
+
+                        </div>
+
+
+                        {/* =================================================
+                            ACCOUNT INFORMATION
+                        ================================================= */}
+                        <div className="hr-profile-card">
+
+                            <div className="hr-section-header">
+
+                                <div>
+
+                                    <h3>
+                                        Account Information
+                                    </h3>
+
+                                    <p>
+                                        Your account activity and security status
+                                    </p>
+
+                                </div>
+
+                                <div className="hr-section-icon">
+                                    <ShieldCheck size={18} />
+                                </div>
+
+                            </div>
+
+
+                            <div className="hr-account-info-grid">
+
+                                {accountItems.map((item, i) => (
+
+                                    <div
+                                        className="hr-account-info-item"
+                                        key={i}
+                                    >
+
+                                        {/* ICON */}
+                                        <div
+                                            className="hr-account-info-icon"
+                                            style={{
+                                                background: item.bg,
+                                                color: item.color,
+                                            }}
+                                        >
+                                            {item.icon}
+                                        </div>
+
+
+                                        {/* TEXT */}
+                                        <div className="hr-account-info-text">
+
+                                            <span>
+                                                {item.label}
+                                            </span>
+
+
+                                            {/* BADGE */}
+                                            {item.badge ? (
+
+                                                <span
+                                                    className="hr-account-badge"
+                                                    style={{
+                                                        background:
+                                                            item.badgeBg,
+                                                        color:
+                                                            item.badgeColor,
+                                                    }}
+                                                >
+
+                                                    <span
+                                                        className="hr-account-badge-dot"
+                                                        style={{
+                                                            background:
+                                                                item.badgeColor,
+                                                        }}
+                                                    ></span>
+
+                                                    {item.value}
+
+                                                </span>
+
+                                            ) : (
+
+                                                <strong>
+                                                    {item.value}
+                                                </strong>
+
+                                            )}
+
+                                        </div>
+
+                                    </div>
+
+                                ))}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            {/* =========================================================
+                EDIT PROFILE MODAL
+            ========================================================= */}
+            {isEditing && (
+
+                <div className="hr-modal-overlay">
+
+                    <div
+                        className="hr-modal"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+
+                        {/* MODAL HEADER */}
+                        <div className="hr-modal-header">
 
                             <div>
-                                <span>Email</span>
-                                <strong>{profile.email}</strong>
-                            </div>
 
-                        </div>
-
-
-                        <div className="hr-quick-item">
-
-                            <div className="hr-quick-icon">
-                                <Phone size={17} />
-                            </div>
-
-                            <div>
-                                <span>Phone</span>
-                                <strong>{profile.phone}</strong>
-                            </div>
-
-                        </div>
-
-
-                        <div className="hr-quick-item">
-
-                            <div className="hr-quick-icon">
-                                <Building2 size={17} />
-                            </div>
-
-                            <div>
-                                <span>Department</span>
-                                <strong>{profile.department}</strong>
-                            </div>
-
-                        </div>
-
-
-                        <div className="hr-quick-item">
-
-                            <div className="hr-quick-icon">
-                                <MapPin size={17} />
-                            </div>
-
-                            <div>
-                                <span>Location</span>
-                                <strong>{profile.location}</strong>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                {/* =================================================
-            RIGHT CONTENT
-        ================================================= */}
-
-                <div className="hr-profile-right">
-
-
-                    {/* ===============================================
-              PERSONAL INFORMATION
-          =============================================== */}
-
-                    <div className="hr-profile-card">
-
-                        <div className="hr-section-header">
-
-                            <div>
-                                <h3>Personal Information</h3>
+                                <h3>
+                                    Edit Profile
+                                </h3>
 
                                 <p>
-                                    Your basic personal information
+                                    Update your personal and professional details
                                 </p>
+
                             </div>
 
-                            <div className="hr-section-icon">
-                                <User size={18} />
-                            </div>
+
+                            <button
+                                className="hr-modal-close"
+                                type="button"
+                                onClick={handleCancel}
+                            >
+                                <X size={18} />
+                            </button>
 
                         </div>
 
 
-                        <div className="hr-profile-form-grid">
+                        {/* MODAL BODY */}
+                        <div className="hr-modal-body">
 
-                            {/* First Name */}
+                            <div className="hr-modal-grid">
 
-                            <div className="hr-form-group">
+                                {/* FIRST NAME */}
+                                <div className="hr-modal-field">
 
-                                <label>
-                                    First Name
-                                </label>
+                                    <label>
+                                        First Name
+                                    </label>
 
-                                {isEditing ? (
                                     <input
                                         type="text"
                                         name="firstName"
                                         value={profile.firstName}
                                         onChange={handleChange}
                                     />
-                                ) : (
-                                    <div className="hr-info-value">
-                                        {profile.firstName}
-                                    </div>
-                                )}
 
-                            </div>
+                                </div>
 
 
-                            {/* Last Name */}
+                                {/* LAST NAME */}
+                                <div className="hr-modal-field">
 
-                            <div className="hr-form-group">
+                                    <label>
+                                        Last Name
+                                    </label>
 
-                                <label>
-                                    Last Name
-                                </label>
-
-                                {isEditing ? (
                                     <input
                                         type="text"
                                         name="lastName"
                                         value={profile.lastName}
                                         onChange={handleChange}
                                     />
-                                ) : (
-                                    <div className="hr-info-value">
-                                        {profile.lastName}
-                                    </div>
-                                )}
 
-                            </div>
+                                </div>
 
 
-                            {/* Email */}
+                                {/* PHONE */}
+                                <div className="hr-modal-field">
 
-                            <div className="hr-form-group">
+                                    <label>
+                                        Phone Number
+                                    </label>
 
-                                <label>
-                                    Email Address
-                                </label>
-
-                                {isEditing ? (
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={profile.email}
-                                        onChange={handleChange}
-                                    />
-                                ) : (
-                                    <div className="hr-info-value">
-                                        {profile.email}
-                                    </div>
-                                )}
-
-                            </div>
-
-
-                            {/* Phone */}
-
-                            <div className="hr-form-group">
-
-                                <label>
-                                    Phone Number
-                                </label>
-
-                                {isEditing ? (
                                     <input
                                         type="text"
                                         name="phone"
                                         value={profile.phone}
                                         onChange={handleChange}
                                     />
-                                ) : (
-                                    <div className="hr-info-value">
-                                        {profile.phone}
-                                    </div>
-                                )}
 
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    {/* ===============================================
-              PROFESSIONAL INFORMATION
-          =============================================== */}
-
-                    <div className="hr-profile-card">
-
-                        <div className="hr-section-header">
-
-                            <div>
-                                <h3>Professional Information</h3>
-
-                                <p>
-                                    Your HR role and employment details
-                                </p>
-                            </div>
-
-                            <div className="hr-section-icon">
-                                <BriefcaseBusiness size={18} />
-                            </div>
-
-                        </div>
-
-
-                        <div className="hr-profile-form-grid">
-
-                            {/* Employee ID */}
-
-                            <div className="hr-form-group">
-
-                                <label>
-                                    Employee ID
-                                </label>
-
-                                <div className="hr-info-value hr-disabled-value">
-                                    <IdCard size={15} />
-                                    {profile.employeeId}
                                 </div>
 
-                            </div>
 
+                                {/* WORK LOCATION */}
+                                <div className="hr-modal-field">
 
-                            {/* Designation */}
+                                    <label>
+                                        Work Location
+                                    </label>
 
-                            <div className="hr-form-group">
-
-                                <label>
-                                    Designation
-                                </label>
-
-                                {isEditing ? (
-                                    <input
-                                        type="text"
-                                        name="designation"
-                                        value={profile.designation}
-                                        onChange={handleChange}
-                                    />
-                                ) : (
-                                    <div className="hr-info-value">
-                                        {profile.designation}
-                                    </div>
-                                )}
-
-                            </div>
-
-
-                            {/* Department */}
-
-                            <div className="hr-form-group">
-
-                                <label>
-                                    Department
-                                </label>
-
-                                <div className="hr-info-value">
-                                    <Building2 size={15} />
-                                    {profile.department}
-                                </div>
-
-                            </div>
-
-
-                            {/* Joining Date */}
-
-                            <div className="hr-form-group">
-
-                                <label>
-                                    Joining Date
-                                </label>
-
-                                <div className="hr-info-value">
-                                    <CalendarDays size={15} />
-                                    {profile.joiningDate}
-                                </div>
-
-                            </div>
-
-
-                            {/* Location */}
-
-                            <div className="hr-form-group hr-form-full">
-
-                                <label>
-                                    Work Location
-                                </label>
-
-                                {isEditing ? (
                                     <input
                                         type="text"
                                         name="location"
                                         value={profile.location}
                                         onChange={handleChange}
                                     />
-                                ) : (
-                                    <div className="hr-info-value">
-                                        <MapPin size={15} />
-                                        {profile.location}
-                                    </div>
-                                )}
+
+                                </div>
 
                             </div>
 
                         </div>
 
-                    </div>
+
+                        {/* MODAL FOOTER */}
+                        <div className="hr-modal-footer">
+
+                            <button
+                                className="hr-profile-cancel-btn"
+                                type="button"
+                                onClick={handleCancel}
+                            >
+                                Cancel
+                            </button>
 
 
-                    {/* ===============================================
-              HR ACCESS CARD
-          =============================================== */}
-
-                    <div className="hr-profile-access-card">
-
-                        <div className="hr-access-icon">
-                            <ShieldCheck size={24} />
-                        </div>
-
-                        <div className="hr-access-content">
-
-                            <h3>
-                                HR Access
-                            </h3>
-
-                            <p>
-                                You have HR-level access to manage employees,
-                                projects, departments and assigned tasks.
-                            </p>
+                            <button
+                                className="hr-profile-save-btn"
+                                type="button"
+                                onClick={handleSave}
+                            >
+                                <CheckCircle2 size={16} />
+                                Save Changes
+                            </button>
 
                         </div>
-
-                        <span className="hr-access-badge">
-                            HR
-                        </span>
 
                     </div>
 
                 </div>
 
-            </section>
+            )}
 
-        </div>
         </AdminLayout>
     );
 };
