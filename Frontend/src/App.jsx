@@ -14,6 +14,7 @@ import ResetPassword from "./admin/ResetPassword";
 import AdminLogin from "./admin/AdminLogin";
 
 import Department from "./admin/Department";
+import Calendar from "./admin/Calendar";
 
 
 
@@ -31,6 +32,8 @@ function App() {
       <Route path="/adminLogin" element={<AdminLogin />} />
 
       <Route path="/departments" element={<Department />} />
+      <Route path="/calendar" element={<Calendar />} />
+   
 
     </Routes>
   );
