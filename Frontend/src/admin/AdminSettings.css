@@ -884,3 +884,33 @@
     width: 100%;
   }
 }
+/* =========================================================
+   PASSWORD SHOW / HIDE
+   ========================================================= */
+
+.hr-settings-input input[name$="Password"] {
+  padding-right: 46px;
+}
+
+.hr-settings-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #9aa3b2;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.hr-settings-password-toggle:hover {
+  color: #1557f5;
+  background: #eef3ff;
+}

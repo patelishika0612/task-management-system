@@ -114,6 +114,9 @@
 
 /* Mobile */
 @media (max-width: 480px) {
+  .admin-field-row {
+    grid-template-columns: 1fr;
+  }
   .admin-page {
     padding: 14px 10px;
   }

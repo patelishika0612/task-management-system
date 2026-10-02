@@ -60,12 +60,12 @@ const Sidebar = () => {
     },
     {
       title: "Employee",
-      path: "/#",
+      path: "/employees",
       icon: <Users size={19} strokeWidth={2} />,
     },
     {
       title: "Projects",
-      path: "/#",
+      path: "/projects",
       icon: <FolderKanban size={19} strokeWidth={2} />,
     },
     {

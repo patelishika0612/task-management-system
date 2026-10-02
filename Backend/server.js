@@ -27,7 +27,12 @@ const __dirname = path.dirname(__filename);
 // SECURITY & MIDDLEWARE
 // =====================================================
 
-app.use(helmet());
+app.use(
+    helmet({
+        // allow the frontend (different port) to load images from /uploads
+        crossOriginResourcePolicy: { policy: "cross-origin" }
+    })
+);
 
 app.use(
     cors({
@@ -37,8 +42,8 @@ app.use(
     })
 );
 
-app.use(express.json({ limit: "10kb" }));
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+app.use(express.json({ limit: "5mb" }));
+app.use(express.urlencoded({ extended: true, limit: "5mb" }));
 
 // =====================================================
 // STATIC UPLOADS

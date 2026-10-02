@@ -1,5 +1,8 @@
 import bcrypt from "bcrypt";
-import db from "../db.js";
+import connection from "../db.js";
+import { getFileUrl } from "../middleware/upload.js";
+
+const db = connection.promise();
 
 // =====================================================
 // GET ALL EMPLOYEES
@@ -108,7 +111,6 @@ const createEmployee = async (req, res) => {
             department_id,
             password,
             Date_of_join,
-            image,
             status,
             employee_code
         } = req.body;
@@ -118,7 +120,6 @@ const createEmployee = async (req, res) => {
             !email ||
             !phone ||
             !department_id ||
-            !password ||
             !Date_of_join ||
             !employee_code
         ) {
@@ -128,7 +129,8 @@ const createEmployee = async (req, res) => {
             });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
+        const imageFile = req.file ? getFileUrl(req, req.file.filename) : null;
 
         const [result] = await db.query(`
     INSERT INTO employe 
@@ -151,7 +153,7 @@ const createEmployee = async (req, res) => {
             department_id,
             hashedPassword,
             Date_of_join,
-            image || null,
+            imageFile,
             status || "active",
             employee_code
         ]);
@@ -186,10 +188,12 @@ const updateEmployee = async (req, res) => {
             phone,
             department_id,
             Date_of_join,
-            image,
             status,
-            employee_code
+            employee_code,
+            existing_image
         } = req.body;
+
+        const imageFile = req.file ? getFileUrl(req, req.file.filename) : (existing_image || null);
 
         const [result] = await db.query(`
             UPDATE employe
@@ -209,7 +213,7 @@ const updateEmployee = async (req, res) => {
             phone,
             department_id,
             Date_of_join,
-            image || null,
+            imageFile,
             status,
             employee_code,
             id

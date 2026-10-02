@@ -14,6 +14,8 @@ import {
   LogOut,
   ChevronRight,
   CheckCircle2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import "./AdminSettings.css";
@@ -28,6 +30,16 @@ const Settings = () => {
     email: localStorage.getItem("adminEmail") || "admin@gmail.com",
     phone: "",
   });
+
+  const [showPasswords, setShowPasswords] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -476,12 +488,21 @@ const Settings = () => {
                     <Lock size={18} />
 
                     <input
-                      type="password"
+                      type={showPasswords.currentPassword ? "text" : "password"}
                       name="currentPassword"
                       value={passwordData.currentPassword}
                       onChange={handlePasswordChange}
                       placeholder="Enter current password"
                     />
+
+                    <button
+                      type="button"
+                      className="hr-settings-password-toggle"
+                      onClick={() => togglePasswordVisibility("currentPassword")}
+                      aria-label={showPasswords.currentPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPasswords.currentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </div>
                 </div>
 
@@ -492,12 +513,21 @@ const Settings = () => {
                     <Lock size={18} />
 
                     <input
-                      type="password"
+                      type={showPasswords.newPassword ? "text" : "password"}
                       name="newPassword"
                       value={passwordData.newPassword}
                       onChange={handlePasswordChange}
                       placeholder="Enter new password"
                     />
+
+                    <button
+                      type="button"
+                      className="hr-settings-password-toggle"
+                      onClick={() => togglePasswordVisibility("newPassword")}
+                      aria-label={showPasswords.newPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPasswords.newPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </div>
                 </div>
 
@@ -508,12 +538,21 @@ const Settings = () => {
                     <Lock size={18} />
 
                     <input
-                      type="password"
+                      type={showPasswords.confirmPassword ? "text" : "password"}
                       name="confirmPassword"
                       value={passwordData.confirmPassword}
                       onChange={handlePasswordChange}
                       placeholder="Confirm new password"
                     />
+
+                    <button
+                      type="button"
+                      className="hr-settings-password-toggle"
+                      onClick={() => togglePasswordVisibility("confirmPassword")}
+                      aria-label={showPasswords.confirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPasswords.confirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </div>
                 </div>
 
