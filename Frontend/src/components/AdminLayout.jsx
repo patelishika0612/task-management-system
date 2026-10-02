@@ -1,20 +1,15 @@
 import React from "react";
 import Sidebar from "../admin/AdminSidebar";
 import Header from "../admin/AdminHeader";
+import "./AdminLayout.css";
 
 const AdminLayout = ({ children }) => {
   return (
-    <div className="admin-layout">
-      {/* Sidebar */}
+    <div style={{ display: "flex", minHeight: "100vh", background: "#f6f8fc" }}>
       <Sidebar />
-
-      {/* Main content */}
-      <div className="main-area">
-        {/* Header */}
+      <div className="admin-main-area">
         <Header />
-
-        {/* Page Content */}
-        <main className="content">
+        <main style={{ flex: 1 }}>
           {children}
         </main>
       </div>

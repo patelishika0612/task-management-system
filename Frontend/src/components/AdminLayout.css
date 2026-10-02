@@ -1,0 +1,13 @@
+.admin-main-area {
+  flex: 1;
+  margin-left: 250px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .admin-main-area {
+    margin-left: 0;
+  }
+}
