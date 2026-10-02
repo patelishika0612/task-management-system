@@ -11,6 +11,8 @@ import "./db.js";
 import departmentRoutes from "./routes/departmentRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
+import projectMemberRoutes from "./routes/projectMemberRoutes.js";
+import clientRoutes from "./routes/clientRoutes.js";
 
 dotenv.config();
 
@@ -61,8 +63,8 @@ app.use(
 app.use("/api/departments", departmentRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/projects", projectRoutes);
-
-
+app.use("/api/project-members", projectMemberRoutes);
+app.use("/api/clients", clientRoutes);
 // =====================================================
 // TEST API
 // =====================================================

@@ -14,8 +14,12 @@ import ResetPassword from "./admin/ResetPassword";
 import AdminLogin from "./admin/AdminLogin";
 
 import Department from "./admin/Department";
+
 import Employee from "./admin/Employee";
 import Project from "./admin/Project";
+
+import Calendar from "./admin/Calendar";
+
 
 
 
@@ -33,8 +37,13 @@ function App() {
       <Route path="/adminLogin" element={<AdminLogin />} />
 
       <Route path="/departments" element={<Department />} />
+
       <Route path="/employees" element={<Employee />} />
       <Route path="/projects" element={<Project />} />
+
+      <Route path="/calendar" element={<Calendar />} />
+   
+
 
     </Routes>
   );
