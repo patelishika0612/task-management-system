@@ -80,6 +80,9 @@ const Calendar = () => {
       startDate: "2026-10-04",
       endDate: "2026-10-07",
       status: "Pending",
+
+
+
       priority: "Medium",
       employee: "Gopika",
       department: "Software Development",
@@ -464,750 +467,748 @@ const Calendar = () => {
 
   return (
     <>
-    <AdminLayout>
-    <div className="admin-calendar-page">
+      <AdminLayout>
+        <div className="admin-calendar-page">
 
-      {/* =====================================================
+          {/* =====================================================
           PAGE HEADER
       ===================================================== */}
 
-      <div className="admin-calendar-header">
+          <div className="admin-calendar-header">
 
-        <div className="admin-calendar-header-left">
+            <div className="admin-calendar-header-left">
 
-          <div className="admin-calendar-title-icon">
-            <CalendarDays size={24} />
+              <div className="admin-calendar-title-icon">
+                <CalendarDays size={24} />
+              </div>
+
+              <div>
+                <h1>Calendar</h1>
+
+                <p>
+                  Track tasks, deadlines and project activities
+                </p>
+              </div>
+
+            </div>
+
+            <button
+              className="admin-calendar-today-btn"
+              onClick={goToToday}
+            >
+              <CalendarDays size={17} />
+              Today
+            </button>
+
           </div>
 
-          <div>
-            <h1>Calendar</h1>
-
-            <p>
-              Track tasks, deadlines and project activities
-            </p>
-          </div>
-
-        </div>
-
-        <button
-          className="admin-calendar-today-btn"
-          onClick={goToToday}
-        >
-          <CalendarDays size={17} />
-          Today
-        </button>
-
-      </div>
-
-      {/* =====================================================
+          {/* =====================================================
           FILTERS
       ===================================================== */}
 
-      <div className="admin-calendar-filter-card">
+          <div className="admin-calendar-filter-card">
 
-        <div className="admin-calendar-filter-header">
+            <div className="admin-calendar-filter-header">
 
-          <div className="admin-calendar-filter-title">
-            <ListFilter size={19} />
-            <span>Filter Calendar</span>
+              <div className="admin-calendar-filter-title">
+                <ListFilter size={19} />
+                <span>Filter Calendar</span>
+              </div>
+
+              <button
+                type="button"
+                className="admin-calendar-clear-btn"
+                onClick={clearFilters}
+              >
+                Clear Filters
+              </button>
+
+            </div>
+
+            <div className="admin-calendar-filters">
+
+              {/* Employee */}
+
+              <div className="admin-calendar-filter-group">
+
+                <label>Employee</label>
+
+                <select
+                  value={filters.employee}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "employee",
+                      e.target.value
+                    )
+                  }
+                >
+                  <option>All Employees</option>
+                  <option>Foram Patel</option>
+                  <option>Ishika Patel</option>
+                  <option>Nandini</option>
+                  <option>Dhruvi</option>
+                  <option>Gopika</option>
+                </select>
+
+              </div>
+
+              {/* Department */}
+
+              <div className="admin-calendar-filter-group">
+
+                <label>Department</label>
+
+                <select
+                  value={filters.department}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "department",
+                      e.target.value
+                    )
+                  }
+                >
+                  <option>All Departments</option>
+                  <option>Web Development</option>
+                  <option>Software Development</option>
+                  <option>Graphics Design</option>
+                </select>
+
+              </div>
+
+              {/* Project */}
+
+              <div className="admin-calendar-filter-group">
+
+                <label>Project</label>
+
+                <select
+                  value={filters.project}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "project",
+                      e.target.value
+                    )
+                  }
+                >
+                  <option>All Projects</option>
+                  <option>ABC Website</option>
+                  <option>Mobile Application</option>
+                  <option>Company Redesign</option>
+                </select>
+
+              </div>
+
+              {/* Event Type */}
+
+              <div className="admin-calendar-filter-group">
+
+                <label>Event Type</label>
+
+                <select
+                  value={filters.eventType}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "eventType",
+                      e.target.value
+                    )
+                  }
+                >
+                  <option>All Events</option>
+                  <option>Task</option>
+                  <option>Project Deadline</option>
+                  <option>Meeting</option>
+                </select>
+
+              </div>
+
+              {/* Status */}
+
+              <div className="admin-calendar-filter-group">
+
+                <label>Status</label>
+
+                <select
+                  value={filters.status}
+                  onChange={(e) =>
+                    handleFilterChange(
+                      "status",
+                      e.target.value
+                    )
+                  }
+                >
+                  <option value="all">All Status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">
+                    In Progress
+                  </option>
+                  <option value="Completed">
+                    Completed
+                  </option>
+                </select>
+
+              </div>
+
+            </div>
+
           </div>
 
-          <button
-            type="button"
-            className="admin-calendar-clear-btn"
-            onClick={clearFilters}
-          >
-            Clear Filters
-          </button>
-
-        </div>
-
-        <div className="admin-calendar-filters">
-
-          {/* Employee */}
-
-          <div className="admin-calendar-filter-group">
-
-            <label>Employee</label>
-
-            <select
-              value={filters.employee}
-              onChange={(e) =>
-                handleFilterChange(
-                  "employee",
-                  e.target.value
-                )
-              }
-            >
-              <option>All Employees</option>
-              <option>Foram Patel</option>
-              <option>Ishika Patel</option>
-              <option>Nandini</option>
-              <option>Dhruvi</option>
-              <option>Gopika</option>
-            </select>
-
-          </div>
-
-          {/* Department */}
-
-          <div className="admin-calendar-filter-group">
-
-            <label>Department</label>
-
-            <select
-              value={filters.department}
-              onChange={(e) =>
-                handleFilterChange(
-                  "department",
-                  e.target.value
-                )
-              }
-            >
-              <option>All Departments</option>
-              <option>Web Development</option>
-              <option>Software Development</option>
-              <option>Graphics Design</option>
-            </select>
-
-          </div>
-
-          {/* Project */}
-
-          <div className="admin-calendar-filter-group">
-
-            <label>Project</label>
-
-            <select
-              value={filters.project}
-              onChange={(e) =>
-                handleFilterChange(
-                  "project",
-                  e.target.value
-                )
-              }
-            >
-              <option>All Projects</option>
-              <option>ABC Website</option>
-              <option>Mobile Application</option>
-              <option>Company Redesign</option>
-            </select>
-
-          </div>
-
-          {/* Event Type */}
-
-          <div className="admin-calendar-filter-group">
-
-            <label>Event Type</label>
-
-            <select
-              value={filters.eventType}
-              onChange={(e) =>
-                handleFilterChange(
-                  "eventType",
-                  e.target.value
-                )
-              }
-            >
-              <option>All Events</option>
-              <option>Task</option>
-              <option>Project Deadline</option>
-              <option>Meeting</option>
-            </select>
-
-          </div>
-
-          {/* Status */}
-
-          <div className="admin-calendar-filter-group">
-
-            <label>Status</label>
-
-            <select
-              value={filters.status}
-              onChange={(e) =>
-                handleFilterChange(
-                  "status",
-                  e.target.value
-                )
-              }
-            >
-              <option value="all">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="In Progress">
-                In Progress
-              </option>
-              <option value="Completed">
-                Completed
-              </option>
-            </select>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* =====================================================
+          {/* =====================================================
           STAT CARDS
       ===================================================== */}
 
-      <div className="admin-calendar-stats">
+          <div className="admin-calendar-stats">
 
-        <div className="admin-calendar-stat-card">
+            <div className="admin-calendar-stat-card">
 
-          <div className="calendar-stat-icon blue">
-            <ClipboardList size={21} />
+              <div className="calendar-stat-icon blue">
+                <ClipboardList size={21} />
+              </div>
+
+              <div>
+                <span>Total Tasks</span>
+                <strong>{filteredTasks.length}</strong>
+              </div>
+
+            </div>
+
+            <div className="admin-calendar-stat-card">
+
+              <div className="calendar-stat-icon orange">
+                <Clock3 size={21} />
+              </div>
+
+              <div>
+                <span>Upcoming</span>
+                <strong>{upcomingTasks.length}</strong>
+              </div>
+
+            </div>
+
+            <div className="admin-calendar-stat-card">
+
+              <div className="calendar-stat-icon red">
+                <AlertCircle size={21} />
+              </div>
+
+              <div>
+                <span>Overdue</span>
+                <strong>{overdueTasks.length}</strong>
+              </div>
+
+            </div>
+
+            <div className="admin-calendar-stat-card">
+
+              <div className="calendar-stat-icon green">
+                <CheckCircle2 size={21} />
+              </div>
+
+              <div>
+                <span>Completed</span>
+                <strong>{completedTasks.length}</strong>
+              </div>
+
+            </div>
+
           </div>
 
-          <div>
-            <span>Total Tasks</span>
-            <strong>{filteredTasks.length}</strong>
-          </div>
-
-        </div>
-
-        <div className="admin-calendar-stat-card">
-
-          <div className="calendar-stat-icon orange">
-            <Clock3 size={21} />
-          </div>
-
-          <div>
-            <span>Upcoming</span>
-            <strong>{upcomingTasks.length}</strong>
-          </div>
-
-        </div>
-
-        <div className="admin-calendar-stat-card">
-
-          <div className="calendar-stat-icon red">
-            <AlertCircle size={21} />
-          </div>
-
-          <div>
-            <span>Overdue</span>
-            <strong>{overdueTasks.length}</strong>
-          </div>
-
-        </div>
-
-        <div className="admin-calendar-stat-card">
-
-          <div className="calendar-stat-icon green">
-            <CheckCircle2 size={21} />
-          </div>
-
-          <div>
-            <span>Completed</span>
-            <strong>{completedTasks.length}</strong>
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* =====================================================
+          {/* =====================================================
           MAIN CONTENT
       ===================================================== */}
 
-      <div className="admin-calendar-layout">
+          <div className="admin-calendar-layout">
 
-        {/* ===================================================
+            {/* ===================================================
             CALENDAR
         =================================================== */}
 
-        <div className="admin-calendar-main">
+            <div className="admin-calendar-main">
 
-          {/* CALENDAR TOP */}
+              {/* CALENDAR TOP */}
 
-          <div className="admin-calendar-toolbar">
+              <div className="admin-calendar-toolbar">
 
-            <div className="admin-calendar-month">
+                <div className="admin-calendar-month">
 
-              <button
-                onClick={goToPreviousMonth}
-                className="calendar-navigation-btn"
-              >
-                <ChevronLeft size={20} />
-              </button>
-
-              <h2>
-                {monthNames[currentDate.getMonth()]}{" "}
-                {currentDate.getFullYear()}
-              </h2>
-
-              <button
-                onClick={goToNextMonth}
-                className="calendar-navigation-btn"
-              >
-                <ChevronRight size={20} />
-              </button>
-
-            </div>
-
-            <div className="calendar-legend">
-
-              <span>
-                <i className="legend-dot blue-dot"></i>
-                In Progress
-              </span>
-
-              <span>
-                <i className="legend-dot orange-dot"></i>
-                Pending
-              </span>
-
-              <span>
-                <i className="legend-dot green-dot"></i>
-                Completed
-              </span>
-
-            </div>
-
-          </div>
-
-          {/* WEEK DAYS */}
-
-          <div className="calendar-weekdays">
-
-            {dayNames.map((day) => (
-              <div key={day}>
-                {day}
-              </div>
-            ))}
-
-          </div>
-
-          {/* CALENDAR GRID */}
-
-          <div className="calendar-grid">
-
-            {calendarDays.map(
-              ({ date, currentMonth }, index) => {
-
-                const dayTasks =
-                  getTasksForDate(date);
-
-                return (
-                  <div
-                    key={index}
-                    className={`calendar-day ${
-                      !currentMonth
-                        ? "calendar-day-other-month"
-                        : ""
-                    } ${
-                      isToday(date)
-                        ? "calendar-day-today"
-                        : ""
-                    }`}
-                  >
-
-                    <div className="calendar-day-number">
-                      {date.getDate()}
-                    </div>
-
-                    <div className="calendar-day-tasks">
-
-                      {dayTasks
-                        .slice(0, 3)
-                        .map((task) => (
-                          <button
-                            key={task.id}
-                            className={`calendar-task ${getStatusClass(
-                              task.status
-                            )}`}
-                            onClick={() =>
-                              setSelectedTask(task)
-                            }
-                            title={task.title}
-                          >
-                            <span></span>
-                            {task.title}
-                          </button>
-                        ))}
-
-                      {dayTasks.length > 3 && (
-                        <div className="calendar-more-tasks">
-                          +{dayTasks.length - 3} more
-                        </div>
-                      )}
-
-                    </div>
-
-                  </div>
-                );
-              }
-            )}
-
-          </div>
-
-        </div>
-
-        {/* ===================================================
-            RIGHT SIDEBAR
-        =================================================== */}
-
-        <div className="admin-calendar-sidebar">
-
-          {/* UPCOMING */}
-
-          <div className="calendar-side-card">
-
-            <div className="calendar-side-header">
-
-              <div>
-                <h3>Upcoming Deadlines</h3>
-                <p>Tasks that need attention</p>
-              </div>
-
-              <Clock3 size={20} />
-
-            </div>
-
-            <div className="upcoming-task-list">
-
-              {upcomingTasks.length > 0 ? (
-                upcomingTasks.map((task) => (
                   <button
-                    key={task.id}
-                    className="upcoming-task-item"
-                    onClick={() =>
-                      setSelectedTask(task)
-                    }
+                    onClick={goToPreviousMonth}
+                    className="calendar-navigation-btn"
                   >
-
-                    <div
-                      className={`upcoming-task-date ${getPriorityClass(
-                        task.priority
-                      )}`}
-                    >
-                      <span>
-                        {new Date(
-                          task.endDate
-                        ).getDate()}
-                      </span>
-
-                      <small>
-                        {monthNames[
-                          new Date(
-                            task.endDate
-                          ).getMonth()
-                        ].substring(0, 3)}
-                      </small>
-                    </div>
-
-                    <div className="upcoming-task-info">
-
-                      <strong>{task.title}</strong>
-
-                      <span>
-                        <CalendarDays size={13} />
-                        Due:{" "}
-                        {new Date(
-                          task.endDate
-                        ).toLocaleDateString(
-                          "en-IN",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}
-                      </span>
-
-                      <span>
-                        <User size={13} />
-                        {task.employee}
-                      </span>
-
-                    </div>
-
-                    <ChevronRight size={17} />
-
+                    <ChevronLeft size={20} />
                   </button>
-                ))
-              ) : (
-                <div className="calendar-empty-state">
-                  No upcoming deadlines
+
+                  <h2>
+                    {monthNames[currentDate.getMonth()]}{" "}
+                    {currentDate.getFullYear()}
+                  </h2>
+
+                  <button
+                    onClick={goToNextMonth}
+                    className="calendar-navigation-btn"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+
                 </div>
-              )}
 
-            </div>
+                <div className="calendar-legend">
 
-          </div>
+                  <span>
+                    <i className="legend-dot blue-dot"></i>
+                    In Progress
+                  </span>
 
-          {/* OVERDUE */}
+                  <span>
+                    <i className="legend-dot orange-dot"></i>
+                    Pending
+                  </span>
 
-          <div className="calendar-side-card overdue-card">
+                  <span>
+                    <i className="legend-dot green-dot"></i>
+                    Completed
+                  </span>
 
-            <div className="calendar-side-header">
+                </div>
 
-              <div>
-                <h3>Overdue Tasks</h3>
-                <p>Tasks past their deadline</p>
               </div>
 
-              <AlertCircle size={20} />
+              {/* WEEK DAYS */}
 
-            </div>
+              <div className="calendar-weekdays">
 
-            {overdueTasks.length > 0 ? (
-              <div className="overdue-list">
-
-                {overdueTasks.map((task) => (
-                  <button
-                    key={task.id}
-                    className="overdue-item"
-                    onClick={() =>
-                      setSelectedTask(task)
-                    }
-                  >
-
-                    <div className="overdue-icon">
-                      <AlertCircle size={17} />
-                    </div>
-
-                    <div>
-
-                      <strong>{task.title}</strong>
-
-                      <span>
-                        Due:{" "}
-                        {new Date(
-                          task.endDate
-                        ).toLocaleDateString(
-                          "en-IN",
-                          {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          }
-                        )}
-                      </span>
-
-                    </div>
-
-                  </button>
+                {dayNames.map((day) => (
+                  <div key={day}>
+                    {day}
+                  </div>
                 ))}
 
               </div>
-            ) : (
-              <div className="no-overdue">
-                <CheckCircle2 size={28} />
-                <span>No overdue tasks</span>
+
+              {/* CALENDAR GRID */}
+
+              <div className="calendar-grid">
+
+                {calendarDays.map(
+                  ({ date, currentMonth }, index) => {
+
+                    const dayTasks =
+                      getTasksForDate(date);
+
+                    return (
+                      <div
+                        key={index}
+                        className={`calendar-day ${!currentMonth
+                            ? "calendar-day-other-month"
+                            : ""
+                          } ${isToday(date)
+                            ? "calendar-day-today"
+                            : ""
+                          }`}
+                      >
+
+                        <div className="calendar-day-number">
+                          {date.getDate()}
+                        </div>
+
+                        <div className="calendar-day-tasks">
+
+                          {dayTasks
+                            .slice(0, 3)
+                            .map((task) => (
+                              <button
+                                key={task.id}
+                                className={`calendar-task ${getStatusClass(
+                                  task.status
+                                )}`}
+                                onClick={() =>
+                                  setSelectedTask(task)
+                                }
+                                title={task.title}
+                              >
+                                <span></span>
+                                {task.title}
+                              </button>
+                            ))}
+
+                          {dayTasks.length > 3 && (
+                            <div className="calendar-more-tasks">
+                              +{dayTasks.length - 3} more
+                            </div>
+                          )}
+
+                        </div>
+
+                      </div>
+                    );
+                  }
+                )}
+
               </div>
-            )}
+
+            </div>
+
+            {/* ===================================================
+            RIGHT SIDEBAR
+        =================================================== */}
+
+            <div className="admin-calendar-sidebar">
+
+              {/* UPCOMING */}
+
+              <div className="calendar-side-card">
+
+                <div className="calendar-side-header">
+
+                  <div>
+                    <h3>Upcoming Deadlines</h3>
+                    <p>Tasks that need attention</p>
+                  </div>
+
+                  <Clock3 size={20} />
+
+                </div>
+
+                <div className="upcoming-task-list">
+
+                  {upcomingTasks.length > 0 ? (
+                    upcomingTasks.map((task) => (
+                      <button
+                        key={task.id}
+                        className="upcoming-task-item"
+                        onClick={() =>
+                          setSelectedTask(task)
+                        }
+                      >
+
+                        <div
+                          className={`upcoming-task-date ${getPriorityClass(
+                            task.priority
+                          )}`}
+                        >
+                          <span>
+                            {new Date(
+                              task.endDate
+                            ).getDate()}
+                          </span>
+
+                          <small>
+                            {monthNames[
+                              new Date(
+                                task.endDate
+                              ).getMonth()
+                            ].substring(0, 3)}
+                          </small>
+                        </div>
+
+                        <div className="upcoming-task-info">
+
+                          <strong>{task.title}</strong>
+
+                          <span>
+                            <CalendarDays size={13} />
+                            Due:{" "}
+                            {new Date(
+                              task.endDate
+                            ).toLocaleDateString(
+                              "en-IN",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              }
+                            )}
+                          </span>
+
+                          <span>
+                            <User size={13} />
+                            {task.employee}
+                          </span>
+
+                        </div>
+
+                        <ChevronRight size={17} />
+
+                      </button>
+                    ))
+                  ) : (
+                    <div className="calendar-empty-state">
+                      No upcoming deadlines
+                    </div>
+                  )}
+
+                </div>
+
+              </div>
+
+              {/* OVERDUE */}
+
+              <div className="calendar-side-card overdue-card">
+
+                <div className="calendar-side-header">
+
+                  <div>
+                    <h3>Overdue Tasks</h3>
+                    <p>Tasks past their deadline</p>
+                  </div>
+
+                  <AlertCircle size={20} />
+
+                </div>
+
+                {overdueTasks.length > 0 ? (
+                  <div className="overdue-list">
+
+                    {overdueTasks.map((task) => (
+                      <button
+                        key={task.id}
+                        className="overdue-item"
+                        onClick={() =>
+                          setSelectedTask(task)
+                        }
+                      >
+
+                        <div className="overdue-icon">
+                          <AlertCircle size={17} />
+                        </div>
+
+                        <div>
+
+                          <strong>{task.title}</strong>
+
+                          <span>
+                            Due:{" "}
+                            {new Date(
+                              task.endDate
+                            ).toLocaleDateString(
+                              "en-IN",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              }
+                            )}
+                          </span>
+
+                        </div>
+
+                      </button>
+                    ))}
+
+                  </div>
+                ) : (
+                  <div className="no-overdue">
+                    <CheckCircle2 size={28} />
+                    <span>No overdue tasks</span>
+                  </div>
+                )}
+
+              </div>
+
+            </div>
 
           </div>
 
-        </div>
-
-      </div>
-
-      {/* =====================================================
+          {/* =====================================================
           TASK MODAL
       ===================================================== */}
 
-      {selectedTask && (
-        <div
-          className="calendar-modal-overlay"
-          onClick={() => setSelectedTask(null)}
-        >
-
-          <div
-            className="calendar-task-modal"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
-          >
-
-            <button
-              className="calendar-modal-close"
-              onClick={() =>
-                setSelectedTask(null)
-              }
+          {selectedTask && (
+            <div
+              className="calendar-modal-overlay"
+              onClick={() => setSelectedTask(null)}
             >
-              <X size={20} />
-            </button>
 
-            <div className="calendar-modal-icon">
-              <ClipboardList size={24} />
-            </div>
-
-            <div className="calendar-modal-heading">
-
-              <span>Task Details</span>
-
-              <h2>
-                {selectedTask.title}
-              </h2>
-
-            </div>
-
-            <div className="calendar-modal-status-row">
-
-              <span
-                className={`task-detail-status ${getStatusClass(
-                  selectedTask.status
-                )}`}
+              <div
+                className="calendar-task-modal"
+                onClick={(e) =>
+                  e.stopPropagation()
+                }
               >
-                <CircleDot size={14} />
-                {selectedTask.status}
-              </span>
 
-              <span
-                className={`task-detail-priority ${getPriorityClass(
-                  selectedTask.priority
-                )}`}
-              >
-                <Flag size={14} />
-                {selectedTask.priority} Priority
-              </span>
+                <button
+                  className="calendar-modal-close"
+                  onClick={() =>
+                    setSelectedTask(null)
+                  }
+                >
+                  <X size={20} />
+                </button>
+
+                <div className="calendar-modal-icon">
+                  <ClipboardList size={24} />
+                </div>
+
+                <div className="calendar-modal-heading">
+
+                  <span>Task Details</span>
+
+                  <h2>
+                    {selectedTask.title}
+                  </h2>
+
+                </div>
+
+                <div className="calendar-modal-status-row">
+
+                  <span
+                    className={`task-detail-status ${getStatusClass(
+                      selectedTask.status
+                    )}`}
+                  >
+                    <CircleDot size={14} />
+                    {selectedTask.status}
+                  </span>
+
+                  <span
+                    className={`task-detail-priority ${getPriorityClass(
+                      selectedTask.priority
+                    )}`}
+                  >
+                    <Flag size={14} />
+                    {selectedTask.priority} Priority
+                  </span>
+
+                </div>
+
+                <div className="calendar-modal-description">
+
+                  <label>Description</label>
+
+                  <p>
+                    {selectedTask.description}
+                  </p>
+
+                </div>
+
+                <div className="calendar-task-details-grid">
+
+                  <div className="calendar-detail-box">
+
+                    <span>
+                      <CalendarDays size={16} />
+                      Start Date
+                    </span>
+
+                    <strong>
+                      {new Date(
+                        selectedTask.startDate
+                      ).toLocaleDateString(
+                        "en-IN",
+                        {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        }
+                      )}
+                    </strong>
+
+                  </div>
+
+                  <div className="calendar-detail-box">
+
+                    <span>
+                      <CalendarDays size={16} />
+                      End Date
+                    </span>
+
+                    <strong>
+                      {new Date(
+                        selectedTask.endDate
+                      ).toLocaleDateString(
+                        "en-IN",
+                        {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        }
+                      )}
+                    </strong>
+
+                  </div>
+
+                  <div className="calendar-detail-box">
+
+                    <span>
+                      <User size={16} />
+                      Assigned To
+                    </span>
+
+                    <strong>
+                      {selectedTask.employee}
+                    </strong>
+
+                  </div>
+
+                  <div className="calendar-detail-box">
+
+                    <span>
+                      <Flag size={16} />
+                      Priority
+                    </span>
+
+                    <strong>
+                      {selectedTask.priority}
+                    </strong>
+
+                  </div>
+
+                  <div className="calendar-detail-box">
+
+                    <span>
+                      <ClipboardList size={16} />
+                      Department
+                    </span>
+
+                    <strong>
+                      {selectedTask.department}
+                    </strong>
+
+                  </div>
+
+                  <div className="calendar-detail-box">
+
+                    <span>
+                      <ClipboardList size={16} />
+                      Project
+                    </span>
+
+                    <strong>
+                      {selectedTask.project}
+                    </strong>
+
+                  </div>
+
+                  <div className="calendar-detail-box">
+
+                    <span>
+                      <CircleDot size={16} />
+                      Event Type
+                    </span>
+
+                    <strong>
+                      {selectedTask.eventType}
+                    </strong>
+
+                  </div>
+
+                </div>
+
+                <button
+                  className="calendar-modal-done-btn"
+                  onClick={() =>
+                    setSelectedTask(null)
+                  }
+                >
+                  Close
+                </button>
+
+              </div>
 
             </div>
-
-            <div className="calendar-modal-description">
-
-              <label>Description</label>
-
-              <p>
-                {selectedTask.description}
-              </p>
-
-            </div>
-
-            <div className="calendar-task-details-grid">
-
-              <div className="calendar-detail-box">
-
-                <span>
-                  <CalendarDays size={16} />
-                  Start Date
-                </span>
-
-                <strong>
-                  {new Date(
-                    selectedTask.startDate
-                  ).toLocaleDateString(
-                    "en-IN",
-                    {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    }
-                  )}
-                </strong>
-
-              </div>
-
-              <div className="calendar-detail-box">
-
-                <span>
-                  <CalendarDays size={16} />
-                  End Date
-                </span>
-
-                <strong>
-                  {new Date(
-                    selectedTask.endDate
-                  ).toLocaleDateString(
-                    "en-IN",
-                    {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    }
-                  )}
-                </strong>
-
-              </div>
-
-              <div className="calendar-detail-box">
-
-                <span>
-                  <User size={16} />
-                  Assigned To
-                </span>
-
-                <strong>
-                  {selectedTask.employee}
-                </strong>
-
-              </div>
-
-              <div className="calendar-detail-box">
-
-                <span>
-                  <Flag size={16} />
-                  Priority
-                </span>
-
-                <strong>
-                  {selectedTask.priority}
-                </strong>
-
-              </div>
-
-              <div className="calendar-detail-box">
-
-                <span>
-                  <ClipboardList size={16} />
-                  Department
-                </span>
-
-                <strong>
-                  {selectedTask.department}
-                </strong>
-
-              </div>
-
-              <div className="calendar-detail-box">
-
-                <span>
-                  <ClipboardList size={16} />
-                  Project
-                </span>
-
-                <strong>
-                  {selectedTask.project}
-                </strong>
-
-              </div>
-
-              <div className="calendar-detail-box">
-
-                <span>
-                  <CircleDot size={16} />
-                  Event Type
-                </span>
-
-                <strong>
-                  {selectedTask.eventType}
-                </strong>
-
-              </div>
-
-            </div>
-
-            <button
-              className="calendar-modal-done-btn"
-              onClick={() =>
-                setSelectedTask(null)
-              }
-            >
-              Close
-            </button>
-
-          </div>
+          )}
 
         </div>
-      )}
-
-    </div>
-    </AdminLayout>
+      </AdminLayout>
 
     </>
   );
