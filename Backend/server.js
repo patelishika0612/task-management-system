@@ -14,6 +14,7 @@ import projectRoutes from "./routes/projectRoutes.js";
 import projectMemberRoutes from "./routes/projectMemberRoutes.js";
 import clientRoutes from "./routes/clientRoutes.js";
 import adminAccessRequestRoutes from "./routes/adminAccessRequestRoutes.js";
+import adminApprovalRequestRoutes from "./routes/adminApprovalRequestRoutes.js";
 
 
 dotenv.config();
@@ -68,6 +69,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/project-members", projectMemberRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api/admin-access-requests", adminAccessRequestRoutes);
+app.use("/api/admin-approval-requests",adminApprovalRequestRoutes);
 
 // =====================================================
 // TEST API
