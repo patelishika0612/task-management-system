@@ -159,21 +159,3 @@
   color: #1557f5;
   background: #eef3ff;
 }
-
-/* Two-column layout for the add/edit employee form */
-.emp-form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 16px;
-}
-
-/* Fields that span the full width of the form grid */
-.emp-form-grid .emp-field-full {
-  grid-column: 1 / -1;
-}
-
-@media (max-width: 600px) {
-  .emp-form-grid {
-    grid-template-columns: 1fr;
-  }
-}

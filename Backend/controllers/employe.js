@@ -1,4 +1,3 @@
-import bcrypt from "bcrypt";
 import connection from "../db.js";
 import { getFileUrl } from "../middleware/upload.js";
 
@@ -109,7 +108,6 @@ const createEmployee = async (req, res) => {
             email,
             phone,
             department_id,
-            password,
             Date_of_join,
             status,
             employee_code
@@ -129,7 +127,7 @@ const createEmployee = async (req, res) => {
             });
         }
 
-        const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
+        const hashedPassword = null;
         const imageFile = req.file ? getFileUrl(req, req.file.filename) : null;
 
         const [result] = await db.query(`
@@ -139,19 +137,17 @@ const createEmployee = async (req, res) => {
         email,
         phone,
         department_id,
-        password,
         Date_of_join,
         image,
         status,
         employee_code
     ) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `, [
             emp_name,
             email,
             phone,
             department_id,
-            hashedPassword,
             Date_of_join,
             imageFile,
             status || "active",

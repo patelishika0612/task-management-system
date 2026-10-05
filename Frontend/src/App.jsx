@@ -19,9 +19,7 @@ import Employee from "./admin/Employee";
 import Project from "./admin/Project";
 
 import Calendar from "./admin/Calendar";
-
-
-
+import Client from "./admin/Client";
 
 function App() {
   return (
@@ -42,6 +40,7 @@ function App() {
       <Route path="/projects" element={<Project />} />
 
       <Route path="/calendar" element={<Calendar />} />
+      <Route path="/clients" element={<Client />} />
    
 
 

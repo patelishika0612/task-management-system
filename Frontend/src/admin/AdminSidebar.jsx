@@ -75,7 +75,7 @@ const Sidebar = () => {
     },
     {
       title: "Clients",
-      path: "/#",
+      path: "/clients",
       icon: <UserRound size={19} strokeWidth={2} />,
     },
     {

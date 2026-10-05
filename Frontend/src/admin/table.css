@@ -458,22 +458,24 @@
   inset: 0;
   z-index: 1000;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 20px;
+  overflow-y: auto;
   background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(3px);
 }
 
 .admin-modal {
   width: 100%;
-  max-width: 510px;
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
+  max-width: 910px;
+  max-height: none;
+  overflow-y: visible;
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
   animation: admin-modal-enter 0.2s ease-out;
+  margin: auto;
 }
 
 @keyframes admin-modal-enter {
@@ -540,7 +542,7 @@
   background: #fef2f2;
 }
 
-.admin-modal-body { padding: 24px; }
+.admin-modal-body { padding: 24px; overflow: visible; }
 
 /* FORM FIELDS */
 .admin-field {
@@ -558,7 +560,7 @@
   font-weight: 600;
 }
 
-.admin-field label span { color: #dc2626; }
+.admin-field label span { color: #1e293b; }
 
 .admin-field input,
 .admin-field select,
@@ -606,11 +608,37 @@
   line-height: 1.5;
 }
 
-/* TWO-COLUMN FIELD ROW */
-.admin-field-row {
+/* COMMON FORM GRID (used by Employee, Client, Project modals)
+   Change --admin-form-columns here to update every form at once. */
+:root {
+  --admin-form-columns: 3;
+}
+
+.admin-form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(var(--admin-form-columns), minmax(0, 1fr));
+  gap: 20px 16px;
+}
+
+.admin-form-grid > .admin-field {
+  margin-bottom: 0;
+}
+
+/* Field that spans the whole row (notes, image upload, IDs) */
+.admin-form-grid > .admin-field-full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --admin-form-columns: 2;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --admin-form-columns: 1;
+  }
 }
 
 /* MODAL FOOTER */

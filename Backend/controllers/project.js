@@ -237,6 +237,12 @@ const deleteProject = async (req, res) => {
     try {
         const { id } = req.params;
 
+        // delete related project members first to avoid FK constraint
+        await db.query(
+            "DELETE FROM project_members WHERE Project_ID = ?",
+            [id]
+        );
+
         const [result] = await db.query(
             "DELETE FROM projects WHERE project_id = ?",
             [id]

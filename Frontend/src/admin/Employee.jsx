@@ -349,7 +349,7 @@ const Employee = () => {
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th>Emp Code</th>
                   <th>Employee</th>
                   <th>Email</th>
                   <th>Phone</th>
@@ -377,7 +377,7 @@ const Employee = () => {
                 ) : (
                   paginated.map((emp) => (
                     <tr key={emp.emp_id}>
-                      <td><span className="admin-table-id">{emp.emp_id}</span></td>
+                      <td><span className="admin-table-id">{emp.employee_code}</span></td>
                       <td>
                         <div className="admin-table-name-cell">
                           {emp.image
@@ -472,7 +472,7 @@ const Employee = () => {
                     </div>
                   )}
 
-                  <div className="emp-form-grid">
+                  <div className="admin-form-grid">
                   <div className="admin-field">
                     <label>Employee Name <span>*</span></label>
                     <input
@@ -497,7 +497,7 @@ const Employee = () => {
                     />
                   </div>
 
-                  <div className="admin-field emp-field-full">
+                  <div className="admin-field">
                     <label>Email <span>*</span></label>
                     <input
                       type="email"
@@ -532,7 +532,7 @@ const Employee = () => {
                     />
                   </div>
 
-                  <div className="admin-field emp-field-full">
+                  <div className="admin-field">
                     <label>Department <span>*</span></label>
                     <select name="department_id" value={form.department_id} onChange={handleChange} required>
                       <option value="">-- Select Department --</option>
@@ -552,9 +552,7 @@ const Employee = () => {
                     </select>
                   </div>
 
-                  </div>
-
-                  <div className="admin-field">
+                  <div className="admin-field admin-field-full">
                     <label>Profile Image</label>
                     <div className="emp-upload-box">
                       {imagePreview
@@ -582,6 +580,7 @@ const Employee = () => {
                         style={{ display: "none" }}
                       />
                     </div>
+                  </div>
                   </div>
 
                 </div>
@@ -622,6 +621,7 @@ const Employee = () => {
                     <img src={getImageUrl(viewEmployee.image)} alt={viewEmployee.emp_name} className="emp-view-avatar" />
                   </div>
                 )}
+                <div className="admin-form-grid">
                 {[
                   { label: "Employee ID",   value: viewEmployee.emp_id },
                   { label: "Employee Code", value: viewEmployee.employee_code },
@@ -639,6 +639,7 @@ const Employee = () => {
                     <input type="text" value={value} readOnly className="admin-readonly" />
                   </div>
                 ))}
+                </div>
               </div>
               <div className="admin-modal-footer">
                 <button type="button" className="admin-cancel-btn" onClick={() => setViewEmployee(null)}>Close</button>
