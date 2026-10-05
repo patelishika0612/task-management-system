@@ -1,582 +1,356 @@
-/* =========================================
-   ADMIN APPROVAL REQUEST PAGE
-========================================= */
-
-.admin-approval-page {
+/* =========================================================
+   APPROVAL REQUEST - STANDALONE SINGLE BOX
+========================================================= */
+ 
+* { box-sizing: border-box; }
+ 
+.apr-page {
+  min-height: 100vh;
+  background: #f0f4ff;
+  display: flex;
+  flex-direction: column;
+  font-family: inherit;
+}
+ 
+/* TOP BAR */
+.apr-topbar {
   width: 100%;
-  min-height: calc(100vh - 70px);
-  padding: 30px;
-  background: #f6f9fc;
-  box-sizing: border-box;
-}
-
-.admin-approval-container {
-  width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
-}
-
-/* =========================================
-   PAGE HEADER
-========================================= */
-
-.admin-approval-header {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 22px;
-}
-
-.admin-approval-header-icon {
-  width: 52px;
-  height: 52px;
-  flex-shrink: 0;
-  border-radius: 12px;
-  background: #e9f5fd;
-  color: #1687d9;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #d5ebfa;
-}
-
-.admin-approval-header h1 {
-  margin: 0 0 5px;
-  color: #1f2937;
-  font-size: 25px;
-  font-weight: 700;
-  line-height: 1.25;
-}
-
-.admin-approval-header p {
-  margin: 0;
-  color: #697586;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-/* =========================================
-   APPROVAL NOTICE
-========================================= */
-
-.admin-approval-notice {
-  display: flex;
-  align-items: flex-start;
-  gap: 13px;
-  padding: 17px 18px;
-  margin-bottom: 20px;
-  border: 1px solid #cfe8f9;
-  border-radius: 10px;
-  background: #eef8fe;
-}
-
-.admin-approval-notice-icon {
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  border-radius: 8px;
+  height: 58px;
   background: #ffffff;
-  color: #1687d9;
+  border-bottom: 1px solid #e8edf4;
   display: flex;
   align-items: center;
-  justify-content: center;
-  border: 1px solid #d6edf9;
+  padding: 0 28px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
-
-.admin-approval-notice-content h3 {
-  margin: 0 0 5px;
-  color: #145f91;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.admin-approval-notice-content p {
-  margin: 0;
-  color: #547085;
-  font-size: 12px;
-  line-height: 1.7;
-}
-
-/* =========================================
-   MAIN FORM CARD
-========================================= */
-
-.admin-approval-form-card {
-  background: #ffffff;
-  border: 1px solid #e2e9f0;
-  border-radius: 12px;
-  box-shadow: 0 3px 15px rgba(25, 75, 120, 0.05);
-  overflow: hidden;
-}
-
-/* =========================================
-   FORM SECTION
-========================================= */
-
-.admin-approval-section {
-  padding: 25px 27px;
-  border-bottom: 1px solid #edf1f5;
-}
-
-.admin-approval-last-section {
-  border-bottom: none;
-}
-
-.admin-approval-section-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 11px;
-  margin-bottom: 21px;
-}
-
-.admin-approval-section-icon {
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  border-radius: 8px;
-  background: #eaf6fd;
-  color: #1687d9;
+ 
+.apr-topbar-brand {
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.admin-approval-section-header h2 {
-  margin: 1px 0 3px;
-  color: #253142;
+  gap: 9px;
+  color: #2f3387;
   font-size: 15px;
   font-weight: 700;
 }
-
-.admin-approval-section-header p {
-  margin: 0;
-  color: #7a8797;
-  font-size: 11px;
-  line-height: 1.5;
+ 
+/* BODY */
+.apr-body {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 36px 20px 50px;
 }
-
-/* =========================================
-   FORM GRID
-========================================= */
-
-.admin-approval-form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 22px;
-  row-gap: 18px;
-}
-
-/* =========================================
-   FORM GROUP
-========================================= */
-
-.admin-approval-form-group {
+ 
+/* SINGLE BOX */
+.apr-box {
   width: 100%;
-  min-width: 0;
+  max-width: 900px;
+  background: #ffffff;
+  border: 1px solid #e8edf4;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
 }
-
-.admin-approval-form-group label {
-  display: block;
-  margin-bottom: 7px;
+ 
+/* BOX HEADER */
+.apr-box-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, #f5f7ff 0%, #ffffff 100%);
+  border-bottom: 1px solid #edf0f8;
+}
+ 
+.apr-box-header-icon {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  border-radius: 14px;
+  background: #eef2ff;
+  color: #2f3387;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(47, 51, 135, 0.15);
+}
+ 
+.apr-box-header h1 {
+  margin: 0 0 5px;
+  color: #1a2436;
+  font-size: 20px;
+  font-weight: 700;
+}
+ 
+.apr-box-header p {
+  margin: 0;
+  color: #7a8497;
+  font-size: 12px;
+  line-height: 1.6;
+}
+ 
+/* NOTICE */
+.apr-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 20px 28px 0;
+  padding: 13px 15px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  color: #1d4ed8;
+}
+ 
+.apr-notice svg { flex-shrink: 0; margin-top: 1px; }
+ 
+.apr-notice p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+ 
+/* SECTION */
+.apr-section {
+  padding: 22px 28px;
+  border-bottom: 1px solid #f0f3f8;
+}
+ 
+.apr-section-last { border-bottom: none; }
+ 
+.apr-section-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #2f3387;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 16px;
+}
+ 
+/* GRID */
+.apr-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+ 
+/* FIELD */
+.apr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+ 
+.apr-field label {
   color: #445164;
   font-size: 12px;
   font-weight: 600;
 }
-
-.admin-approval-form-group label span {
-  color: #e05252;
-  margin-left: 2px;
-}
-
-/* =========================================
-   INPUT
-========================================= */
-
-.admin-approval-input-wrapper {
-  width: 100%;
-  height: 43px;
+ 
+.apr-field label span { color: #dc2626; }
+ 
+/* INPUT */
+.apr-input {
   display: flex;
   align-items: center;
   gap: 9px;
+  height: 42px;
   padding: 0 12px;
-  box-sizing: border-box;
   border: 1px solid #dce5ed;
-  border-radius: 7px;
+  border-radius: 9px;
   background: #ffffff;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-
-.admin-approval-input-wrapper svg {
-  flex-shrink: 0;
-  color: #8795a5;
-  transition: color 0.2s ease;
+ 
+.apr-input svg { flex-shrink: 0; color: #9aa2b0; transition: color 0.2s ease; }
+ 
+.apr-input:focus-within {
+  border-color: #2f3387;
+  box-shadow: 0 0 0 3px rgba(47, 51, 135, 0.08);
 }
-
-.admin-approval-input-wrapper:focus-within {
-  border-color: #1687d9;
-  box-shadow: 0 0 0 3px rgba(22, 135, 217, 0.08);
-}
-
-.admin-approval-input-wrapper:focus-within svg {
-  color: #1687d9;
-}
-
-.admin-approval-input-wrapper.has-error {
-  border-color: #e05252;
-}
-
-.admin-approval-input-wrapper.has-error:focus-within {
-  box-shadow: 0 0 0 3px rgba(224, 82, 82, 0.08);
-}
-
-.admin-approval-input-wrapper input,
-.admin-approval-input-wrapper select {
-  width: 100%;
+ 
+.apr-input:focus-within svg { color: #2f3387; }
+ 
+.apr-input-error { border-color: #f87171 !important; }
+.apr-input-error:focus-within { box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.1) !important; }
+ 
+.apr-input input,
+.apr-input select {
+  flex: 1;
+  min-width: 0;
   height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #293548;
+  font-family: inherit;
+  font-size: 13px;
+}
+ 
+.apr-input input::placeholder { color: #b0bac8; }
+.apr-input select { cursor: pointer; }
+.apr-input select option:first-child { color: #b0bac8; }
+ 
+/* TEXTAREA */
+.apr-textarea {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 11px 12px;
+  border: 1px solid #dce5ed;
+  border-radius: 9px;
+  background: #ffffff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+ 
+.apr-textarea svg { flex-shrink: 0; color: #9aa2b0; margin-top: 2px; }
+ 
+.apr-textarea:focus-within {
+  border-color: #2f3387;
+  box-shadow: 0 0 0 3px rgba(47, 51, 135, 0.08);
+}
+ 
+.apr-textarea textarea {
+  flex: 1;
   min-width: 0;
   border: none;
   outline: none;
   background: transparent;
   color: #293548;
   font-family: inherit;
-  font-size: 12px;
-}
-
-.admin-approval-input-wrapper input::placeholder {
-  color: #a2acb8;
-}
-
-.admin-approval-input-wrapper select {
-  cursor: pointer;
-}
-
-.admin-approval-input-wrapper select:invalid {
-  color: #a2acb8;
-}
-
-.admin-approval-input-wrapper input[type="date"] {
-  cursor: pointer;
-}
-
-/* =========================================
-   TEXTAREA
-========================================= */
-
-.admin-approval-textarea-wrapper {
-  width: 100%;
-  min-height: 125px;
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-  padding: 12px;
-  box-sizing: border-box;
-  border: 1px solid #dce5ed;
-  border-radius: 7px;
-  background: #ffffff;
-  transition: all 0.2s ease;
-}
-
-.admin-approval-textarea-wrapper svg {
-  flex-shrink: 0;
-  margin-top: 2px;
-  color: #8795a5;
-}
-
-.admin-approval-textarea-wrapper:focus-within {
-  border-color: #1687d9;
-  box-shadow: 0 0 0 3px rgba(22, 135, 217, 0.08);
-}
-
-.admin-approval-textarea-wrapper.has-error {
-  border-color: #e05252;
-}
-
-.admin-approval-textarea-wrapper textarea {
-  width: 100%;
-  min-height: 100px;
-  resize: vertical;
-  border: none;
-  outline: none;
-  background: transparent;
-  color: #293548;
-  font-family: inherit;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.6;
+  resize: vertical;
 }
-
-.admin-approval-textarea-wrapper textarea::placeholder {
-  color: #a2acb8;
-}
-
-.admin-approval-textarea-footer {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 15px;
-  margin-top: 6px;
-}
-
-.admin-approval-textarea-footer > small {
-  color: #8a96a5;
+ 
+.apr-textarea textarea::placeholder { color: #b0bac8; }
+ 
+.apr-char-count {
+  text-align: right;
+  color: #b0bac8;
   font-size: 10px;
-  line-height: 1.5;
+  margin-top: 4px;
 }
-
-.admin-approval-textarea-footer > span {
-  flex-shrink: 0;
-  color: #8a96a5;
+ 
+/* ERROR */
+.apr-error {
+  color: #dc2626;
   font-size: 10px;
-}
-
-/* =========================================
-   VALIDATION ERROR
-========================================= */
-
-.admin-approval-error {
-  display: block;
-  margin-top: 5px;
-  color: #dc4c4c !important;
-  font-size: 10px !important;
   line-height: 1.4;
 }
-
-/* =========================================
-   ACTION BUTTONS
-========================================= */
-
-.admin-approval-actions {
+ 
+/* ACTIONS */
+.apr-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
-  padding: 20px 27px;
-  background: #fbfcfe;
-  border-top: 1px solid #edf1f5;
+  padding: 18px 28px;
+  background: #fafbfd;
+  border-top: 1px solid #f0f3f8;
 }
-
-.admin-approval-cancel-btn,
-.admin-approval-submit-btn {
-  min-height: 40px;
+ 
+.apr-cancel-btn,
+.apr-submit-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 0 17px;
-  border-radius: 7px;
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 10px;
   font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: 0.2s ease;
 }
-
-.admin-approval-cancel-btn {
-  border: 1px solid #d9e1e9;
+ 
+.apr-cancel-btn {
+  border: 1px solid #e2e8f0;
   background: #ffffff;
-  color: #596579;
+  color: #536174;
 }
-
-.admin-approval-cancel-btn:hover:not(:disabled) {
-  border-color: #c4ced9;
-  background: #f6f8fa;
-  color: #344054;
+ 
+.apr-cancel-btn:hover {
+  border-color: #c8d0dc;
+  background: #f5f6f8;
 }
-
-.admin-approval-submit-btn {
-  border: 1px solid #1687d9;
-  background: #1687d9;
+ 
+.apr-submit-btn {
+  border: 1px solid #2f3387;
+  background: #2f3387;
   color: #ffffff;
-  box-shadow: 0 3px 8px rgba(22, 135, 217, 0.18);
+  box-shadow: 0 4px 14px rgba(47, 51, 135, 0.25);
 }
-
-.admin-approval-submit-btn:hover:not(:disabled) {
-  background: #1178c2;
-  border-color: #1178c2;
-  box-shadow: 0 4px 11px rgba(22, 135, 217, 0.24);
+ 
+.apr-submit-btn:hover {
+  background: #252a6e;
   transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(47, 51, 135, 0.3);
 }
-
-.admin-approval-cancel-btn:disabled,
-.admin-approval-submit-btn:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
-/* =========================================
-   LOADING SPINNER
-========================================= */
-
-.admin-approval-spinner {
-  width: 15px;
-  height: 15px;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: adminApprovalSpin 0.7s linear infinite;
-}
-
-@keyframes adminApprovalSpin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* =========================================
-   SECURITY NOTE
-========================================= */
-
-.admin-approval-security-note {
+ 
+/* FOOTER NOTE */
+.apr-footer-note {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  margin-top: 14px;
-  color: #8793a2;
-  font-size: 10px;
-  line-height: 1.5;
+  padding: 14px 28px;
+  color: #9aa2b0;
+  font-size: 11px;
+  border-top: 1px solid #f0f3f8;
 }
-
-.admin-approval-security-note svg {
-  color: #1687d9;
-  flex-shrink: 0;
+ 
+.apr-footer-note svg { color: #2f3387; flex-shrink: 0; }
+ 
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .apr-topbar { padding: 0 16px; }
+  .apr-body { padding: 20px 12px 40px; }
+  .apr-box-header { padding: 18px 18px; gap: 12px; }
+  .apr-box-header h1 { font-size: 17px; }
+  .apr-notice { margin: 16px 18px 0; }
+  .apr-section { padding: 18px; }
+  .apr-grid { grid-template-columns: 1fr; }
+  .apr-actions { padding: 16px 18px; flex-direction: column-reverse; }
+  .apr-cancel-btn, .apr-submit-btn { width: 100%; }
+  .apr-footer-note { padding: 12px 18px; }
 }
-
-/* =========================================
-   RESPONSIVE - TABLET
-========================================= */
-
-@media (max-width: 900px) {
-  .admin-approval-page {
-    padding: 24px 20px;
-  }
-
-  .admin-approval-section {
-    padding: 23px;
-  }
-
-  .admin-approval-actions {
-    padding: 18px 23px;
-  }
-}
-
-/* =========================================
-   RESPONSIVE - MOBILE
-========================================= */
-
-@media (max-width: 700px) {
-  .admin-approval-page {
-    min-height: calc(100vh - 60px);
-    padding: 20px 14px;
-  }
-
-  .admin-approval-header {
+ 
+ .apr-success-message {
+    margin: 20px 0;
+    padding: 16px 18px;
+    display: flex;
     align-items: flex-start;
-  }
+    gap: 12px;
 
-  .admin-approval-header-icon {
-    width: 46px;
-    height: 46px;
-  }
-
-  .admin-approval-header h1 {
-    font-size: 21px;
-  }
-
-  .admin-approval-header p {
-    font-size: 12px;
-  }
-
-  .admin-approval-notice {
-    padding: 14px;
-  }
-
-  .admin-approval-form-grid {
-    grid-template-columns: 1fr;
-    row-gap: 16px;
-  }
-
-  .admin-approval-section {
-    padding: 21px 17px;
-  }
-
-  .admin-approval-actions {
-    flex-direction: column-reverse;
-    align-items: stretch;
-    padding: 17px;
-  }
-
-  .admin-approval-cancel-btn,
-  .admin-approval-submit-btn {
-    width: 100%;
-  }
+    border: 1px solid #bbf7d0;
+    border-radius: 10px;
+    background: #f0fdf4;
+    color: #166534;
 }
 
-/* =========================================
-   SMALL MOBILE
-========================================= */
+.apr-success-message svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
 
-@media (max-width: 450px) {
-  .admin-approval-page {
-    padding: 15px 10px;
-  }
+.apr-success-message h3 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    font-weight: 600;
+}
 
-  .admin-approval-header {
-    gap: 10px;
-  }
-
-  .admin-approval-header-icon {
-    width: 42px;
-    height: 42px;
-  }
-
-  .admin-approval-header-icon svg {
-    width: 22px;
-    height: 22px;
-  }
-
-  .admin-approval-header h1 {
-    font-size: 19px;
-  }
-
-  .admin-approval-header p {
-    font-size: 11px;
-  }
-
-  .admin-approval-notice {
-    gap: 10px;
-  }
-
-  .admin-approval-notice-icon {
-    width: 30px;
-    height: 30px;
-  }
-
-  .admin-approval-notice-content h3 {
-    font-size: 13px;
-  }
-
-  .admin-approval-notice-content p {
-    font-size: 11px;
-  }
-
-  .admin-approval-section {
-    padding: 18px 14px;
-  }
-
-  .admin-approval-section-header {
-    margin-bottom: 17px;
-  }
-
-  .admin-approval-section-icon {
-    width: 31px;
-    height: 31px;
-  }
-
-  .admin-approval-section-header h2 {
+.apr-success-message p {
+    margin: 4px 0;
     font-size: 14px;
-  }
-
-  .admin-approval-input-wrapper {
-    height: 41px;
-  }
+    line-height: 1.5;
 }

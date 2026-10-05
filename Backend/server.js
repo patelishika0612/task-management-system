@@ -64,7 +64,7 @@ app.use(
 // =====================================================
 
 app.use("/api/departments", departmentRoutes);
-app.use("/api/employees", employeeRoutes);
+app.use("/api/employees",employeeRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/project-members", projectMemberRoutes);
 app.use("/api/clients", clientRoutes);

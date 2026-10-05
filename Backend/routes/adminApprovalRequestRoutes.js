@@ -6,46 +6,93 @@ import adminApprovalRequestController
 const router = express.Router();
 
 
-// Get all
+// =====================================================
+// GET ALL
+// =====================================================
+
 router.get(
     "/",
     adminApprovalRequestController.getAllApprovals
 );
 
 
-// Get by ID
+// =====================================================
+// GET BY TOKEN
+// =====================================================
+
 router.get(
-    "/:id",
-    adminApprovalRequestController.getApprovalById
+    "/token/:token",
+    adminApprovalRequestController.getApprovalByToken
 );
 
 
-// Create approval link
-router.post(
-    "/",
-    adminApprovalRequestController.createApproval
-);
+// =====================================================
+// APPROVE BY TOKEN
+// =====================================================
 
-
-// Approve using token
 router.post(
     "/approve/:token",
     adminApprovalRequestController.approveByToken
 );
 
 
-// Reject using token
+// =====================================================
+// REJECT BY TOKEN
+// =====================================================
+
 router.post(
     "/reject/:token",
     adminApprovalRequestController.rejectByToken
 );
 
 
-// Delete
+// =====================================================
+// APPROVE BY REQUEST ID
+// =====================================================
+
+router.post(
+    "/approve-request/:requestId",
+    adminApprovalRequestController.approveByRequestId
+);
+
+
+// =====================================================
+// REJECT BY REQUEST ID
+// =====================================================
+
+router.post(
+    "/reject-request/:requestId",
+    adminApprovalRequestController.rejectByRequestId
+);
+
+
+// =====================================================
+// GET BY ID
+// =====================================================
+
+router.get(
+    "/:id",
+    adminApprovalRequestController.getApprovalById
+);
+
+
+// =====================================================
+// CREATE
+// =====================================================
+
+router.post(
+    "/",
+    adminApprovalRequestController.createApproval
+);
+
+
+// =====================================================
+// DELETE
+// =====================================================
+
 router.delete(
     "/:id",
     adminApprovalRequestController.deleteApproval
 );
-
 
 export default router;

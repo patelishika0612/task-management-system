@@ -1,323 +1,834 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
-  ShieldCheck,
-  User,
-  Phone,
-  Mail,
-  CalendarDays,
-  IdCard,
-  Building2,
-  BriefcaseBusiness,
-  FileText,
-  Clock3,
-  CheckCircle2,
-  XCircle,
-  ArrowLeft,
-  Eye,
-  Trash2,
-  MapPin,
+    CheckCircle2,
+    XCircle,
+    ArrowLeft,
+    Clock3,
+    RefreshCw
 } from "lucide-react";
+
 import Swal from "sweetalert2";
-import AdminLayout from "../components/AdminLayout";
 import "./AdminReviewRequests.css";
 
+const API_BASE_URL = "http://localhost:5000/api";
+
 const AdminReviewRequests = () => {
-  const navigate = useNavigate();
-  const [requests, setRequests] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [rejectReason, setRejectReason] = useState("");
-  const [showRejectInput, setShowRejectInput] = useState(false);
+    const navigate = useNavigate();
 
-  useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("approvalRequests") || "[]");
-    setRequests(data);
-  }, []);
+    const [requests, setRequests] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-  const updateStatus = (id, status, reason = "") => {
-    const updated = requests.map((r) =>
-      r.id === id
-        ? { ...r, status, rejectionReason: reason, updatedAt: new Date().toISOString() }
-        : r
+    const [selectedRequest, setSelectedRequest] =
+        useState(null);
+
+    // =====================================================
+    // LOAD REQUESTS
+    // =====================================================
+
+    useEffect(() => {
+        fetchRequests();
+    }, []);
+
+    const fetchRequests = async () => {
+        try {
+            setLoading(true);
+
+            const response = await fetch(
+                `${API_BASE_URL}/admin-access-requests`
+            );
+
+            const data = await response.json();
+
+            console.log("Access requests:", data);
+
+            if (!response.ok || !data.success) {
+                throw new Error(
+                    data.message ||
+                    "Failed to load requests."
+                );
+            }
+
+            setRequests(data.data || []);
+
+        } catch (error) {
+            console.error(
+                "Fetch requests error:",
+                error
+            );
+
+            Swal.fire({
+                icon: "error",
+                title: "Unable to Load Requests",
+                text:
+                    error.message ||
+                    "Something went wrong.",
+                confirmButtonColor: "#2f3387"
+            });
+
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // =====================================================
+    // GET VALUE
+    // =====================================================
+
+    const getValue = (obj, ...keys) => {
+        for (const key of keys) {
+            if (
+                obj?.[key] !== undefined &&
+                obj?.[key] !== null
+            ) {
+                return obj[key];
+            }
+        }
+
+        return "";
+    };
+
+    // =====================================================
+    // FORMAT DATE
+    // =====================================================
+
+    const formatDate = (date) => {
+        if (!date) return "—";
+
+        const parsedDate = new Date(date);
+
+        if (Number.isNaN(parsedDate.getTime())) {
+            return "—";
+        }
+
+        return parsedDate.toLocaleDateString(
+            "en-IN",
+            {
+                day: "2-digit",
+                month: "short",
+                year: "numeric"
+            }
+        );
+    };
+
+    // =====================================================
+    // STATUS
+    // =====================================================
+
+    const getStatus = (request) => {
+        return String(
+            getValue(
+                request,
+                "Request_Status",
+                "request_status",
+                "status"
+            ) || "Pending"
+        ).toLowerCase();
+    };
+
+    // =====================================================
+    // OPEN REQUEST
+    // =====================================================
+
+    const openRequest = (request) => {
+        setSelectedRequest(request);
+    };
+
+    // =====================================================
+    // CLOSE REQUEST
+    // =====================================================
+
+    const closeRequest = () => {
+        setSelectedRequest(null);
+    };
+
+
+    // =====================================================
+// ACCEPT REQUEST
+// =====================================================
+
+const handleApprove = async () => {
+    if (!selectedRequest) return;
+
+    const requestId = getValue(
+        selectedRequest,
+        "Request_ID",
+        "request_id"
     );
-    setRequests(updated);
-    localStorage.setItem("approvalRequests", JSON.stringify(updated));
-    setSelected((prev) => prev?.id === id ? { ...prev, status, rejectionReason: reason } : prev);
-  };
 
-  const handleAccept = async (req) => {
+    const fullName = getValue(
+        selectedRequest,
+        "Full_Name",
+        "full_name"
+    );
+
     const result = await Swal.fire({
-      title: "Accept Request?",
-      text: `Grant admin access to ${req.fullName}?`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Yes, Accept",
-      cancelButtonText: "Cancel",
-      confirmButtonColor: "#16a34a",
+        title: "Approve Request?",
+        text: `Are you sure you want to approve ${fullName}'s request?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Approve",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#16a34a"
     });
-    if (!result.isConfirmed) return;
-    updateStatus(req.id, "approved");
-    Swal.fire({ icon: "success", title: "Accepted!", text: `${req.fullName} has been granted admin access.`, confirmButtonColor: "#16a34a" });
-  };
 
-  const handleReject = async (req) => {
-    if (!rejectReason.trim()) {
-      Swal.fire({ icon: "warning", title: "Reason Required", text: "Please enter a rejection reason.", confirmButtonColor: "#dc2626" });
-      return;
+    if (!result.isConfirmed) {
+        return;
     }
-    const result = await Swal.fire({
-      title: "Reject Request?",
-      text: `Reject admin access for ${req.fullName}?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, Reject",
-      cancelButtonText: "Cancel",
-      confirmButtonColor: "#dc2626",
-    });
-    if (!result.isConfirmed) return;
-    updateStatus(req.id, "rejected", rejectReason.trim());
-    setShowRejectInput(false);
-    setRejectReason("");
-    Swal.fire({ icon: "info", title: "Rejected", text: `Request from ${req.fullName} has been rejected.`, confirmButtonColor: "#dc2626" });
-  };
 
-  const handleDelete = async (id) => {
-    const result = await Swal.fire({
-      title: "Delete Request?",
-      text: "This will permanently remove the request.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Delete",
-      confirmButtonColor: "#dc2626",
-    });
-    if (!result.isConfirmed) return;
-    const updated = requests.filter((r) => r.id !== id);
-    setRequests(updated);
-    localStorage.setItem("approvalRequests", JSON.stringify(updated));
-    if (selected?.id === id) setSelected(null);
-  };
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/admin-approval-requests/approve-request/${requestId}`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+        );
 
-  const formatDate = (d) => {
-    if (!d) return "—";
-    return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-  };
+        const data = await response.json();
 
-  const statusBadge = (status) => {
-    if (status === "approved") return <span className="arv-badge arv-badge-approved"><CheckCircle2 size={13} />Approved</span>;
-    if (status === "rejected") return <span className="arv-badge arv-badge-rejected"><XCircle size={13} />Rejected</span>;
-    return <span className="arv-badge arv-badge-pending"><Clock3 size={13} />Pending</span>;
-  };
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message ||
+                "Approval failed."
+            );
+        }
 
-  const pending = requests.filter((r) => r.status === "pending").length;
-  const approved = requests.filter((r) => r.status === "approved").length;
-  const rejected = requests.filter((r) => r.status === "rejected").length;
+        await Swal.fire({
+            icon: "success",
+            title: "Approved!",
+            text:
+                data.message ||
+                "Request approved successfully.",
+            confirmButtonColor: "#16a34a"
+        });
 
-  return (
-    <AdminLayout>
-      <div className="arv-page">
+        setSelectedRequest(null);
 
-        {/* HEADER */}
-        <div className="arv-header">
-          <div className="arv-header-left">
-            <div className="arv-header-icon"><ShieldCheck size={22} /></div>
-            <div>
-              <h1>Access Requests</h1>
-              <p>Review and manage admin access requests</p>
-            </div>
-          </div>
-          <button className="arv-back-btn" onClick={() => navigate(-1)}>
-            <ArrowLeft size={16} /> Back
-          </button>
-        </div>
+        await fetchRequests();
 
-        {/* STATS */}
-        <div className="arv-stats">
-          <div className="arv-stat arv-stat-total">
-            <span>{requests.length}</span>
-            <p>Total</p>
-          </div>
-          <div className="arv-stat arv-stat-pending">
-            <span>{pending}</span>
-            <p>Pending</p>
-          </div>
-          <div className="arv-stat arv-stat-approved">
-            <span>{approved}</span>
-            <p>Approved</p>
-          </div>
-          <div className="arv-stat arv-stat-rejected">
-            <span>{rejected}</span>
-            <p>Rejected</p>
-          </div>
-        </div>
+    } catch (error) {
 
-        {/* MAIN LAYOUT */}
-        <div className={`arv-layout ${selected ? "arv-layout-split" : ""}`}>
+        console.error(
+            "Approve request error:",
+            error
+        );
 
-          {/* LIST */}
-          <div className="arv-list-panel">
-            <div className="arv-panel-title">
-              <h3>All Requests</h3>
-              <span>{requests.length} total</span>
-            </div>
-
-            {requests.length === 0 ? (
-              <div className="arv-empty">
-                <ShieldCheck size={40} />
-                <p>No requests yet</p>
-              </div>
-            ) : (
-              <div className="arv-list">
-                {requests.map((req) => (
-                  <div
-                    key={req.id}
-                    className={`arv-list-item ${selected?.id === req.id ? "arv-list-item-active" : ""}`}
-                    onClick={() => { setSelected(req); setShowRejectInput(false); setRejectReason(""); }}
-                  >
-                    <div className="arv-list-avatar">
-                      {req.fullName?.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="arv-list-info">
-                      <strong>{req.fullName}</strong>
-                      <span>{req.designation} · {req.department}</span>
-                      <span className="arv-list-date">{formatDate(req.createdAt)}</span>
-                    </div>
-                    <div className="arv-list-right">
-                      {statusBadge(req.status)}
-                      <button className="arv-delete-icon" onClick={(e) => { e.stopPropagation(); handleDelete(req.id); }}>
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* DETAIL PANEL */}
-          {selected && (
-            <div className="arv-detail-panel">
-
-              <div className="arv-detail-header">
-                <div className="arv-detail-avatar">{selected.fullName?.charAt(0).toUpperCase()}</div>
-                <div>
-                  <h2>{selected.fullName}</h2>
-                  <p>{selected.designation} · {selected.department}</p>
-                </div>
-                <div className="arv-detail-status">{statusBadge(selected.status)}</div>
-              </div>
-
-              {/* INFO SECTIONS */}
-              <div className="arv-detail-sections">
-
-                <div className="arv-detail-section">
-                  <h4><User size={15} /> Personal Info</h4>
-                  <div className="arv-detail-grid">
-                    <InfoRow icon={<Mail size={15} />} label="Email" value={selected.emailAddress} />
-                    <InfoRow icon={<Phone size={15} />} label="Phone" value={selected.phoneNumber} />
-                    <InfoRow icon={<CalendarDays size={15} />} label="Date of Birth" value={formatDate(selected.dateOfBirth)} />
-                  </div>
-                </div>
-
-                <div className="arv-detail-section">
-                  <h4><BriefcaseBusiness size={15} /> Employment</h4>
-                  <div className="arv-detail-grid">
-                    <InfoRow icon={<IdCard size={15} />} label="Employee ID" value={selected.employeeId} />
-                    <InfoRow icon={<Building2 size={15} />} label="Department" value={selected.department} />
-                    <InfoRow icon={<BriefcaseBusiness size={15} />} label="Designation" value={selected.designation} />
-                    <InfoRow icon={<CalendarDays size={15} />} label="Joining Date" value={formatDate(selected.joiningDate)} />
-                  </div>
-                </div>
-
-                <div className="arv-detail-section">
-                  <h4><FileText size={15} /> Reason for Access</h4>
-                  <div className="arv-reason-box">{selected.reason || "No reason provided."}</div>
-                </div>
-
-                {selected.status === "rejected" && selected.rejectionReason && (
-                  <div className="arv-rejection-note">
-                    <XCircle size={15} />
-                    <div>
-                      <strong>Rejection Reason</strong>
-                      <p>{selected.rejectionReason}</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="arv-detail-section">
-                  <h4><Clock3 size={15} /> Request Info</h4>
-                  <div className="arv-detail-grid">
-                    <InfoRow icon={<CalendarDays size={15} />} label="Submitted" value={formatDate(selected.createdAt)} />
-                    <InfoRow icon={<Clock3 size={15} />} label="Status" value={selected.status?.charAt(0).toUpperCase() + selected.status?.slice(1)} />
-                  </div>
-                </div>
-
-              </div>
-
-              {/* ACTIONS */}
-              {selected.status === "pending" && (
-                <div className="arv-actions">
-                  <div className="arv-actions-top">
-                    <button className="arv-accept-btn" onClick={() => handleAccept(selected)}>
-                      <CheckCircle2 size={17} /> Accept
-                    </button>
-                    <button
-                      className="arv-reject-btn"
-                      onClick={() => setShowRejectInput(!showRejectInput)}
-                    >
-                      <XCircle size={17} /> Reject
-                    </button>
-                  </div>
-
-                  {showRejectInput && (
-                    <div className="arv-reject-input-wrap">
-                      <textarea
-                        placeholder="Enter rejection reason..."
-                        value={rejectReason}
-                        onChange={(e) => setRejectReason(e.target.value)}
-                        rows={3}
-                      />
-                      <div className="arv-reject-input-btns">
-                        <button className="arv-cancel-reason-btn" onClick={() => { setShowRejectInput(false); setRejectReason(""); }}>Cancel</button>
-                        <button className="arv-confirm-reject-btn" onClick={() => handleReject(selected)}>
-                          <XCircle size={15} /> Confirm Reject
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {selected.status === "approved" && (
-                <div className="arv-approved-banner">
-                  <CheckCircle2 size={20} />
-                  <span>Admin access has been <strong>approved</strong> for this user.</span>
-                </div>
-              )}
-
-              {selected.status === "rejected" && (
-                <div className="arv-rejected-banner">
-                  <XCircle size={20} />
-                  <span>This request has been <strong>rejected</strong>.</span>
-                </div>
-              )}
-
-            </div>
-          )}
-
-        </div>
-      </div>
-    </AdminLayout>
-  );
+        Swal.fire({
+            icon: "error",
+            title: "Approval Failed",
+            text:
+                error.message ||
+                "Something went wrong.",
+            confirmButtonColor: "#dc2626"
+        });
+    }
 };
 
-const InfoRow = ({ icon, label, value }) => (
-  <div className="arv-info-row">
-    <div className="arv-info-icon">{icon}</div>
-    <div>
-      <span>{label}</span>
-      <strong>{value || "—"}</strong>
-    </div>
-  </div>
-);
+
+// =====================================================
+// REJECT REQUEST
+// =====================================================
+
+const handleReject = async () => {
+    if (!selectedRequest) return;
+
+    const requestId = getValue(
+        selectedRequest,
+        "Request_ID",
+        "request_id"
+    );
+
+    const fullName = getValue(
+        selectedRequest,
+        "Full_Name",
+        "full_name"
+    );
+
+    const result = await Swal.fire({
+        title: "Reject Request?",
+        text: `Reject ${fullName}'s request?`,
+        icon: "warning",
+        input: "textarea",
+        inputLabel: "Rejection Reason",
+        inputPlaceholder:
+            "Enter rejection reason...",
+        inputAttributes: {
+            "aria-label":
+                "Enter rejection reason"
+        },
+        showCancelButton: true,
+        confirmButtonText: "Reject",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#dc2626",
+
+        inputValidator: (value) => {
+            if (!value || !value.trim()) {
+                return "Rejection reason is required.";
+            }
+
+            return null;
+        }
+    });
+
+    if (!result.isConfirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/admin-approval-requests/reject-request/${requestId}`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+                body: JSON.stringify({
+                    rejectionReason:
+                        result.value.trim()
+                })
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message ||
+                "Rejection failed."
+            );
+        }
+
+        await Swal.fire({
+            icon: "success",
+            title: "Request Rejected",
+            text:
+                data.message ||
+                "Request rejected successfully.",
+            confirmButtonColor: "#dc2626"
+        });
+
+        setSelectedRequest(null);
+
+        await fetchRequests();
+
+    } catch (error) {
+
+        console.error(
+            "Reject request error:",
+            error
+        );
+
+        Swal.fire({
+            icon: "error",
+            title: "Rejection Failed",
+            text:
+                error.message ||
+                "Something went wrong.",
+            confirmButtonColor: "#dc2626"
+        });
+    }
+};
+
+    // =====================================================
+    // LOADING
+    // =====================================================
+
+    if (loading) {
+        return (
+            <div className="arv-page">
+
+                <div className="arv-header">
+
+                    <strong>
+                        Admin Access Review
+                    </strong>
+
+                    <button
+                        className="arv-back"
+                        onClick={() => navigate(-1)}
+                    >
+                        <ArrowLeft size={14} />
+                        Back
+                    </button>
+
+                </div>
+
+                <div className="arv-content">
+
+                    <div className="arv-empty">
+
+                        <h3>
+                            Loading Requests...
+                        </h3>
+
+                        <p>
+                            Please wait while requests
+                            are being loaded.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+        );
+    }
+
+    // =====================================================
+    // MAIN UI
+    // =====================================================
+
+    return (
+        <div className="arv-page">
+
+            {/* =================================================
+                HEADER
+            ================================================= */}
+
+            <div className="arv-header">
+
+                <strong>
+                    Admin Access Review
+                </strong>
+
+                <div
+                    style={{
+                        display: "flex",
+                        gap: "8px"
+                    }}
+                >
+
+                    <button
+                        className="arv-back"
+                        onClick={fetchRequests}
+                    >
+                        <RefreshCw size={14} />
+                        Refresh
+                    </button>
+
+                    <button
+                        className="arv-back"
+                        onClick={() => navigate(-1)}
+                    >
+                        <ArrowLeft size={14} />
+                        Back
+                    </button>
+
+                </div>
+
+            </div>
+
+            {/* =================================================
+                CONTENT
+            ================================================= */}
+
+            <div className="arv-content">
+
+                {/* NO REQUEST */}
+                {requests.length === 0 ? (
+
+                    <div className="arv-empty">
+
+                        <h3>
+                            No Request Found
+                        </h3>
+
+                        <p>
+                            No admin access request
+                            has been submitted yet.
+                        </p>
+
+                    </div>
+
+                ) : (
+
+                    <div className="arv-container">
+
+                        {/* TITLE */}
+
+                        <div className="arv-title">
+
+                            <div>
+
+                                <h1>
+                                    Admin Access Requests
+                                </h1>
+
+                                <p>
+                                    Review registration
+                                    requests and check their
+                                    current approval status.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        {/* REQUEST LIST */}
+
+                        <div className="arv-list">
+
+                            {requests.map((item) => {
+
+                                const requestId =
+                                    getValue(
+                                        item,
+                                        "Request_ID",
+                                        "request_id"
+                                    );
+
+                                const fullName =
+                                    getValue(
+                                        item,
+                                        "Full_Name",
+                                        "full_name"
+                                    );
+
+                                const employeeCode =
+                                    getValue(
+                                        item,
+                                        "employee_code",
+                                        "Employee_Code"
+                                    );
+
+                                const department =
+                                    getValue(
+                                        item,
+                                        "department_name",
+                                        "Department_Name"
+                                    );
+
+                                const status =
+                                    getStatus(item);
+
+                                return (
+
+                                    <div
+                                        key={requestId}
+                                        className="arv-row"
+                                        style={{
+                                            cursor:
+                                                "pointer"
+                                        }}
+                                        onClick={() =>
+                                            openRequest(item)
+                                        }
+                                    >
+
+                                        <span>
+                                            #{requestId}
+                                        </span>
+
+                                        <strong>
+                                            {fullName || "—"}
+                                        </strong>
+
+                                        <strong>
+                                            {employeeCode || "—"}
+                                        </strong>
+
+                                        <strong>
+                                            {department || "—"}
+                                        </strong>
+
+                                        <strong>
+                                            {status}
+                                        </strong>
+
+                                    </div>
+
+                                );
+                            })}
+
+                        </div>
+
+                    </div>
+                )}
+
+            </div>
+
+            {/* =================================================
+                REQUEST DETAILS MODAL
+            ================================================= */}
+
+            {selectedRequest && (
+
+                <div className="arv-modal-overlay">
+
+                    <div className="arv-modal">
+
+                        {/* TITLE */}
+
+                        <div className="arv-title">
+
+                            <div>
+
+                                <h1>
+                                    Admin Access Request
+                                </h1>
+
+                                <p>
+                                    Review request details
+                                    and approval status.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        {/* USER */}
+
+                        <div className="arv-user">
+
+                            <h2>
+                                {getValue(
+                                    selectedRequest,
+                                    "Full_Name",
+                                    "full_name"
+                                )}
+                            </h2>
+
+                            <span>
+                                Employee Code:{" "}
+                                {getValue(
+                                    selectedRequest,
+                                    "employee_code",
+                                    "Employee_Code"
+                                ) || "—"}
+                            </span>
+
+                        </div>
+
+                        {/* DETAILS */}
+
+                        <div className="arv-list">
+
+                            <InfoRow
+                                label="Full Name"
+                                value={getValue(
+                                    selectedRequest,
+                                    "Full_Name",
+                                    "full_name"
+                                )}
+                            />
+
+                            <InfoRow
+                                label="Email"
+                                value={getValue(
+                                    selectedRequest,
+                                    "Email",
+                                    "email"
+                                )}
+                            />
+
+                            <InfoRow
+                                label="Phone"
+                                value={getValue(
+                                    selectedRequest,
+                                    "Phone",
+                                    "phone"
+                                )}
+                            />
+
+                            <InfoRow
+                                label="Date of Birth"
+                                value={formatDate(
+                                    getValue(
+                                        selectedRequest,
+                                        "DOB",
+                                        "dob"
+                                    )
+                                )}
+                            />
+
+                            <InfoRow
+                                label="Employee Code"
+                                value={getValue(
+                                    selectedRequest,
+                                    "employee_code",
+                                    "Employee_Code"
+                                )}
+                            />
+
+                            <InfoRow
+                                label="Department"
+                                value={getValue(
+                                    selectedRequest,
+                                    "department_name",
+                                    "Department_Name"
+                                )}
+                            />
+
+                            <InfoRow
+                                label="Joining Date"
+                                value={formatDate(
+                                    getValue(
+                                        selectedRequest,
+                                        "Joining_Date",
+                                        "joining_date"
+                                    )
+                                )}
+                            />
+
+                            <InfoRow
+                                label="Submitted On"
+                                value={formatDate(
+                                    getValue(
+                                        selectedRequest,
+                                        "Created_At",
+                                        "created_at"
+                                    )
+                                )}
+                            />
+
+                            <div className="arv-row arv-reason-row">
+
+                                <span>
+                                    Reason
+                                </span>
+
+                                <strong>
+                                    {getValue(
+                                        selectedRequest,
+                                        "Reason",
+                                        "reason"
+                                    ) ||
+                                        "No reason provided."}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                        {/* =================================================
+                            STATUS
+                        ================================================= */}
+
+                        {getStatus(selectedRequest) ===
+                            "approved" && (
+
+                            <div className="arv-message success">
+
+                                <CheckCircle2 size={16} />
+
+                                <span>
+                                    Admin access has
+                                    been approved.
+                                </span>
+
+                            </div>
+                        )}
+
+                        {getStatus(selectedRequest) ===
+                            "rejected" && (
+
+                            <div className="arv-message danger">
+
+                                <XCircle size={16} />
+
+                                <span>
+                                    Request has been
+                                    rejected.
+                                </span>
+
+                            </div>
+                        )}
+
+                      {getStatus(selectedRequest) === "pending" && (
+
+    <>
+        <div className="arv-message">
+
+            <Clock3 size={16} />
+
+            <span>
+                This request is waiting for approval.
+            </span>
+
+        </div>
+
+        {/* ==========================================
+            ACCEPT / REJECT BUTTONS
+        ========================================== */}
+
+        <div className="arv-action-buttons">
+
+            <button
+                type="button"
+                className="arv-approve-btn"
+                onClick={handleApprove}
+            >
+                <CheckCircle2 size={16} />
+                Accept
+            </button>
+
+            <button
+                type="button"
+                className="arv-reject-btn"
+                onClick={handleReject}
+            >
+                <XCircle size={16} />
+                Reject
+            </button>
+
+        </div>
+    </>
+)}
+
+                        {/* =================================================
+                            CLOSE
+                        ================================================= */}
+
+                        <div
+                            style={{
+                                marginTop: "20px",
+                                textAlign: "right"
+                            }}
+                        >
+
+                            <button
+                                className="arv-cancel"
+                                onClick={closeRequest}
+                            >
+                                Close
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            )}
+
+        </div>
+    );
+};
+
+// =====================================================
+// INFO ROW
+// =====================================================
+
+const InfoRow = ({ label, value }) => {
+
+    return (
+
+        <div className="arv-row">
+
+            <span>
+                {label}
+            </span>
+
+            <strong>
+                {value || "—"}
+            </strong>
+
+        </div>
+    );
+};
 
 export default AdminReviewRequests;

@@ -28,7 +28,7 @@ import AdminReviewRequests from "./admin/AdminReviewRequests";
 function App() {
   return (
     <Routes>
-         <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/" element={<Dashboard />} />
       <Route path="/profile" element={<Adminprofile />} />
       <Route path="/settings" element={<Settings />} />
@@ -47,8 +47,12 @@ function App() {
       <Route path="/clients" element={<Client />} />
       <Route path="/approvalrequests" element={<AdminApprovalRequest />} />
       <Route path="/review-requests" element={<AdminReviewRequests />} />
+      <Route
+        path="/admin/approval/:token"
+        element={<AdminReviewRequests />}
+      />
       {/* <Route path="/approvedrequests" element={<AdminApprovalApproved />} /> */}
-    
+
 
 
     </Routes>
