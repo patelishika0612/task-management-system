@@ -21,6 +21,10 @@ import Project from "./admin/Project";
 import Calendar from "./admin/Calendar";
 import Client from "./admin/Client";
 
+import AdminApprovalRequest from "./admin/AdminApprovalRequest";
+import AdminReviewRequests from "./admin/AdminReviewRequests";
+
+
 function App() {
   return (
     <Routes>
@@ -41,7 +45,10 @@ function App() {
 
       <Route path="/calendar" element={<Calendar />} />
       <Route path="/clients" element={<Client />} />
-   
+      <Route path="/approvalrequests" element={<AdminApprovalRequest />} />
+      <Route path="/review-requests" element={<AdminReviewRequests />} />
+      {/* <Route path="/approvedrequests" element={<AdminApprovalApproved />} /> */}
+    
 
 
     </Routes>
