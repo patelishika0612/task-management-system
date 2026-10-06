@@ -61,7 +61,7 @@ const upload = multer({
     fileFilter,
 
     limits: {
-        fileSize: 2 * 1024 * 1024
+        fileSize: 5 * 1024 * 1024
     }
 });
 
@@ -79,6 +79,10 @@ router.get(
 // =====================================================
 // GET EMPLOYEE BY ID
 // =====================================================
+router.get(
+    "/profile",
+    employeeController.getEmployeeProfile
+);
 
 router.get(
     "/:id",
@@ -94,6 +98,12 @@ router.post(
     "/",
     upload.single("image"),
     employeeController.createEmployee
+);
+
+router.put(
+    "/create-profile/:empId",
+     upload.single("image"),
+    employeeController.createEmployeeProfile
 );
 
 

@@ -1,11 +1,13 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import http from "http";
+import { Server } from "socket.io";
 import helmet from "helmet";
 import path from "path";
 import { fileURLToPath } from "url";
-
-import "./db.js";
+import connection from "./db.js";
+// import "./db.js";
 
 // Routes
 import departmentRoutes from "./routes/departmentRoutes.js";
@@ -15,7 +17,7 @@ import projectMemberRoutes from "./routes/projectMemberRoutes.js";
 import clientRoutes from "./routes/clientRoutes.js";
 import adminAccessRequestRoutes from "./routes/adminAccessRequestRoutes.js";
 import adminApprovalRequestRoutes from "./routes/adminApprovalRequestRoutes.js";
-
+import adminLoginRoutes from "./routes/adminLoginRoutes.js";
 
 dotenv.config();
 
@@ -70,6 +72,10 @@ app.use("/api/project-members", projectMemberRoutes);
 app.use("/api/clients", clientRoutes);
 app.use("/api/admin-access-requests", adminAccessRequestRoutes);
 app.use("/api/admin-approval-requests",adminApprovalRequestRoutes);
+app.use(
+    "/api/admin-login",
+    adminLoginRoutes
+);
 
 // =====================================================
 // TEST API
@@ -104,14 +110,171 @@ app.use((err, req, res, next) => {
         success: false,
         message: "Internal server error"
     });
-});
-
-// =====================================================
-// START SERVER
+});// =====================================================
+// START HTTP SERVER
 // =====================================================
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+// Create HTTP server
+const server = http.createServer(app);
+
+// =====================================================
+// SOCKET.IO
+// =====================================================
+
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST"]
+    }
+});
+
+// =====================================================
+// CONNECTED ADMINS
+// =====================================================
+
+io.on("connection", (socket) => {
+
+    console.log(
+        "Admin connected:",
+        socket.id
+    );
+
+    socket.on("admin-authenticated", async (adminId) => {
+
+        try {
+
+            const [admins] =
+                await connection.promise().query(
+                    `
+                    SELECT id
+                    FROM admin_login
+                    WHERE id = ?
+                    LIMIT 1
+                    `,
+                    [adminId]
+                );
+
+            if (admins.length === 0) {
+
+                console.log(
+                    `❌ Admin ${adminId} does not exist`
+                );
+
+                socket.emit(
+                    "adminDeleted",
+                    {
+                        adminId: Number(adminId),
+                        message:
+                            "Your admin account no longer exists."
+                    }
+                );
+
+                return;
+            }
+
+            socket.join(`admin-${adminId}`);
+
+            console.log(
+                `Admin ${adminId} connected`
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Admin socket authentication error:",
+                error.message
+            );
+        }
+    });
+
+    socket.on("disconnect", () => {
+
+        console.log(
+            "Admin disconnected:",
+            socket.id
+        );
+
+    });
+});
+
+// =====================================================
+// ADMIN DATABASE WATCHER
+// =====================================================
+// =====================================================
+// ADMIN DATABASE WATCHER
+// =====================================================
+
+let previousAdmins = new Set();
+let isAdminWatcherInitialized = false;
+
+const checkDeletedAdmins = async () => {
+    try {
+        const [admins] = await connection.promise().query(
+            `
+            SELECT id
+            FROM admin_login
+            `
+        );
+
+        const currentAdmins = new Set(
+            admins.map((admin) => String(admin.id))
+        );
+
+        // First database check
+        if (!isAdminWatcherInitialized) {
+            previousAdmins = currentAdmins;
+            isAdminWatcherInitialized = true;
+
+            console.log(
+                "✅ Admin watcher initialized:",
+                [...currentAdmins]
+            );
+
+            return;
+        }
+
+        // Check deleted admins
+        for (const adminId of previousAdmins) {
+
+            if (!currentAdmins.has(adminId)) {
+
+                console.log(
+                    `❌ Admin ${adminId} deleted`
+                );
+
+                io.to(`admin-${adminId}`).emit(
+                    "adminDeleted",
+                    {
+                        adminId: Number(adminId),
+                        message:
+                            "Your admin account has been deleted."
+                    }
+                );
+            }
+        }
+
+        // Update admin list
+        previousAdmins = currentAdmins;
+
+    } catch (error) {
+        console.error(
+            "Admin watcher error:",
+            error.message
+        );
+    }
+};
+
+setInterval(() => {
+    checkDeletedAdmins();
+}, 1000);
+// =====================================================
+// START SERVER
+// =====================================================
+
+server.listen(PORT, () => {
+    console.log(
+        `🚀 Server running on http://localhost:${PORT}`
+    );
 });

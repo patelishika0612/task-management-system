@@ -1,7 +1,9 @@
+
 // src/admin/Profile.jsx
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
     User,
     Mail,
@@ -18,199 +20,628 @@ import {
     X,
     Clock,
     BadgeCheck,
-    CircleCheck,
+    RefreshCw,
 } from "lucide-react";
+
 import UserImg from "../img/user.png";
 import AdminLayout from "../components/AdminLayout";
+import API from "../api";
+
 import "./AdminProfile.css";
 
+
+// =====================================================
+// BASE URL
+// =====================================================
+
+const BASE_URL =
+    API.defaults.baseURL.replace(/\/api\/?$/, "");
+
+
+// =====================================================
+// IMAGE URL
+// =====================================================
+
+const getImageUrl = (image) => {
+
+    if (!image) {
+        return UserImg;
+    }
+
+    // Full URL
+    if (/^https?:\/\//i.test(image)) {
+        return image;
+    }
+
+    // /uploads/employee-123.jpeg
+    if (image.startsWith("/uploads/")) {
+        return `${BASE_URL}${image}`;
+    }
+
+    // uploads/employee-123.jpeg
+    if (image.startsWith("uploads/")) {
+        return `${BASE_URL}/${image}`;
+    }
+
+    // employee-123.jpeg
+    return `${BASE_URL}/uploads/${image}`;
+};
+
+
+// =====================================================
+// COMPONENT
+// =====================================================
+
 const Profile = () => {
-    const adminEmail =
-        localStorage.getItem("adminEmail") || "hr@nirvanza.com";
 
     const navigate = useNavigate();
 
-    const [isEditing, setIsEditing] = useState(false);
+    // =====================================================
+    // ADMIN EMAIL
+    // =====================================================
+
+    const adminEmail =
+        localStorage.getItem("adminEmail") || "";
+
 
     // =====================================================
-    // PROFILE DATA
+    // STATES
     // =====================================================
+
+    const [isEditing, setIsEditing] =
+        useState(false);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState("");
+
+
+    // =====================================================
+    // PROFILE
+    // =====================================================
+
     const [profile, setProfile] = useState({
-        firstName: "HR",
-        lastName: "Manager",
-        email: adminEmail,
-        phone: "+91 98765 43210",
-        employeeId: "HR001",
-        department: "Human Resources",
+
+        firstName: "",
+        lastName: "",
+
+        email: "",
+
+        phone: "",
+
+        employeeId: "",
+
+        department: "",
+
         designation: "HR Manager",
-        joiningDate: "01 January 2025",
+
+        joiningDate: "",
+
         location: "Ahmedabad, Gujarat",
 
-        // Email Verification
-        // true  = Verified
-        // false = Not Verified
-        emailVerified: false,
+        image: "",
 
-        // Account Status
-        // "Active"     = Active
-        // "Not Active" = Not Active
+        emailVerified: true,
+
         accountStatus: "Active",
+
+        accountCreated: "",
+
+        lastLogin: "Today",
+
     });
 
-    const [savedProfile, setSavedProfile] = useState({
-        ...profile,
-    });
+    const formatDateTime = (dateValue) => {
+        if (!dateValue) {
+            return "";
+        }
+
+        const date = new Date(dateValue);
+
+        if (Number.isNaN(date.getTime())) {
+            return String(dateValue);
+        }
+
+        return date.toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+    };
+
+    // =====================================================
+    // SAVED PROFILE
+    // =====================================================
+
+    const [savedProfile, setSavedProfile] =
+        useState(profile);
+
+
+    // =====================================================
+    // FETCH PROFILE FROM DATABASE
+    // =====================================================
+
+    const fetchProfile = async () => {
+
+        try {
+
+            setLoading(true);
+
+            setError("");
+
+
+            if (!adminEmail) {
+
+                setError(
+                    "Admin email not found. Please login again."
+                );
+
+                return;
+            }
+
+
+            console.log(
+                "Fetching profile for:",
+                adminEmail
+            );
+
+
+            const response = await API.get(
+                `/employees/profile?email=${encodeURIComponent(
+                    adminEmail
+                )}`
+            );
+
+
+            console.log(
+                "Profile API response:",
+                response.data
+            );
+
+
+            if (!response.data?.success) {
+
+                throw new Error(
+                    response.data?.message ||
+                    "Unable to fetch profile."
+                );
+            }
+
+
+            const employee =
+                response.data.data;
+
+
+            // =====================================================
+            // CONVERT EMPLOYEE NAME
+            // =====================================================
+
+            const nameParts =
+                (employee.emp_name || "")
+                    .trim()
+                    .split(/\s+/);
+
+
+            const firstName =
+                nameParts[0] || "";
+
+
+            const lastName =
+                nameParts
+                    .slice(1)
+                    .join(" ");
+
+
+            // =====================================================
+            // DATE
+            // =====================================================
+
+            const joiningDate =
+                employee.date_of_join
+                    ? new Date(
+                        employee.date_of_join
+                    ).toLocaleDateString(
+                        "en-GB",
+                        {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                        }
+                    )
+                    : "";
+
+
+            // =====================================================
+            // ACCOUNT CREATED
+            // =====================================================
+
+            const accountCreated = formatDateTime(
+                employee.created_at
+            );
+
+
+            // =====================================================
+            // ACCOUNT STATUS
+            // =====================================================
+
+            const accountStatus =
+                employee.status === "active"
+                    ? "Active"
+                    : "Not Active";
+
+
+            // =====================================================
+            // PROFILE DATA
+            // =====================================================
+
+            const profileData = {
+
+                firstName,
+
+                lastName,
+
+                email:
+                    employee.email || adminEmail,
+
+                phone:
+                    employee.phone || "",
+
+                employeeId:
+                    employee.employee_code ||
+                    employee.emp_id ||
+                    "",
+
+                department:
+                    employee.department_name ||
+                    "",
+
+                // Current DB does not have designation
+                designation:
+                    "HR Manager",
+
+                joiningDate,
+
+                // Current DB does not have location
+                location:
+                    "Ahmedabad, Gujarat",
+
+                image:
+                    employee.image || "",
+
+                emailVerified: true,
+
+                accountStatus,
+
+                accountCreated,
+
+                lastLogin: "Today",
+            };
+
+
+            setProfile(profileData);
+
+            setSavedProfile(profileData);
+
+
+        } catch (err) {
+
+            console.error(
+                "Profile fetch error:",
+                err
+            );
+
+            setError(
+                err.response?.data?.message ||
+                err.message ||
+                "Unable to load profile."
+            );
+
+        } finally {
+
+            setLoading(false);
+
+        }
+    };
+
+
+    // =====================================================
+    // LOAD PROFILE
+    // =====================================================
+
+    useEffect(() => {
+
+        fetchProfile();
+
+    }, [adminEmail]);
+
 
     // =====================================================
     // HANDLE INPUT CHANGE
     // =====================================================
+
     const handleChange = (e) => {
-        const { name, value } = e.target;
+
+        const {
+            name,
+            value
+        } = e.target;
+
 
         setProfile((prev) => ({
             ...prev,
             [name]: value,
         }));
+
     };
+
 
     // =====================================================
     // SAVE PROFILE
     // =====================================================
+
     const handleSave = () => {
+
         setSavedProfile({
             ...profile,
         });
 
         setIsEditing(false);
+
     };
 
+
     // =====================================================
-    // OPEN EDIT MODAL
+    // OPEN EDIT
     // =====================================================
+
     const handleEditOpen = () => {
+
         setIsEditing(true);
+
     };
+
 
     // =====================================================
     // CANCEL EDIT
     // =====================================================
+
     const handleCancel = () => {
+
         setProfile({
             ...savedProfile,
         });
 
         setIsEditing(false);
+
     };
+
 
     // =====================================================
     // WORK INFORMATION
     // =====================================================
+
     const profItems = [
+
         {
             icon: <IdCard size={16} />,
             label: "Employee ID",
             value: profile.employeeId,
         },
+
         {
-            icon: <BriefcaseBusiness size={16} />,
+            icon:
+                <BriefcaseBusiness size={16} />,
             label: "Designation",
             value: profile.designation,
         },
+
         {
-            icon: <Building2 size={16} />,
+            icon:
+                <Building2 size={16} />,
             label: "Department",
             value: profile.department,
         },
+
         {
-            icon: <CalendarDays size={16} />,
+            icon:
+                <CalendarDays size={16} />,
             label: "Joining Date",
             value: profile.joiningDate,
         },
+
     ];
+
+
 
     // =====================================================
     // ACCOUNT INFORMATION
     // =====================================================
+
     const accountItems = [
+
         {
-            icon: <CalendarDays size={18} />,
+            icon:
+                <CalendarDays size={18} />,
             label: "Account Created",
-            value: "01 January 2025",
+            value:
+                profile.accountCreated ||
+                "—",
+
             color: "#6366f1",
             bg: "#eef2ff",
         },
 
         {
-            icon: <Clock size={18} />,
+            icon:
+                <Clock size={18} />,
             label: "Last Login",
-            value: "Today, 09:42 AM",
+            value:
+                profile.lastLogin ||
+                "Today",
+
             color: "#0ea5e9",
             bg: "#e0f2fe",
         },
 
-        // =================================================
-        // EMAIL VERIFICATION
-        // =================================================
         {
-            icon: <BadgeCheck size={18} />,
+            icon:
+                <BadgeCheck size={18} />,
+
             label: "Email Verification",
 
-            value: profile.emailVerified
-                ? "Verified"
-                : "Not Verified",
+            value:
+                profile.emailVerified
+                    ? "Verified"
+                    : "Not Verified",
 
             badge: true,
 
-            badgeColor: profile.emailVerified
-                ? "#16a34a"
-                : "#dc2626",
+            badgeColor:
+                profile.emailVerified
+                    ? "#16a34a"
+                    : "#dc2626",
 
-            badgeBg: profile.emailVerified
-                ? "#dcfce7"
-                : "#fee2e2",
+            badgeBg:
+                profile.emailVerified
+                    ? "#dcfce7"
+                    : "#fee2e2",
 
-            color: profile.emailVerified
-                ? "#16a34a"
-                : "#dc2626",
+            color:
+                profile.emailVerified
+                    ? "#16a34a"
+                    : "#dc2626",
 
-            bg: profile.emailVerified
-                ? "#dcfce7"
-                : "#fee2e2",
+            bg:
+                profile.emailVerified
+                    ? "#dcfce7"
+                    : "#fee2e2",
         },
-
 
     ];
 
+
+    // =====================================================
+    // LOADING
+    // =====================================================
+
+    if (loading) {
+
+        return (
+            <AdminLayout>
+
+                <div className="hr-profile-page">
+
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            minHeight: "300px",
+                            gap: "10px",
+                        }}
+                    >
+
+                        <RefreshCw
+                            size={22}
+                            className="admin-spinning"
+                        />
+
+                        <span>
+                            Loading profile...
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </AdminLayout>
+        );
+    }
+
+
     return (
+
         <AdminLayout>
 
             <div className="hr-profile-page">
 
                 {/* =====================================================
+                    ERROR
+                ===================================================== */}
+
+                {error && (
+
+                    <div
+                        className="admin-alert admin-alert-error"
+                        style={{
+                            marginBottom: "20px",
+                        }}
+                    >
+
+                        <span>
+                            {error}
+                        </span>
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setError("")
+                            }
+                        >
+                            <X size={17} />
+                        </button>
+
+                    </div>
+
+                )}
+
+
+                {/* =====================================================
                     TOP BAR
                 ===================================================== */}
+
                 <section className="hr-profile-top">
 
                     <div className="hr-profile-actions">
 
                         {/* CHANGE PASSWORD */}
+
                         <button
                             className="hr-profile-password-btn"
                             type="button"
-                            onClick={() => navigate("/resetpassword")}
+                            onClick={() =>
+                                navigate(
+                                    "/resetpassword"
+                                )
+                            }
                         >
+
                             <LockKeyhole size={15} />
+
                             Change Password
+
                         </button>
 
+
                         {/* EDIT PROFILE */}
+
                         <button
                             className="hr-profile-edit-btn"
                             type="button"
-                            onClick={handleEditOpen}
+                            onClick={
+                                handleEditOpen
+                            }
                         >
+
                             <Pencil size={15} />
+
                             Edit Profile
+
                         </button>
 
                     </div>
@@ -221,59 +652,95 @@ const Profile = () => {
                 {/* =====================================================
                     MAIN GRID
                 ===================================================== */}
+
                 <section className="hr-profile-grid">
+
 
                     {/* =================================================
                         LEFT PROFILE CARD
                     ================================================= */}
+
                     <div className="hr-profile-card hr-profile-main-card">
 
+
                         {/* COVER */}
+
                         <div className="hr-profile-cover">
+
                             <div className="hr-cover-pattern"></div>
+
                         </div>
 
 
                         {/* AVATAR */}
+
                         <div className="hr-profile-avatar-wrapper">
 
                             <div className="hr-profile-avatar">
+
                                 <img
-                                    src={UserImg}
-                                    alt="Admin Avatar"
+                                    src={
+                                        getImageUrl(
+                                            profile.image
+                                        )
+                                    }
+                                    alt={
+                                        profile.firstName ||
+                                        "Admin"
+                                    }
                                     className="admin-avatar-image"
+                                    onError={(e) => {
+
+                                        e.currentTarget.src =
+                                            UserImg;
+
+                                    }}
                                 />
+
                             </div>
 
                         </div>
 
 
                         {/* BASIC INFORMATION */}
+
                         <div className="hr-profile-basic">
 
                             <h2>
+
                                 {profile.firstName}{" "}
+
                                 {profile.lastName}
+
                             </h2>
 
+
                             <p className="hr-profile-designation">
+
                                 {profile.designation}
+
                             </p>
 
+
                             <div className="hr-profile-role">
+
                                 <ShieldCheck size={15} />
+
                                 HR / Human Resources
+
                             </div>
 
                         </div>
 
 
-                        {/* ACTIVE ACCOUNT STATUS */}
+                        {/* ACCOUNT STATUS */}
+
                         <div className="hr-profile-status">
 
                             <span className="hr-status-dot"></span>
 
-                            {profile.accountStatus === "Active"
+                            {profile.accountStatus ===
+                                "Active"
                                 ? "Active Account"
                                 : "Not Active"}
 
@@ -283,75 +750,115 @@ const Profile = () => {
                         {/* =================================================
                             QUICK INFORMATION
                         ================================================= */}
+
                         <div className="hr-profile-quick-info">
 
+
                             {/* EMAIL */}
+
                             <div className="hr-quick-item">
 
                                 <div className="hr-quick-icon">
+
                                     <Mail size={17} />
+
                                 </div>
 
                                 <div>
-                                    <span>Email</span>
+
+                                    <span>
+                                        Email
+                                    </span>
 
                                     <strong>
-                                        {profile.email}
+                                        {
+                                            profile.email
+                                        }
                                     </strong>
+
                                 </div>
 
                             </div>
 
 
                             {/* PHONE */}
+
                             <div className="hr-quick-item">
 
                                 <div className="hr-quick-icon">
+
                                     <Phone size={17} />
+
                                 </div>
 
                                 <div>
-                                    <span>Phone</span>
+
+                                    <span>
+                                        Phone
+                                    </span>
 
                                     <strong>
-                                        {profile.phone}
+                                        {
+                                            profile.phone ||
+                                            "—"
+                                        }
                                     </strong>
+
                                 </div>
 
                             </div>
 
 
                             {/* DEPARTMENT */}
+
                             <div className="hr-quick-item">
 
                                 <div className="hr-quick-icon">
+
                                     <Building2 size={17} />
+
                                 </div>
 
                                 <div>
-                                    <span>Department</span>
+
+                                    <span>
+                                        Department
+                                    </span>
 
                                     <strong>
-                                        {profile.department}
+                                        {
+                                            profile.department ||
+                                            "—"
+                                        }
                                     </strong>
+
                                 </div>
 
                             </div>
 
 
                             {/* LOCATION */}
+
                             <div className="hr-quick-item">
 
                                 <div className="hr-quick-icon">
+
                                     <MapPin size={17} />
+
                                 </div>
 
                                 <div>
-                                    <span>Location</span>
+
+                                    <span>
+                                        Location
+                                    </span>
 
                                     <strong>
-                                        {profile.location}
+                                        {
+                                            profile.location
+                                        }
                                     </strong>
+
                                 </div>
 
                             </div>
@@ -364,11 +871,14 @@ const Profile = () => {
                     {/* =================================================
                         RIGHT CONTENT
                     ================================================= */}
+
                     <div className="hr-profile-right">
+
 
                         {/* =================================================
                             WORK INFORMATION
                         ================================================= */}
+
                         <div className="hr-profile-card">
 
                             <div className="hr-section-header">
@@ -385,8 +895,13 @@ const Profile = () => {
 
                                 </div>
 
+
                                 <div className="hr-section-icon">
-                                    <BriefcaseBusiness size={18} />
+
+                                    <BriefcaseBusiness
+                                        size={18}
+                                    />
+
                                 </div>
 
                             </div>
@@ -394,32 +909,46 @@ const Profile = () => {
 
                             <div className="hr-prof-info-grid">
 
-                                {profItems.map((item, i) => (
+                                {profItems.map(
+                                    (
+                                        item,
+                                        i
+                                    ) => (
 
-                                    <div
-                                        className="hr-prof-info-item"
-                                        key={i}
-                                    >
+                                        <div
+                                            className="hr-prof-info-item"
+                                            key={i}
+                                        >
 
-                                        <div className="hr-prof-info-icon">
-                                            {item.icon}
+                                            <div className="hr-prof-info-icon">
+
+                                                {
+                                                    item.icon
+                                                }
+
+                                            </div>
+
+                                            <div className="hr-prof-info-text">
+
+                                                <span>
+                                                    {
+                                                        item.label
+                                                    }
+                                                </span>
+
+                                                <strong>
+                                                    {
+                                                        item.value ||
+                                                        "—"
+                                                    }
+                                                </strong>
+
+                                            </div>
+
                                         </div>
 
-                                        <div className="hr-prof-info-text">
-
-                                            <span>
-                                                {item.label}
-                                            </span>
-
-                                            <strong>
-                                                {item.value}
-                                            </strong>
-
-                                        </div>
-
-                                    </div>
-
-                                ))}
+                                    )
+                                )}
 
                             </div>
 
@@ -429,6 +958,7 @@ const Profile = () => {
                         {/* =================================================
                             ACCOUNT INFORMATION
                         ================================================= */}
+
                         <div className="hr-profile-card">
 
                             <div className="hr-section-header">
@@ -445,8 +975,13 @@ const Profile = () => {
 
                                 </div>
 
+
                                 <div className="hr-section-icon">
-                                    <ShieldCheck size={18} />
+
+                                    <ShieldCheck
+                                        size={18}
+                                    />
+
                                 </div>
 
                             </div>
@@ -454,71 +989,85 @@ const Profile = () => {
 
                             <div className="hr-account-info-grid">
 
-                                {accountItems.map((item, i) => (
+                                {accountItems.map(
+                                    (
+                                        item,
+                                        i
+                                    ) => (
 
-                                    <div
-                                        className="hr-account-info-item"
-                                        key={i}
-                                    >
-
-                                        {/* ICON */}
                                         <div
-                                            className="hr-account-info-icon"
-                                            style={{
-                                                background: item.bg,
-                                                color: item.color,
-                                            }}
+                                            className="hr-account-info-item"
+                                            key={i}
                                         >
-                                            {item.icon}
-                                        </div>
+
+                                            <div
+                                                className="hr-account-info-icon"
+                                                style={{
+                                                    background:
+                                                        item.bg,
+                                                    color:
+                                                        item.color,
+                                                }}
+                                            >
+
+                                                {
+                                                    item.icon
+                                                }
+
+                                            </div>
 
 
-                                        {/* TEXT */}
-                                        <div className="hr-account-info-text">
+                                            <div className="hr-account-info-text">
 
-                                            <span>
-                                                {item.label}
-                                            </span>
-
-
-                                            {/* BADGE */}
-                                            {item.badge ? (
-
-                                                <span
-                                                    className="hr-account-badge"
-                                                    style={{
-                                                        background:
-                                                            item.badgeBg,
-                                                        color:
-                                                            item.badgeColor,
-                                                    }}
-                                                >
-
-                                                    <span
-                                                        className="hr-account-badge-dot"
-                                                        style={{
-                                                            background:
-                                                                item.badgeColor,
-                                                        }}
-                                                    ></span>
-
-                                                    {item.value}
-
+                                                <span>
+                                                    {
+                                                        item.label
+                                                    }
                                                 </span>
 
-                                            ) : (
 
-                                                <strong>
-                                                    {item.value}
-                                                </strong>
+                                                {item.badge ? (
 
-                                            )}
+                                                    <span
+                                                        className="hr-account-badge"
+                                                        style={{
+                                                            background:
+                                                                item.badgeBg,
+                                                            color:
+                                                                item.badgeColor,
+                                                        }}
+                                                    >
+
+                                                        <span
+                                                            className="hr-account-badge-dot"
+                                                            style={{
+                                                                background:
+                                                                    item.badgeColor,
+                                                            }}
+                                                        ></span>
+
+                                                        {
+                                                            item.value
+                                                        }
+
+                                                    </span>
+
+                                                ) : (
+
+                                                    <strong>
+                                                        {
+                                                            item.value
+                                                        }
+                                                    </strong>
+
+                                                )}
+
+                                            </div>
 
                                         </div>
 
-                                    </div>
-
-                                ))}
+                                    )
+                                )}
 
                             </div>
 
@@ -534,16 +1083,20 @@ const Profile = () => {
             {/* =========================================================
                 EDIT PROFILE MODAL
             ========================================================= */}
+
             {isEditing && (
 
                 <div className="hr-modal-overlay">
 
                     <div
                         className="hr-modal"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) =>
+                            e.stopPropagation()
+                        }
                     >
 
-                        {/* MODAL HEADER */}
+                        {/* HEADER */}
+
                         <div className="hr-modal-header">
 
                             <div>
@@ -562,20 +1115,27 @@ const Profile = () => {
                             <button
                                 className="hr-modal-close"
                                 type="button"
-                                onClick={handleCancel}
+                                onClick={
+                                    handleCancel
+                                }
                             >
+
                                 <X size={18} />
+
                             </button>
 
                         </div>
 
 
-                        {/* MODAL BODY */}
+                        {/* BODY */}
+
                         <div className="hr-modal-body">
 
                             <div className="hr-modal-grid">
 
+
                                 {/* FIRST NAME */}
+
                                 <div className="hr-modal-field">
 
                                     <label>
@@ -585,14 +1145,19 @@ const Profile = () => {
                                     <input
                                         type="text"
                                         name="firstName"
-                                        value={profile.firstName}
-                                        onChange={handleChange}
+                                        value={
+                                            profile.firstName
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
                                     />
 
                                 </div>
 
 
                                 {/* LAST NAME */}
+
                                 <div className="hr-modal-field">
 
                                     <label>
@@ -602,14 +1167,19 @@ const Profile = () => {
                                     <input
                                         type="text"
                                         name="lastName"
-                                        value={profile.lastName}
-                                        onChange={handleChange}
+                                        value={
+                                            profile.lastName
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
                                     />
 
                                 </div>
 
 
                                 {/* PHONE */}
+
                                 <div className="hr-modal-field">
 
                                     <label>
@@ -619,14 +1189,19 @@ const Profile = () => {
                                     <input
                                         type="text"
                                         name="phone"
-                                        value={profile.phone}
-                                        onChange={handleChange}
+                                        value={
+                                            profile.phone
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
                                     />
 
                                 </div>
 
 
                                 {/* WORK LOCATION */}
+
                                 <div className="hr-modal-field">
 
                                     <label>
@@ -636,8 +1211,12 @@ const Profile = () => {
                                     <input
                                         type="text"
                                         name="location"
-                                        value={profile.location}
-                                        onChange={handleChange}
+                                        value={
+                                            profile.location
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
                                     />
 
                                 </div>
@@ -647,13 +1226,16 @@ const Profile = () => {
                         </div>
 
 
-                        {/* MODAL FOOTER */}
+                        {/* FOOTER */}
+
                         <div className="hr-modal-footer">
 
                             <button
                                 className="hr-profile-cancel-btn"
                                 type="button"
-                                onClick={handleCancel}
+                                onClick={
+                                    handleCancel
+                                }
                             >
                                 Cancel
                             </button>
@@ -662,10 +1244,17 @@ const Profile = () => {
                             <button
                                 className="hr-profile-save-btn"
                                 type="button"
-                                onClick={handleSave}
+                                onClick={
+                                    handleSave
+                                }
                             >
-                                <CheckCircle2 size={16} />
+
+                                <CheckCircle2
+                                    size={16}
+                                />
+
                                 Save Changes
+
                             </button>
 
                         </div>
@@ -677,6 +1266,7 @@ const Profile = () => {
             )}
 
         </AdminLayout>
+
     );
 };
 

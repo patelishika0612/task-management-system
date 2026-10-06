@@ -123,6 +123,10 @@ export const sendApprovalSuccessEmail = async ({
     employeeCode,
     departmentName
 }) => {
+
+    const adminLoginLink =
+        `${process.env.FRONTEND_URL}/set-password?email=${encodeURIComponent(to)}`;
+
     const mailOptions = {
         from: `"Task Management System" <${process.env.SMTP_USER}>`,
 
@@ -136,6 +140,7 @@ export const sendApprovalSuccessEmail = async ({
                 line-height: 1.6;
                 max-width: 650px;
                 margin: auto;
+                padding: 20px;
             ">
 
                 <h2 style="color:#16a34a;">
@@ -173,8 +178,37 @@ export const sendApprovalSuccessEmail = async ({
                 <br />
 
                 <p>
-                    Your admin access request has been
-                    successfully approved.
+                    Your admin access has been successfully approved.
+                </p>
+
+                <p>
+                    Click the button below to access the Admin Login page.
+                </p>
+
+                <br />
+
+                <a
+                    href="${adminLoginLink}"
+                    style="
+                        display:inline-block;
+                        padding:12px 22px;
+                        background:#2563eb;
+                        color:white;
+                        text-decoration:none;
+                        border-radius:6px;
+                        font-weight:bold;
+                    "
+                >
+                    Admin Login
+                </a>
+
+                <p style="
+                    margin-top:25px;
+                    color:#666;
+                    font-size:13px;
+                ">
+                    Your email address will be automatically filled
+                    on the login page.
                 </p>
 
                 <p>

@@ -1,3 +1,4 @@
+
 import bcrypt from "bcryptjs";
 import connection from "../db.js";
 
@@ -309,11 +310,6 @@ const createEmployee = async (req, res) => {
             ]
         );
 
-        // ---------------------------------------------
-        // IMPORTANT
-        // result.insertId = AUTO_INCREMENT emp_id
-        // ---------------------------------------------
-
         return res.status(201).json({
             success: true,
             message: "Employee created successfully",
@@ -494,19 +490,23 @@ const updateEmployee = async (req, res) => {
         // IMAGE
         // ---------------------------------------------
 
-        let imageName = existing_image || employee[0].image || null;
+        let imageName =
+            existing_image ||
+            employee[0].image ||
+            null;
 
         if (req.file) {
             imageName = req.file.filename;
         }
 
         // ---------------------------------------------
-        // UPDATE WITH / WITHOUT PASSWORD
+        // UPDATE WITH PASSWORD
         // ---------------------------------------------
 
         if (password && password.trim()) {
 
-            const passwordHash = await bcrypt.hash(password, 10);
+            const passwordHash =
+                await bcrypt.hash(password, 10);
 
             await db.query(
                 `
@@ -538,6 +538,10 @@ const updateEmployee = async (req, res) => {
             );
 
         } else {
+
+            // -----------------------------------------
+            // UPDATE WITHOUT PASSWORD
+            // -----------------------------------------
 
             await db.query(
                 `
@@ -600,7 +604,6 @@ const deleteEmployee = async (req, res) => {
             });
         }
 
-        // Check employee
         const [employee] = await db.query(
             `
             SELECT emp_id
@@ -644,6 +647,200 @@ const deleteEmployee = async (req, res) => {
 
 
 // =====================================================
+// GET EMPLOYEE PROFILE
+// GET /api/employees/profile?email=example@gmail.com
+// =====================================================
+
+const getEmployeeProfile = async (req, res) => {
+    try {
+        const { email } = req.query;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Email is required"
+            });
+        }
+
+        const [rows] = await db.query(
+            `
+            SELECT
+                e.emp_id,
+                e.employee_code,
+                e.emp_name,
+                e.email,
+                e.phone,
+                e.department_id,
+                d.department_name,
+                e.date_of_join,
+                e.image,
+                e.status,
+                e.created_at,
+                e.updated_at
+            FROM employe e
+            LEFT JOIN departments d
+                ON e.department_id = d.department_id
+            WHERE LOWER(e.email) = LOWER(?)
+            LIMIT 1
+            `,
+            [email.trim()]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Employee profile not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: rows[0]
+        });
+
+    } catch (error) {
+        console.error(
+            "Get employee profile error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch employee profile"
+        });
+    }
+};
+
+// =====================================================
+// CREATE / UPDATE EMPLOYEE PROFILE
+// =====================================================
+// Password removed.
+// Status removed.
+// Only profile image is updated here.
+//
+// PUT /api/employees/create-profile/:empId
+// Content-Type: multipart/form-data
+// Field: image
+// =====================================================
+
+const createEmployeeProfile = async (req, res) => {
+    try {
+
+        const { empId } = req.params;
+
+        const image = req.file;
+
+        // ---------------------------------------------
+        // VALIDATE EMPLOYEE ID
+        // ---------------------------------------------
+
+        if (!empId) {
+            return res.status(400).json({
+                success: false,
+                message: "Employee ID is required"
+            });
+        }
+
+        const employeeId = Number(empId);
+
+        if (
+            !Number.isInteger(employeeId) ||
+            employeeId <= 0
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid employee ID"
+            });
+        }
+
+        // ---------------------------------------------
+        // IMAGE REQUIRED
+        // ---------------------------------------------
+
+        if (!image) {
+            return res.status(400).json({
+                success: false,
+                message: "Profile image is required"
+            });
+        }
+
+        // ---------------------------------------------
+        // CHECK EMPLOYEE
+        // ---------------------------------------------
+
+        const [employees] = await db.query(
+            `
+            SELECT
+                emp_id
+            FROM employe
+            WHERE emp_id = ?
+            LIMIT 1
+            `,
+            [employeeId]
+        );
+
+        if (employees.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Employee not found"
+            });
+        }
+
+        // ---------------------------------------------
+        // IMAGE PATH
+        // ---------------------------------------------
+
+        const imagePath =
+            `/uploads/${image.filename}`;
+
+        // ---------------------------------------------
+        // UPDATE DATABASE
+        // ---------------------------------------------
+
+        await db.query(
+            `
+            UPDATE employe
+            SET
+                image = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE emp_id = ?
+            `,
+            [
+                imagePath,
+                employeeId
+            ]
+        );
+
+        // ---------------------------------------------
+        // SUCCESS
+        // ---------------------------------------------
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile created successfully",
+            data: {
+                emp_id: employeeId,
+                image: imagePath
+            }
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Create employee profile error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to create employee profile",
+            error: error.message
+        });
+    }
+};
+
+
+// =====================================================
 // EXPORT
 // =====================================================
 
@@ -652,5 +849,7 @@ export default {
     getEmployeeById,
     createEmployee,
     updateEmployee,
-    deleteEmployee
+    deleteEmployee,
+    getEmployeeProfile,
+    createEmployeeProfile
 };

@@ -43,10 +43,25 @@ const BASE_URL = API_BASE.replace(/\/api\/?$/, "");
 const getImageUrl = (image) => {
     if (!image) return "";
 
-    if (/^https?:\/\//.test(image)) {
+    // Full URL
+    if (/^https?:\/\//i.test(image)) {
         return image;
     }
 
+    // Backend already returns:
+    // /uploads/employee-123.jpeg
+    if (image.startsWith("/uploads/")) {
+        return `${BASE_URL}${image}`;
+    }
+
+    // Backend returns:
+    // uploads/employee-123.jpeg
+    if (image.startsWith("uploads/")) {
+        return `${BASE_URL}/${image}`;
+    }
+
+    // Backend returns only:
+    // employee-123.jpeg
     return `${BASE_URL}/uploads/${image}`;
 };
 
