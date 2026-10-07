@@ -1,288 +1,421 @@
+
 import React, { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  LogIn,
+  ShieldCheck,
+} from "lucide-react";
+import "./AdminLogin.css";
 
 import API from "../api";
 
 const AdminLogin = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-    const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
+  // =====================================================
+  // GET EMAIL FROM APPROVAL EMAIL LINK
+  // =====================================================
 
-    // =====================================================
-    // GET EMAIL FROM APPROVAL EMAIL LINK
-    // =====================================================
-    const emailFromMail = searchParams.get("email") || "";
+  const emailFromMail = searchParams.get("email") || "";
 
-    const [email, setEmail] = useState(emailFromMail);
-    const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(emailFromMail);
+  const [password, setPassword] = useState("");
 
-    const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
-    const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-    const [error, setError] = useState("");
+  const [error, setError] = useState("");
 
-    const [success, setSuccess] = useState("");
+  const [success, setSuccess] = useState("");
 
-    // =====================================================
-    // ADMIN LOGIN
-    // =====================================================
+  // =====================================================
+  // ADMIN LOGIN
+  // =====================================================
 
-    const handleLogin = async (e) => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
 
-        e.preventDefault();
+    setError("");
+    setSuccess("");
 
-        setError("");
-        setSuccess("");
+    // =================================================
+    // VALIDATION
+    // =================================================
 
-        // =================================================
-        // VALIDATION
-        // =================================================
+    if (!email.trim()) {
+      setError("Email is required.");
+      return;
+    }
 
-        if (!email.trim()) {
-            setError("Email is required.");
-            return;
+    if (!password.trim()) {
+      setError("Password is required.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // =================================================
+      // LOGIN API
+      // =================================================
+
+      const response = await API.post(
+        "/admin-login/login",
+        {
+          email: email.trim().toLowerCase(),
+          password: password,
         }
+      );
 
-        if (!password.trim()) {
-            setError("Password is required.");
-            return;
-        }
+      const result = response.data;
 
-        try {
+      // =================================================
+      // CHECK RESPONSE
+      // =================================================
 
-            setLoading(true);
+      if (!result.success) {
+        setError(
+          result.message ||
+            "Invalid email or password."
+        );
 
-            // =================================================
-            // LOGIN API
-            // =================================================
+        return;
+      }
 
-            const response = await API.post(
-                "/admin-login/login",
-                {
-                    email: email.trim().toLowerCase(),
-                    password: password
-                }
-            );
+      // =================================================
+      // SAVE JWT TOKEN
+      // =================================================
 
-            const result = response.data;
+      localStorage.setItem(
+        "adminToken",
+        result.data.token
+      );
 
-            // =================================================
-            // CHECK RESPONSE
-            // =================================================
+      // =================================================
+      // SAVE ADMIN DATA
+      // =================================================
 
-            if (!result.success) {
+      localStorage.setItem(
+        "adminData",
+        JSON.stringify({
+          adminId: result.data.adminId,
+          email: result.data.email,
+        })
+      );
 
-                setError(
-                    result.message ||
-                    "Invalid email or password."
-                );
+      // =================================================
+      // SUCCESS
+      // =================================================
 
-                return;
-            }
+      setSuccess("Login successful!");
 
-            // =================================================
-            // SAVE JWT TOKEN
-            // =================================================
+      // =================================================
+      // REDIRECT
+      // =================================================
 
-            localStorage.setItem(
-                "adminToken",
-                result.data.token
-            );
+      setTimeout(() => {
+        navigate(
+          `/?email=${encodeURIComponent(email)}`
+        );
+      }, 500);
+    } catch (error) {
+      console.error(
+        "Admin login error:",
+        error
+      );
 
-            // =================================================
-            // SAVE ADMIN DATA
-            // =================================================
+      setError(
+        error.response?.data?.message ||
+          "Unable to connect to server."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            localStorage.setItem(
-                "adminData",
-                JSON.stringify({
-                    adminId: result.data.adminId,
-                    email: result.data.email
-                })
-            );
+  // =====================================================
+  // UI
+  // =====================================================
 
-            // =================================================
-            // SUCCESS
-            // =================================================
+  return (
+    <div className="admin-login-page">
 
-            setSuccess("Login successful!");
+      {/* ==================================================
+          LEFT SIDE
+      ================================================== */}
 
-            // =================================================
-            // REDIRECT TO PROFILE
-            // =================================================
+      <div className="admin-login-left">
 
-            setTimeout(() => {
+        {/* Decorative Shapes */}
 
-                navigate(`/?email=${encodeURIComponent(email)}`);
+        <div className="admin-login-decoration admin-login-decoration-one"></div>
 
-            }, 500);
+        <div className="admin-login-decoration admin-login-decoration-two"></div>
 
-        } catch (error) {
+        <div className="admin-login-decoration admin-login-decoration-three"></div>
 
-            console.error(
-                "Admin login error:",
-                error
-            );
+      </div>
 
-            setError(
-                error.response?.data?.message ||
-                "Unable to connect to server."
-            );
+      {/* ==================================================
+          RIGHT SIDE
+      ================================================== */}
 
-        } finally {
+      <div className="admin-login-right">
 
-            setLoading(false);
-        }
-    };
+        <div className="admin-login-card">
 
-    // =====================================================
-    // UI
-    // =====================================================
+          {/* ==================================================
+              MOBILE BRAND
+          ================================================== */}
 
-    return (
-        <div className="admin-login-page">
+          <div className="admin-login-mobile-brand">
 
-            <div className="admin-login-card">
+            <div className="admin-login-mobile-icon">
+              <ShieldCheck size={26} />
+            </div>
 
-                <h2>
-                    Admin Login
-                </h2>
+            <div>
+              <h3>Employee Management</h3>
+              <span>Admin Portal</span>
+            </div>
 
-                <p className="login-subtitle">
-                    Login to access your admin account
-                </p>
+          </div>
 
-                {/* ERROR */}
+          {/* ==================================================
+              HEADING
+          ================================================== */}
 
-                {error && (
-                    <div className="login-error">
-                        {error}
-                    </div>
-                )}
+          <div className="admin-login-heading">
 
-                {/* SUCCESS */}
+            <div className="admin-login-welcome">
+              Welcome Admin
+            </div>
 
-                {success && (
-                    <div className="login-success">
-                        {success}
-                    </div>
-                )}
+            <h1>
+              Sign in to your account
+            </h1>
 
-                {/* LOGIN FORM */}
+            <p>
+              Enter your credentials to access
+              your admin dashboard.
+            </p>
 
-                <form onSubmit={handleLogin}>
+          </div>
 
-                    {/* =================================================
-                        EMAIL
-                    ================================================= */}
+          {/* ==================================================
+              ERROR MESSAGE
+          ================================================== */}
 
-                    <div className="form-group">
+          {error && (
+            <div className="login-error">
+              {error}
+            </div>
+          )}
 
-                        <label htmlFor="email">
-                            Email
-                        </label>
+          {/* ==================================================
+              SUCCESS MESSAGE
+          ================================================== */}
 
-                        <div className="input-wrapper">
+          {success && (
+            <div className="login-success">
+              {success}
+            </div>
+          )}
 
-                            <Mail
-                                size={18}
-                                className="input-icon"
-                            />
+          {/* ==================================================
+              LOGIN FORM
+          ================================================== */}
 
-                            <input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Email"
-                                required
-                            />
-                        </div>
+          <form
+            className="admin-login-form"
+            onSubmit={handleLogin}
+          >
 
-                    </div>
+            {/* ==================================================
+                EMAIL
+            ================================================== */}
 
-                    {/* =================================================
-                        PASSWORD
-                    ================================================= */}
+            <div className="admin-login-form-group">
 
-                    <div className="form-group">
+              <label htmlFor="email">
+                Email Address
+              </label>
 
-                        <label htmlFor="password">
-                            Password
-                        </label>
+              <div className="admin-login-input-wrapper">
 
-                        <div className="input-wrapper">
+                <Mail
+                  size={19}
+                  className="admin-login-input-icon"
+                />
 
-                            <Lock
-                                size={18}
-                                className="input-icon"
-                            />
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setError("");
+                  }}
+                  autoComplete="email"
+                  required
+                />
 
-                            <input
-                                id="password"
-                                type={
-                                    showPassword
-                                        ? "text"
-                                        : "password"
-                                }
-                                value={password}
-                                onChange={(e) =>
-                                    setPassword(e.target.value)
-                                }
-                                placeholder="Enter password"
-                                required
-                            />
-
-                            {/* SHOW / HIDE PASSWORD */}
-
-                            <button
-                                type="button"
-                                className="password-toggle"
-                                onClick={() =>
-                                    setShowPassword(
-                                        !showPassword
-                                    )
-                                }
-                                aria-label={
-                                    showPassword
-                                        ? "Hide password"
-                                        : "Show password"
-                                }
-                            >
-                                {showPassword ? (
-                                    <EyeOff size={19} />
-                                ) : (
-                                    <Eye size={19} />
-                                )}
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    {/* =================================================
-                        LOGIN BUTTON
-                    ================================================= */}
-
-                    <button
-                        type="submit"
-                        className="login-button"
-                        disabled={loading}
-                    >
-                        {loading
-                            ? "Logging in..."
-                            : "Login"
-                        }
-                    </button>
-
-                </form>
+              </div>
 
             </div>
 
+            {/* ==================================================
+                PASSWORD
+            ================================================== */}
+
+            <div className="admin-login-form-group">
+
+              <label htmlFor="password">
+                Password
+              </label>
+
+              <div className="admin-login-input-wrapper">
+
+                <Lock
+                  size={19}
+                  className="admin-login-input-icon"
+                />
+
+                <input
+                  id="password"
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  name="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError("");
+                  }}
+                  autoComplete="current-password"
+                  required
+                />
+
+                <button
+                  type="button"
+                  className="admin-login-password-toggle"
+                  onClick={() =>
+                    setShowPassword(
+                      (prev) => !prev
+                    )
+                  }
+                  aria-label={
+                    showPassword
+                      ? "Hide password"
+                      : "Show password"
+                  }
+                >
+                  {showPassword ? (
+                    <EyeOff size={19} />
+                  ) : (
+                    <Eye size={19} />
+                  )}
+                </button>
+
+              </div>
+
+            </div>
+
+            {/* ==================================================
+                LOGIN OPTIONS
+            ================================================== */}
+
+            <div className="admin-login-options">
+
+              <button
+                type="button"
+                className="admin-login-forgot"
+                onClick={() =>
+                  navigate("/forgotpassword")
+                }
+              >
+                Forgot Password?
+              </button>
+
+            </div>
+
+            {/* ==================================================
+                LOGIN BUTTON
+            ================================================== */}
+
+            <button
+              type="submit"
+              className="admin-login-submit"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <span className="admin-login-spinner"></span>
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <LogIn size={19} />
+                  Sign In
+                </>
+              )}
+            </button>
+
+            {/* ==================================================
+                EMPLOYEE LOGIN
+            ================================================== */}
+
+            <button
+              type="button"
+              className="hr-login"
+              onClick={() =>
+                navigate("/")
+              }
+            >
+              Employee Login
+            </button>
+
+          </form>
+
+          {/* ==================================================
+              SECURITY INFORMATION
+          ================================================== */}
+
+          <div className="admin-login-security">
+
+            <ShieldCheck size={18} />
+
+            <div>
+
+              <strong>
+                Secure Login
+              </strong>
+
+              <span>
+                Your account information is protected.
+              </span>
+
+            </div>
+
+          </div>
+
         </div>
-    );
+
+      </div>
+
+    </div>
+  );
 };
 
 export default AdminLogin;

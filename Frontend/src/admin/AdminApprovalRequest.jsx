@@ -13,37 +13,50 @@ import {
     ShieldCheck,
     Send,
     X,
-    Info
-} from "lucide-react";
+    Info,
+    KeyRound,
+    BadgeCheck,
 
+    
+    CheckCircle2,
+} from "lucide-react";
+import "./AdminReviewRequests.css";
 import Swal from "sweetalert2";
 import "./AdminApprovalRequest.css";
 
 const API_BASE_URL = "http://localhost:5000/api";
 
-  const Field = ({
-        id,
-        label,
-        required,
-        error,
-        children
-    }) => (
-        <div className="apr-field">
-            <label htmlFor={id}>
-                {label}
-                {required && <span> *</span>}
-            </label>
+// =====================================================
+// FIELD COMPONENT
+// =====================================================
 
-            {children}
+const Field = ({
+    id,
+    label,
+    required,
+    error,
+    children,
+}) => (
+    <div className="apr-field">
+        <label htmlFor={id}>
+            {label}
+            {required && <span className="apr-required"> *</span>}
+        </label>
 
-            {error && (
-                <small className="apr-error">
-                    {error}
-                </small>
-            )}
-        </div>
-    );
-    
+        {children}
+
+        {error && (
+            <small className="apr-error">
+                {error}
+            </small>
+        )}
+    </div>
+);
+
+// =====================================================
+// MAIN COMPONENT
+// =====================================================
+
 const AdminApprovalRequest = () => {
     const navigate = useNavigate();
 
@@ -59,7 +72,7 @@ const AdminApprovalRequest = () => {
         employeeCode: "",
         department: "",
         joiningDate: "",
-        reason: ""
+        reason: "",
     });
 
     // =====================================================
@@ -68,10 +81,12 @@ const AdminApprovalRequest = () => {
 
     const [errors, setErrors] = useState({});
     const [departments, setDepartments] = useState([]);
-    const [loadingDepartments, setLoadingDepartments] = useState(false);
+    const [loadingDepartments, setLoadingDepartments] =
+        useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-    const [submittedRequestId, setSubmittedRequestId] = useState(null);
+    const [submittedRequestId, setSubmittedRequestId] =
+        useState(null);
 
     // =====================================================
     // LOAD DEPARTMENTS
@@ -91,17 +106,19 @@ const AdminApprovalRequest = () => {
 
             const data = await response.json();
 
-            console.log("Departments API response:", data);
-
             if (!response.ok || !data.success) {
                 throw new Error(
-                    data.message || "Failed to fetch departments"
+                    data.message ||
+                        "Failed to fetch departments"
                 );
             }
 
             setDepartments(data.data || []);
         } catch (error) {
-            console.error("Fetch departments error:", error);
+            console.error(
+                "Fetch departments error:",
+                error
+            );
 
             Swal.fire({
                 icon: "error",
@@ -109,7 +126,7 @@ const AdminApprovalRequest = () => {
                 text:
                     error.message ||
                     "Something went wrong while loading departments.",
-                confirmButtonColor: "#2f3387"
+                confirmButtonColor: "#3155f5",
             });
         } finally {
             setLoadingDepartments(false);
@@ -125,13 +142,13 @@ const AdminApprovalRequest = () => {
 
         setFormData((prev) => ({
             ...prev,
-            [name]: value
+            [name]: value,
         }));
 
         if (errors[name]) {
             setErrors((prev) => ({
                 ...prev,
-                [name]: ""
+                [name]: "",
             }));
         }
     };
@@ -147,19 +164,19 @@ const AdminApprovalRequest = () => {
 
         setFormData((prev) => ({
             ...prev,
-            phoneNumber: value
+            phoneNumber: value,
         }));
 
         if (errors.phoneNumber) {
             setErrors((prev) => ({
                 ...prev,
-                phoneNumber: ""
+                phoneNumber: "",
             }));
         }
     };
 
     // =====================================================
-    // VALIDATE FORM
+    // VALIDATE
     // =====================================================
 
     const validateForm = () => {
@@ -173,12 +190,13 @@ const AdminApprovalRequest = () => {
             reason,
             dateOfBirth,
             joiningDate,
-            department
+            department,
         } = formData;
 
         // Full Name
         if (!fullName.trim()) {
-            newErrors.fullName = "Full name is required.";
+            newErrors.fullName =
+                "Full name is required.";
         } else if (fullName.trim().length < 3) {
             newErrors.fullName =
                 "Full name must be at least 3 characters.";
@@ -188,7 +206,9 @@ const AdminApprovalRequest = () => {
         if (!phoneNumber.trim()) {
             newErrors.phoneNumber =
                 "Phone number is required.";
-        } else if (!/^[0-9]{10}$/.test(phoneNumber.trim())) {
+        } else if (
+            !/^[0-9]{10}$/.test(phoneNumber.trim())
+        ) {
             newErrors.phoneNumber =
                 "Enter a valid 10-digit phone number.";
         }
@@ -232,7 +252,9 @@ const AdminApprovalRequest = () => {
 
         // DOB
         if (dateOfBirth) {
-            const dob = new Date(`${dateOfBirth}T00:00:00`);
+            const dob = new Date(
+                `${dateOfBirth}T00:00:00`
+            );
             const today = new Date();
 
             today.setHours(0, 0, 0, 0);
@@ -248,7 +270,10 @@ const AdminApprovalRequest = () => {
             newErrors.joiningDate =
                 "Joining date is required.";
         } else {
-            const jd = new Date(`${joiningDate}T00:00:00`);
+            const jd = new Date(
+                `${joiningDate}T00:00:00`
+            );
+
             const today = new Date();
 
             today.setHours(0, 0, 0, 0);
@@ -261,8 +286,13 @@ const AdminApprovalRequest = () => {
 
         // DOB vs Joining Date
         if (dateOfBirth && joiningDate) {
-            const dob = new Date(`${dateOfBirth}T00:00:00`);
-            const jd = new Date(`${joiningDate}T00:00:00`);
+            const dob = new Date(
+                `${dateOfBirth}T00:00:00`
+            );
+
+            const jd = new Date(
+                `${joiningDate}T00:00:00`
+            );
 
             if (jd < dob) {
                 newErrors.joiningDate =
@@ -287,7 +317,7 @@ const AdminApprovalRequest = () => {
                 icon: "warning",
                 title: "Check Your Details",
                 text: "Please correct the highlighted fields.",
-                confirmButtonColor: "#2f3387"
+                confirmButtonColor: "#3155f5",
             });
 
             return;
@@ -301,29 +331,32 @@ const AdminApprovalRequest = () => {
             // =================================================
 
             const payload = {
-                employee_code: formData.employeeCode.trim(),
+                employee_code:
+                    formData.employeeCode.trim(),
 
-                Full_Name: formData.fullName.trim(),
+                Full_Name:
+                    formData.fullName.trim(),
 
-                Email: formData.emailAddress
-                    .trim()
-                    .toLowerCase(),
+                Email:
+                    formData.emailAddress
+                        .trim()
+                        .toLowerCase(),
 
-                Phone: formData.phoneNumber.trim(),
+                Phone:
+                    formData.phoneNumber.trim(),
 
-                DOB: formData.dateOfBirth || null,
+                DOB:
+                    formData.dateOfBirth || null,
 
-                Department_ID: Number(formData.department),
+                Department_ID:
+                    Number(formData.department),
 
-                Joining_Date: formData.joiningDate,
+                Joining_Date:
+                    formData.joiningDate,
 
-                Reason: formData.reason.trim()
+                Reason:
+                    formData.reason.trim(),
             };
-
-            console.log(
-                "Admin access request payload:",
-                payload
-            );
 
             const response = await fetch(
                 `${API_BASE_URL}/admin-access-requests`,
@@ -331,24 +364,20 @@ const AdminApprovalRequest = () => {
                     method: "POST",
 
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type":
+                            "application/json",
                     },
 
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
                 }
             );
 
             const data = await response.json();
 
-            console.log(
-                "Admin access request response:",
-                data
-            );
-
             if (!response.ok || !data.success) {
                 throw new Error(
                     data.message ||
-                    "Failed to submit admin access request."
+                        "Failed to submit admin access request."
                 );
             }
 
@@ -378,22 +407,18 @@ const AdminApprovalRequest = () => {
                     method: "POST",
 
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type":
+                            "application/json",
                     },
 
                     body: JSON.stringify({
-                        Request_ID: requestId
-                    })
+                        Request_ID: requestId,
+                    }),
                 }
             );
 
             const approvalData =
                 await approvalResponse.json();
-
-            console.log(
-                "Approval response:",
-                approvalData
-            );
 
             if (
                 !approvalResponse.ok ||
@@ -401,13 +426,9 @@ const AdminApprovalRequest = () => {
             ) {
                 throw new Error(
                     approvalData.message ||
-                    "Request was created, but approval email could not be sent."
+                        "Request was created, but approval email could not be sent."
                 );
             }
-
-            // =================================================
-            // SUCCESS
-            // =================================================
 
             // =================================================
             // SUCCESS
@@ -416,7 +437,6 @@ const AdminApprovalRequest = () => {
             setSubmittedRequestId(requestId);
             setSubmitted(true);
 
-            // Clear form
             setFormData({
                 fullName: "",
                 phoneNumber: "",
@@ -425,10 +445,15 @@ const AdminApprovalRequest = () => {
                 employeeCode: "",
                 department: "",
                 joiningDate: "",
-                reason: ""
+                reason: "",
             });
 
             setErrors({});
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+            });
         } catch (error) {
             console.error(
                 "Submit admin access request error:",
@@ -441,7 +466,7 @@ const AdminApprovalRequest = () => {
                 text:
                     error.message ||
                     "Something went wrong while submitting the request.",
-                confirmButtonColor: "#dc2626"
+                confirmButtonColor: "#dc2626",
             });
         } finally {
             setSubmitting(false);
@@ -472,7 +497,7 @@ const AdminApprovalRequest = () => {
             confirmButtonText: "Yes, Discard",
             cancelButtonText: "Continue Editing",
             confirmButtonColor: "#dc2626",
-            cancelButtonColor: "#2f3387"
+            cancelButtonColor: "#3155f5",
         }).then((result) => {
             if (result.isConfirmed) {
                 navigate(-1);
@@ -481,446 +506,755 @@ const AdminApprovalRequest = () => {
     };
 
     // =====================================================
-    // FIELD COMPONENT
+    // INPUT CLASS
     // =====================================================
 
-  
-
+    const inputClass = (field) =>
+        `apr-input ${
+            errors[field] ? "apr-input-error" : ""
+        }`;
+sessionStorage.setItem(
+    "accessRequest",
+    JSON.stringify({
+        email: formData.email,
+        fullName: formData.fullName,
+        phone: formData.phone,
+        employeeId: formData.employeeId,
+    })
+);
     // =====================================================
     // JSX
     // =====================================================
 
     return (
         <div className="apr-page">
+
             <div className="apr-body">
+
+                {/* =================================================
+                    TOP STEP BADGE
+                ================================================= */}
+
+                <div className="apr-top-step">
+                    <span className="apr-top-step-number">
+                        1
+                    </span>
+
+                    <span>
+                        Step 1 of 4
+                    </span>
+                </div>
+
+                {/* =================================================
+                    PAGE HEADING
+                ================================================= */}
+
+                <div className="apr-page-heading">
+
+                    <h1>
+                        Request Account Access
+                    </h1>
+
+                    <p>
+                        Fill in your basic information below.
+                        Your request will be sent to the
+                        authorized person for approval.
+                    </p>
+
+                </div>
+
+                {/* =================================================
+                    STEP PROGRESS
+                ================================================= */}
+
+               
+        <div className="arv-process">
+
+          <div className="arv-process-step arv-active">
+
+            <div className="arv-step-number">
+              <CheckCircle2 size={17} />
+            </div>
+
+            <div>
+              <span>01</span>
+              <strong>Request Submitted</strong>
+            </div>
+
+          </div>
+
+          <div className="arv-process-line active"></div>
+
+          <div className="arv-process-step ">
+
+            <div className="arv-step-number">
+              <FileText size={17} />
+            </div>
+
+            <div>
+              <span>02</span>
+              <strong>Review Request</strong>
+            </div>
+
+          </div>
+
+          <div className="arv-process-line"></div>
+
+          <div className="arv-process-step">
+
+            <div className="arv-step-number">
+              <KeyRound size={17} />
+            </div>
+
+            <div>
+              <span>03</span>
+              <strong>Create Password</strong>
+            </div>
+
+          </div>
+
+          <div className="arv-process-line"></div>
+
+          <div className="arv-process-step">
+
+            <div className="arv-step-number">
+              <BadgeCheck size={17} />
+            </div>
+
+            <div>
+              <span>04</span>
+              <strong>Complete Profile</strong>
+            </div>
+
+          </div>
+
+        </div>
+                {/* =================================================
+                    MAIN CARD
+                ================================================= */}
+
                 <div className="apr-box">
 
-                    {/* HEADER */}
+                    {/* =================================================
+                        CARD HEADER
+                    ================================================= */}
+
                     <div className="apr-box-header">
+
                         <div className="apr-box-header-icon">
-                            <ShieldCheck size={26} />
+                            <FileText size={19} />
                         </div>
 
                         <div>
-                            <h1>Request Admin Access</h1>
+
+                            <h2>
+                                Your Information
+                            </h2>
 
                             <p>
-                                Submit your details to request
-                                administrator access to the
-                                Task Management System.
+                                Please provide accurate information.
                             </p>
+
                         </div>
+
                     </div>
 
-                    {/* NOTICE */}
-                    <div className="apr-notice">
-                        <Info size={17} />
+                    {/* =================================================
+                        CONTENT
+                    ================================================= */}
 
-                        <p>
-                            Your request will be reviewed by
-                            an authorized approver. You will
-                            be notified after approval.
-                        </p>
-                    </div>
+                    <div className="apr-content">
 
-                    {/* FORM */}
-                    <form
-                        onSubmit={handleSubmit}
-                        noValidate
-                    >
+                        {/* =================================================
+                            LEFT FORM
+                        ================================================= */}
 
-                        {/* PERSONAL INFORMATION */}
-                        <div className="apr-section">
+                        <div className="apr-form-area">
 
-                            <div className="apr-section-label">
-                                <User size={14} />
-                                Personal Information
-                            </div>
+                            <form
+                                onSubmit={handleSubmit}
+                                noValidate
+                            >
 
-                            <div className="apr-grid">
+                                {/* =================================================
+                                    PERSONAL DETAILS
+                                ================================================= */}
 
-                                {/* FULL NAME */}
-                                <Field
-                                    id="fullName"
-                                    label="Full Name"
-                                    required
-                                    error={errors.fullName}
-                                >
-                                    <div
-                                        className={`apr-input ${errors.fullName
-                                                ? "apr-input-error"
-                                                : ""
-                                            }`}
-                                    >
-                                        <User size={15} />
+                                <div className="apr-section">
 
-                                        <input
+                                    <h3>
+                                        Personal Details
+                                    </h3>
+
+                                    <div className="apr-grid">
+
+                                        {/* FULL NAME */}
+
+                                        <Field
                                             id="fullName"
-                                            type="text"
-                                            name="fullName"
-                                            value={
-                                                formData.fullName
-                                            }
-                                            onChange={
-                                                handleChange
-                                            }
-                                            placeholder="Enter full name"
-                                        />
-                                    </div>
-                                </Field>
-
-                                {/* PHONE */}
-                                <Field
-                                    id="phoneNumber"
-                                    label="Phone Number"
-                                    required
-                                    error={
-                                        errors.phoneNumber
-                                    }
-                                >
-                                    <div
-                                        className={`apr-input ${errors.phoneNumber
-                                                ? "apr-input-error"
-                                                : ""
-                                            }`}
-                                    >
-                                        <Phone size={15} />
-
-                                        <input
-                                            id="phoneNumber"
-                                            type="tel"
-                                            name="phoneNumber"
-                                            value={
-                                                formData.phoneNumber
-                                            }
-                                            inputMode="numeric"
-                                            onChange={
-                                                handlePhoneChange
-                                            }
-                                            placeholder="10-digit phone number"
-                                        />
-                                    </div>
-                                </Field>
-
-                                {/* EMAIL */}
-                                <Field
-                                    id="emailAddress"
-                                    label="Email Address"
-                                    required
-                                    error={
-                                        errors.emailAddress
-                                    }
-                                >
-                                    <div
-                                        className={`apr-input ${errors.emailAddress
-                                                ? "apr-input-error"
-                                                : ""
-                                            }`}
-                                    >
-                                        <Mail size={15} />
-
-                                        <input
-                                            id="emailAddress"
-                                            type="email"
-                                            name="emailAddress"
-                                            value={
-                                                formData.emailAddress
-                                            }
-                                            onChange={
-                                                handleChange
-                                            }
-                                            placeholder="Enter email address"
-                                        />
-                                    </div>
-                                </Field>
-
-                                {/* DOB */}
-                                <Field
-                                    id="dateOfBirth"
-                                    label="Date of Birth"
-                                    error={
-                                        errors.dateOfBirth
-                                    }
-                                >
-                                    <div
-                                        className={`apr-input ${errors.dateOfBirth
-                                                ? "apr-input-error"
-                                                : ""
-                                            }`}
-                                    >
-                                        <CalendarDays
-                                            size={15}
-                                        />
-
-                                        <input
-                                            id="dateOfBirth"
-                                            type="date"
-                                            name="dateOfBirth"
-                                            value={
-                                                formData.dateOfBirth
-                                            }
-                                            onChange={
-                                                handleChange
-                                            }
-                                        />
-                                    </div>
-                                </Field>
-
-                            </div>
-                        </div>
-
-                        {/* EMPLOYMENT DETAILS */}
-                        <div className="apr-section">
-
-                            <div className="apr-section-label">
-                                <BriefcaseBusiness size={14} />
-                                Employment Details
-                            </div>
-
-                            <div className="apr-grid">
-
-                                {/* EMPLOYEE CODE */}
-                                <Field
-                                    id="employeeCode"
-                                    label="Employee Code"
-                                    required
-                                    error={
-                                        errors.employeeCode
-                                    }
-                                >
-                                    <div
-                                        className={`apr-input ${errors.employeeCode
-                                                ? "apr-input-error"
-                                                : ""
-                                            }`}
-                                    >
-                                        <IdCard size={15} />
-
-                                        <input
-                                            id="employeeCode"
-                                            type="text"
-                                            name="employeeCode"
-                                            value={
-                                                formData.employeeCode
-                                            }
-                                            onChange={
-                                                handleChange
-                                            }
-                                            placeholder="Enter Employee Code"
-                                            maxLength={50}
-                                        />
-                                    </div>
-
-                                    <small className="apr-help-text">
-                                        Enter your Employee Code.
-                                        New employees can use a
-                                        new code.
-                                    </small>
-                                </Field>
-
-                                {/* DEPARTMENT */}
-                                <Field
-                                    id="department"
-                                    label="Department"
-                                    required
-                                    error={
-                                        errors.department
-                                    }
-                                >
-                                    <div
-                                        className={`apr-input ${errors.department
-                                                ? "apr-input-error"
-                                                : ""
-                                            }`}
-                                    >
-                                        <Building2 size={15} />
-
-                                        <select
-                                            id="department"
-                                            name="department"
-                                            value={
-                                                formData.department
-                                            }
-                                            onChange={
-                                                handleChange
-                                            }
-                                            disabled={
-                                                loadingDepartments
+                                            label="Full Name"
+                                            required
+                                            error={
+                                                errors.fullName
                                             }
                                         >
-                                            <option value="">
-                                                {loadingDepartments
-                                                    ? "Loading Departments..."
-                                                    : "Select Department"}
-                                            </option>
 
-                                            {departments.map(
-                                                (department) => (
-                                                    <option
-                                                        key={
-                                                            department.department_id
-                                                        }
-                                                        value={
-                                                            department.department_id
-                                                        }
-                                                    >
-                                                        {
-                                                            department.department_name
-                                                        }
+                                            <div
+                                                className={inputClass(
+                                                    "fullName"
+                                                )}
+                                            >
+
+                                                <User size={15} />
+
+                                                <input
+                                                    id="fullName"
+                                                    type="text"
+                                                    name="fullName"
+                                                    value={
+                                                        formData.fullName
+                                                    }
+                                                    onChange={
+                                                        handleChange
+                                                    }
+                                                    placeholder="Enter your full name"
+                                                />
+
+                                            </div>
+
+                                        </Field>
+
+                                        {/* EMAIL */}
+
+                                        <Field
+                                            id="emailAddress"
+                                            label="Email Address"
+                                            required
+                                            error={
+                                                errors.emailAddress
+                                            }
+                                        >
+
+                                            <div
+                                                className={inputClass(
+                                                    "emailAddress"
+                                                )}
+                                            >
+
+                                                <Mail size={15} />
+
+                                                <input
+                                                    id="emailAddress"
+                                                    type="email"
+                                                    name="emailAddress"
+                                                    value={
+                                                        formData.emailAddress
+                                                    }
+                                                    onChange={
+                                                        handleChange
+                                                    }
+                                                    placeholder="name@company.com"
+                                                />
+
+                                            </div>
+
+                                        </Field>
+
+                                        {/* PHONE */}
+
+                                        <Field
+                                            id="phoneNumber"
+                                            label="Phone Number"
+                                            required
+                                            error={
+                                                errors.phoneNumber
+                                            }
+                                        >
+
+                                            <div
+                                                className={inputClass(
+                                                    "phoneNumber"
+                                                )}
+                                            >
+
+                                                <Phone size={15} />
+
+                                                <input
+                                                    id="phoneNumber"
+                                                    type="tel"
+                                                    name="phoneNumber"
+                                                    value={
+                                                        formData.phoneNumber
+                                                    }
+                                                    inputMode="numeric"
+                                                    onChange={
+                                                        handlePhoneChange
+                                                    }
+                                                    placeholder="Enter phone number"
+                                                />
+
+                                            </div>
+
+                                        </Field>
+
+                                        {/* DOB */}
+
+                                        <Field
+                                            id="dateOfBirth"
+                                            label="Date of Birth"
+                                            error={
+                                                errors.dateOfBirth
+                                            }
+                                        >
+
+                                            <div
+                                                className={inputClass(
+                                                    "dateOfBirth"
+                                                )}
+                                            >
+
+                                                <CalendarDays
+                                                    size={15}
+                                                />
+
+                                                <input
+                                                    id="dateOfBirth"
+                                                    type="date"
+                                                    name="dateOfBirth"
+                                                    value={
+                                                        formData.dateOfBirth
+                                                    }
+                                                    onChange={
+                                                        handleChange
+                                                    }
+                                                />
+
+                                            </div>
+
+                                        </Field>
+
+                                    </div>
+
+                                </div>
+
+                                {/* =================================================
+                                    WORK INFORMATION
+                                ================================================= */}
+
+                                <div className="apr-section">
+
+                                    <h3>
+                                        Work Information
+                                    </h3>
+
+                                    <div className="apr-grid">
+
+                                        {/* EMPLOYEE ID */}
+
+                                        <Field
+                                            id="employeeCode"
+                                            label="Employee ID"
+                                            error={
+                                                errors.employeeCode
+                                            }
+                                        >
+
+                                            <div
+                                                className={inputClass(
+                                                    "employeeCode"
+                                                )}
+                                            >
+
+                                                <IdCard size={15} />
+
+                                                <input
+                                                    id="employeeCode"
+                                                    type="text"
+                                                    name="employeeCode"
+                                                    value={
+                                                        formData.employeeCode
+                                                    }
+                                                    onChange={
+                                                        handleChange
+                                                    }
+                                                    placeholder="e.g. EMP001"
+                                                    maxLength={50}
+                                                />
+
+                                            </div>
+
+                                            <small className="apr-help-text">
+                                                Leave blank if you don't have one.
+                                            </small>
+
+                                        </Field>
+
+                                        {/* DEPARTMENT */}
+
+                                        <Field
+                                            id="department"
+                                            label="Department"
+                                            required
+                                            error={
+                                                errors.department
+                                            }
+                                        >
+
+                                            <div
+                                                className={inputClass(
+                                                    "department"
+                                                )}
+                                            >
+
+                                                <Building2 size={15} />
+
+                                                <select
+                                                    id="department"
+                                                    name="department"
+                                                    value={
+                                                        formData.department
+                                                    }
+                                                    onChange={
+                                                        handleChange
+                                                    }
+                                                    disabled={
+                                                        loadingDepartments
+                                                    }
+                                                >
+
+                                                    <option value="">
+                                                        {loadingDepartments
+                                                            ? "Loading departments..."
+                                                            : "Select department"}
                                                     </option>
-                                                )
-                                            )}
-                                        </select>
-                                    </div>
-                                </Field>
 
-                                {/* JOINING DATE */}
-                                <Field
-                                    id="joiningDate"
-                                    label="Joining Date"
-                                    required
-                                    error={
-                                        errors.joiningDate
-                                    }
-                                >
-                                    <div
-                                        className={`apr-input ${errors.joiningDate
-                                                ? "apr-input-error"
-                                                : ""
-                                            }`}
-                                    >
-                                        <CalendarDays
-                                            size={15}
-                                        />
+                                                    {departments.map(
+                                                        (department) => (
+                                                            <option
+                                                                key={
+                                                                    department.department_id
+                                                                }
+                                                                value={
+                                                                    department.department_id
+                                                                }
+                                                            >
+                                                                {
+                                                                    department.department_name
+                                                                }
+                                                            </option>
+                                                        )
+                                                    )}
 
-                                        <input
+                                                </select>
+
+                                            </div>
+
+                                        </Field>
+
+                                        {/* JOINING DATE */}
+
+                                        <Field
                                             id="joiningDate"
-                                            type="date"
-                                            name="joiningDate"
-                                            value={
-                                                formData.joiningDate
+                                            label="Joining Date"
+                                            required
+                                            error={
+                                                errors.joiningDate
                                             }
-                                            onChange={
-                                                handleChange
-                                            }
-                                        />
+                                        >
+
+                                            <div
+                                                className={inputClass(
+                                                    "joiningDate"
+                                                )}
+                                            >
+
+                                                <CalendarDays
+                                                    size={15}
+                                                />
+
+                                                <input
+                                                    id="joiningDate"
+                                                    type="date"
+                                                    name="joiningDate"
+                                                    value={
+                                                        formData.joiningDate
+                                                    }
+                                                    onChange={
+                                                        handleChange
+                                                    }
+                                                />
+
+                                            </div>
+
+                                        </Field>
+
                                     </div>
-                                </Field>
 
-                            </div>
-                        </div>
+                                </div>
 
-                        {/* REASON */}
-                        <div className="apr-section apr-section-last">
+                                {/* =================================================
+                                    REASON
+                                ================================================= */}
 
-                            <div className="apr-section-label">
-                                <FileText size={14} />
-                                Reason for Access
-                            </div>
+                                <div className="apr-section apr-reason-section">
 
-                            <Field
-                                id="reason"
-                                label="Why do you need admin access?"
-                                required
-                                error={errors.reason}
-                            >
-                                <div
-                                    className={`apr-textarea ${errors.reason
-                                            ? "apr-input-error"
-                                            : ""
-                                        }`}
-                                >
-                                    <FileText size={15} />
+                                    <h3>
+                                        Request Details
+                                    </h3>
 
-                                    <textarea
+                                    <Field
                                         id="reason"
-                                        name="reason"
-                                        value={
-                                            formData.reason
-                                        }
-                                        onChange={
-                                            handleChange
-                                        }
-                                        placeholder="Explain why you need administrator access..."
-                                        rows={4}
-                                        maxLength={500}
-                                    />
+                                        label="Reason for Admin Access"
+                                        required
+                                        error={errors.reason}
+                                    >
+
+                                        <div
+                                            className={`apr-textarea ${
+                                                errors.reason
+                                                    ? "apr-input-error"
+                                                    : ""
+                                            }`}
+                                        >
+
+                                            <FileText size={15} />
+
+                                            <textarea
+                                                id="reason"
+                                                name="reason"
+                                                value={
+                                                    formData.reason
+                                                }
+                                                onChange={
+                                                    handleChange
+                                                }
+                                                placeholder="Explain why you need administrator access..."
+                                                rows={4}
+                                                maxLength={500}
+                                            />
+
+                                        </div>
+
+                                        <div className="apr-char-count">
+                                            {formData.reason.length}/500
+                                        </div>
+
+                                    </Field>
+
                                 </div>
 
-                                <div className="apr-char-count">
-                                    {formData.reason.length}/500
+                                {/* =================================================
+                                    ACTION BUTTONS
+                                ================================================= */}
+
+                                <div className="apr-actions">
+
+                                    <button
+                                        type="button"
+                                        className="apr-cancel-btn"
+                                        onClick={
+                                            handleCancel
+                                        }
+                                        disabled={
+                                            submitting
+                                        }
+                                    >
+                                        <X size={15} />
+                                        Cancel
+                                    </button>
+
+                                    <button
+                                        type="submit"
+                                        className="apr-submit-btn"
+                                        disabled={
+                                            submitting ||
+                                            loadingDepartments
+                                        }
+                                    >
+                                        <Send size={15} />
+
+                                        {submitting
+                                            ? "Submitting..."
+                                            : "Send Approval Request"}
+                                    </button>
+
                                 </div>
-                            </Field>
+
+                            </form>
+
+                            {/* SUCCESS */}
+
+                            {submitted && (
+                                <div className="apr-success-message">
+
+                                    <div className="apr-success-icon">
+                                        <CheckCircle2 size={20} />
+                                    </div>
+
+                                    <div>
+
+                                        <h3>
+                                            Request Submitted Successfully!
+                                        </h3>
+
+                                        <p>
+                                            Your admin access request
+                                            has been submitted successfully.
+                                        </p>
+
+                                        <p>
+                                            Please wait. You will receive
+                                            an update on your registered
+                                            email once your request is reviewed.
+                                        </p>
+
+                                        {submittedRequestId && (
+                                            <p>
+                                                <strong>
+                                                    Request ID:
+                                                </strong>{" "}
+                                                {submittedRequestId}
+                                            </p>
+                                        )}
+
+                                    </div>
+
+                                </div>
+                            )}
 
                         </div>
 
-                        {/* ACTIONS */}
-                        <div className="apr-actions">
+                        {/* =================================================
+                            RIGHT SIDEBAR
+                        ================================================= */}
 
-                            <button
-                                type="button"
-                                className="apr-cancel-btn"
-                                onClick={handleCancel}
-                                disabled={submitting}
-                            >
-                                <X size={15} />
-                                Cancel
-                            </button>
+                        <aside className="apr-next-panel">
 
-                            <button
-                                type="submit"
-                                className="apr-submit-btn"
-                                disabled={
-                                    submitting ||
-                                    loadingDepartments
-                                }
-                            >
-                                <Send size={15} />
+                            <h3>
+                                What happens next?
+                            </h3>
 
-                                {submitting
-                                    ? "Submitting..."
-                                    : "Send Approval Request"}
-                            </button>
+                            <p className="apr-next-description">
+                                You don't need to do anything else
+                                right now. Simply submit this form
+                                and follow the next steps.
+                            </p>
 
-                        </div>
+                            {/* STEP 1 */}
 
-                    </form>
-{submitted && (
-    <div className="apr-success-message">
-        <ShieldCheck size={20} />
+                            <div className="apr-next-step">
 
-        <div>
-            <h3>Request Submitted Successfully!</h3>
+                                <div className="apr-next-number">
+                                    1
+                                </div>
 
-            <p>
-                Your admin access request has been submitted successfully.
-            </p>
+                                <div>
 
-            <p>
-                Please wait. You will receive an update on your
-                registered email once your request is reviewed.
-            </p>
+                                    <h4>
+                                        Submit your request
+                                    </h4>
 
-            {submittedRequestId && (
-                <p>
-                    <strong>Request ID:</strong> {submittedRequestId}
-                </p>
-            )}
-        </div>
-    </div>
-)}
-                    {/* FOOTER */}
+                                    <p>
+                                        Click the button below to
+                                        send your information.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            {/* STEP 2 */}
+
+                            <div className="apr-next-step">
+
+                                <div className="apr-next-number">
+                                    2
+                                </div>
+
+                                <div>
+
+                                    <h4>
+                                        Wait for approval
+                                    </h4>
+
+                                    <p>
+                                        The authorized person will
+                                        review your request.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            {/* STEP 3 */}
+
+                            <div className="apr-next-step">
+
+                                <div className="apr-next-number">
+                                    3
+                                </div>
+
+                                <div>
+
+                                    <h4>
+                                        Check your email
+                                    </h4>
+
+                                    <p>
+                                        If approved, you will receive
+                                        a secure setup link.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                            {/* STEP 4 */}
+
+                            <div className="apr-next-step">
+
+                                <div className="apr-next-number">
+                                    4
+                                </div>
+
+                                <div>
+
+                                    <h4>
+                                        Complete setup
+                                    </h4>
+
+                                    <p>
+                                        Create your password and
+                                        complete your profile.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </aside>
+
+                    </div>
+
+                    {/* =================================================
+                        FOOTER
+                    ================================================= */}
+
                     <div className="apr-footer-note">
+
                         <ShieldCheck size={14} />
 
                         <span>
-                            Your information will be reviewed
-                            only by an authorized company approver.
+                            Your information will be reviewed only
+                            by an authorized company approver.
                         </span>
+
                     </div>
 
                 </div>
+
             </div>
+
         </div>
     );
 };
