@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import "./AdminLogin.css";
-import { isValidEmail } from "../validation";
+// Form validation helpers
+const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
 
 const Login = () => {
   const navigate = useNavigate();

@@ -24,7 +24,25 @@ import UserImg from "../img/user.png";
 import AdminLayout from "../components/AdminLayout";
 import "./AdminProfile.css";
 import Swal from "sweetalert2";
-import { onlyDigits, onlyLetters, isValidPhone, isValidName, phoneInputProps } from "../validation";
+// Form validation helpers
+// Keep only digits and cut to max length (blocks letters while typing)
+const onlyDigits = (value, max) => {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  return max ? digits.slice(0, max) : digits;
+};
+// Keep only letters, spaces and . ' - (for names, city, state, etc.)
+const onlyLetters = (value) =>
+  String(value ?? "").replace(/[^A-Za-z .'-]/g, "");
+const isValidPhone = (v) => /^[6-9]\d{9}$/.test(String(v).trim());
+const isValidName = (v) => /^[A-Za-z][A-Za-z .'-]*$/.test(String(v).trim());
+// Props to spread on a phone <input> so only 10 digits can be typed
+const phoneInputProps = {
+  type: "tel",
+  inputMode: "numeric",
+  maxLength: 10,
+  pattern: "[6-9][0-9]{9}",
+  title: "Enter a valid 10-digit mobile number",
+};
 
 const Profile = () => {
     const adminEmail =
