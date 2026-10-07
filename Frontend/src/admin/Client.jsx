@@ -6,10 +6,17 @@ import {
   ChevronLeft, ChevronRight, ChevronDown,
 } from "lucide-react";
 import "./Client.css";
+import {
+  onlyDigits, onlyLetters, isValidEmail, isValidPhone,
+  isValidPincode, isValidName, isValidUrl, phoneInputProps,
+} from "../validation";
+
+const DIGIT_FIELDS = { Phone: 10, Alternate_Phone: 10, Pincode: 6 };
+const LETTER_FIELDS = ["Client_Name", "City", "State", "Country"];
 
 const API_URL = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"}/clients`;
 const EMP_URL = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"}/employees`;
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 5;     
 
 const STATUS_OPTIONS = ["Active", "Inactive", "Prospect", "Churned"];
 
@@ -99,7 +106,11 @@ const Client = () => {
   // FORM CHANGE
   // ==========================================
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name } = e.target;
+    let { value } = e.target;
+    if (DIGIT_FIELDS[name]) value = onlyDigits(value, DIGIT_FIELDS[name]);
+    else if (LETTER_FIELDS.includes(name)) value = onlyLetters(value);
+    setForm((prev) => ({ ...prev, [name]: value }));
     setError("");
   };
 
@@ -176,8 +187,17 @@ const Client = () => {
   // ==========================================
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.Client_Name.trim()) { setError("Client name is required."); return; }
-    if (!form.Company_Name.trim()) { setError("Company name is required."); return; }
+    const f = form;
+    if (!f.Client_Name.trim()) { setError("Client name is required."); return; }
+    if (f.Client_Name.trim().length < 2 || !isValidName(f.Client_Name)) { setError("Enter a valid client name (letters only, min 2 characters)."); return; }
+    if (!f.Company_Name.trim()) { setError("Company name is required."); return; }
+    if (f.Company_Name.trim().length < 2) { setError("Company name must be at least 2 characters."); return; }
+    if (f.Email && !isValidEmail(f.Email)) { setError("Enter a valid email address."); return; }
+    if (f.Phone && !isValidPhone(f.Phone)) { setError("Phone must be a valid 10-digit mobile number."); return; }
+    if (f.Alternate_Phone && !isValidPhone(f.Alternate_Phone)) { setError("Alternate phone must be a valid 10-digit mobile number."); return; }
+    if (f.Phone && f.Alternate_Phone && f.Phone === f.Alternate_Phone) { setError("Alternate phone must be different from phone."); return; }
+    if (f.Website && !isValidUrl(f.Website)) { setError("Enter a valid website URL."); return; }
+    if (f.Pincode && !isValidPincode(f.Pincode)) { setError("Pincode must be 6 digits."); return; }
 
     setSaving(true);
     setError("");
@@ -463,13 +483,13 @@ const Client = () => {
                     </div>
                     <div className="admin-field">
                       <label>Phone</label>
-                      <input type="text" name="Phone" placeholder="e.g. 9876543210" value={form.Phone} onChange={handleChange} />
+                      <input {...phoneInputProps} name="Phone" placeholder="e.g. 9876543210" value={form.Phone} onChange={handleChange} />
                     </div>
 
                     {/* Alternate Phone + Website */}
                     <div className="admin-field">
                       <label>Alternate Phone</label>
-                      <input type="text" name="Alternate_Phone" placeholder="e.g. 9876543211" value={form.Alternate_Phone} onChange={handleChange} />
+                      <input {...phoneInputProps} name="Alternate_Phone" placeholder="e.g. 9876543211" value={form.Alternate_Phone} onChange={handleChange} />
                     </div>
                     <div className="admin-field">
                       <label>Website</label>
@@ -570,7 +590,7 @@ const Client = () => {
                     </div>
                     <div className="admin-field">
                       <label>Pincode</label>
-                      <input type="text" name="Pincode" placeholder="e.g. 400001" value={form.Pincode} onChange={handleChange} />
+                      <input type="text" inputMode="numeric" maxLength={6} name="Pincode" placeholder="e.g. 400001" value={form.Pincode} onChange={handleChange} />
                     </div>
 
                     {/* Notes full width */}

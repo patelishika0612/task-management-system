@@ -23,6 +23,8 @@ import {
 import UserImg from "../img/user.png";
 import AdminLayout from "../components/AdminLayout";
 import "./AdminProfile.css";
+import Swal from "sweetalert2";
+import { onlyDigits, onlyLetters, isValidPhone, isValidName, phoneInputProps } from "../validation";
 
 const Profile = () => {
     const adminEmail =
@@ -39,7 +41,7 @@ const Profile = () => {
         firstName: "HR",
         lastName: "Manager",
         email: adminEmail,
-        phone: "+91 98765 43210",
+        phone: "9876543210",
         employeeId: "HR001",
         department: "Human Resources",
         designation: "HR Manager",
@@ -65,7 +67,10 @@ const Profile = () => {
     // HANDLE INPUT CHANGE
     // =====================================================
     const handleChange = (e) => {
-        const { name, value } = e.target;
+        const { name } = e.target;
+        let { value } = e.target;
+        if (name === "phone") value = onlyDigits(value, 10);
+        else if (name === "firstName" || name === "lastName") value = onlyLetters(value);
 
         setProfile((prev) => ({
             ...prev,
@@ -77,6 +82,29 @@ const Profile = () => {
     // SAVE PROFILE
     // =====================================================
     const handleSave = () => {
+        const warn = (text) =>
+            Swal.fire({ icon: "warning", title: "Invalid Input", text, confirmButtonColor: "#1557f5" });
+
+        if (!profile.firstName.trim() || !isValidName(profile.firstName)) {
+            warn("Please enter a valid first name (letters only).");
+            return;
+        }
+
+        if (!profile.lastName.trim() || !isValidName(profile.lastName)) {
+            warn("Please enter a valid last name (letters only).");
+            return;
+        }
+
+        if (!isValidPhone(profile.phone)) {
+            warn("Phone must be a valid 10-digit mobile number.");
+            return;
+        }
+
+        if (profile.location.trim().length < 2) {
+            warn("Please enter your work location.");
+            return;
+        }
+
         setSavedProfile({
             ...profile,
         });
@@ -617,7 +645,7 @@ const Profile = () => {
                                     </label>
 
                                     <input
-                                        type="text"
+                                        {...phoneInputProps}
                                         name="phone"
                                         value={profile.phone}
                                         onChange={handleChange}

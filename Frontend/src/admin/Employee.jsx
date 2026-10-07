@@ -6,6 +6,7 @@ import {
   ChevronLeft, ChevronRight, Upload,
 } from "lucide-react";
 import "./Employee.css";
+import { onlyDigits, onlyLetters, isValidEmail, isValidPhone, isValidName, phoneInputProps } from "../validation";
 
 const API_URL = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"}/employees`;
 const DEPT_URL = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"}/departments`;
@@ -112,7 +113,12 @@ const Employee = () => {
   // FORM CHANGE
   // ==========================================
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name } = e.target;
+    let { value } = e.target;
+    if (name === "phone") value = onlyDigits(value, 10);
+    else if (name === "emp_name") value = onlyLetters(value);
+    else if (name === "employee_code") value = value.replace(/[^A-Za-z0-9_-]/g, "").toUpperCase();
+    setForm((prev) => ({ ...prev, [name]: value }));
     setError("");
   };
 
@@ -186,11 +192,15 @@ const Employee = () => {
     const { emp_name, email, phone, department_id, Date_of_join, employee_code, status } = form;
 
     if (!emp_name.trim()) { setError("Employee name is required."); return; }
-    if (!email.trim()) { setError("Email is required."); return; }
-    if (!phone.trim()) { setError("Phone is required."); return; }
-    if (!department_id) { setError("Department is required."); return; }
-    if (!Date_of_join) { setError("Date of joining is required."); return; }
+    if (emp_name.trim().length < 2 || !isValidName(emp_name)) { setError("Enter a valid employee name (letters only, min 2 characters)."); return; }
     if (!employee_code.trim()) { setError("Employee code is required."); return; }
+    if (!email.trim()) { setError("Email is required."); return; }
+    if (!isValidEmail(email)) { setError("Enter a valid email address."); return; }
+    if (!phone.trim()) { setError("Phone is required."); return; }
+    if (!isValidPhone(phone)) { setError("Phone must be a valid 10-digit mobile number."); return; }
+    if (!Date_of_join) { setError("Date of joining is required."); return; }
+    if (Date_of_join > new Date().toISOString().split("T")[0]) { setError("Date of joining cannot be in the future."); return; }
+    if (!department_id) { setError("Department is required."); return; }
 
     setSaving(true);
     setError("");
@@ -512,7 +522,7 @@ const Employee = () => {
                   <div className="admin-field">
                     <label>Phone <span>*</span></label>
                     <input
-                      type="text"
+                      {...phoneInputProps}
                       name="phone"
                       placeholder="e.g. 9876543210"
                       value={form.phone}
@@ -526,6 +536,7 @@ const Employee = () => {
                     <input
                       type="date"
                       name="Date_of_join"
+                      max={new Date().toISOString().split("T")[0]}
                       value={form.Date_of_join}
                       onChange={handleChange}
                       required

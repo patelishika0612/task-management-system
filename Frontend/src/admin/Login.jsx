@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import "./AdminLogin.css";
+import { isValidEmail } from "../validation";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ const Login = () => {
       return;
     }
 
-    if (!email.includes("@")) {
+    if (!isValidEmail(email)) {
       Swal.fire({
         icon: "warning",
         title: "Invalid Email",

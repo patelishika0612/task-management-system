@@ -34,7 +34,6 @@ const getAllEmployees = async (req, res) => {
             count: rows.length,
             data: rows
         });
-
     } catch (error) {
         console.error("Get employees error:", error);
 

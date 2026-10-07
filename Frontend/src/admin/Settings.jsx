@@ -19,6 +19,13 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import "./AdminSettings.css";
+import {
+  onlyDigits, onlyLetters, isValidEmail, isValidPhone,
+  isValidName, phoneInputProps,
+} from "../validation";
+
+const warn = (title, text) =>
+  Swal.fire({ icon: "warning", title, text, confirmButtonColor: "#1557f5" });
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -68,7 +75,10 @@ const Settings = () => {
   // =====================================================
 
   const handleAccountChange = (e) => {
-    const { name, value } = e.target;
+    const { name } = e.target;
+    let { value } = e.target;
+    if (name === "phone") value = onlyDigits(value, 10);
+    else if (name === "name") value = onlyLetters(value);
 
     setAccountData((prev) => ({
       ...prev,
@@ -116,7 +126,22 @@ const Settings = () => {
       return;
     }
 
-    localStorage.setItem("adminEmail", accountData.email);
+    if (accountData.name.trim().length < 2 || !isValidName(accountData.name)) {
+      warn("Invalid Name", "Name must contain only letters (min 2 characters).");
+      return;
+    }
+
+    if (!isValidEmail(accountData.email)) {
+      warn("Invalid Email", "Please enter a valid email address.");
+      return;
+    }
+
+    if (accountData.phone && !isValidPhone(accountData.phone)) {
+      warn("Invalid Phone", "Phone must be a valid 10-digit mobile number.");
+      return;
+    }
+
+    localStorage.setItem("adminEmail", accountData.email.trim());
 
     await Swal.fire({
       icon: "success",
@@ -159,6 +184,16 @@ const Settings = () => {
         confirmButtonColor: "#1557f5",
       });
 
+      return;
+    }
+
+    if (!/[A-Za-z]/.test(newPassword) || !/\d/.test(newPassword)) {
+      warn("Weak Password", "New password must contain at least one letter and one number.");
+      return;
+    }
+
+    if (newPassword === currentPassword) {
+      warn("Same Password", "New password must be different from current password.");
       return;
     }
 
@@ -417,7 +452,7 @@ const Settings = () => {
                     <Phone size={18} />
 
                     <input
-                      type="text"
+                      {...phoneInputProps}
                       name="phone"
                       value={accountData.phone}
                       onChange={handleAccountChange}

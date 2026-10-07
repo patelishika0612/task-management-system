@@ -235,17 +235,24 @@ const Project = () => {
           Number(member.project_id) === Number(data.project_id)
       );
 
-      // Convert employee IDs back into employee codes for the UI
-      const selectedEmployeeCodes = projectMembers
-        .map((member) => {
-          const employee = employeeList.find(
-            (item) =>
-              Number(item.emp_id) === Number(member.employee_id)
-          );
+      // project_members API returns employee_code / emp_id per member
+      const selectedEmployeeCodes = [
+        ...new Set(
+          projectMembers
+            .map((member) => {
+              const employee = employeeList.find(
+                (item) =>
+                  (member.employee_code &&
+                    item.employee_code === member.employee_code) ||
+                  (member.emp_id &&
+                    Number(item.emp_id) === Number(member.emp_id))
+              );
 
-          return employee?.employee_code || null;
-        })
-        .filter(Boolean);
+              return employee?.employee_code || null;
+            })
+            .filter(Boolean)
+        ),
+      ];
 
       // Fallback for projects which have created_by but no members
       if (
@@ -321,6 +328,16 @@ const Project = () => {
       return;
     }
 
+    if (proj_name.trim().length < 3 || proj_name.trim().length > 150) {
+      setError("Project name must be 3–150 characters.");
+      return;
+    }
+
+    if (form.description.length > 1000) {
+      setError("Description cannot exceed 1000 characters.");
+      return;
+    }
+
     if (!client_name.trim()) {
       setError("Client name is required.");
       return;
@@ -328,6 +345,11 @@ const Project = () => {
 
     if (!start_date) {
       setError("Start date is required.");
+      return;
+    }
+
+    if (form.end_date && form.end_date < start_date) {
+      setError("End date cannot be before start date.");
       return;
     }
 
@@ -449,7 +471,7 @@ const Project = () => {
           !isEditing &&
           existingMembers.some(
             (member) =>
-              Number(member.employee_id) === employeeId
+              Number(member.emp_id) === employeeId
           );
 
         if (alreadyAssigned) continue;
@@ -919,6 +941,7 @@ const Project = () => {
                         placeholder="e.g. Website Redesign"
                         value={form.proj_name}
                         onChange={handleChange}
+                        maxLength={150}
                         required
                       />
                     </div>
@@ -1036,6 +1059,7 @@ const Project = () => {
                         placeholder="Brief project description..."
                         value={form.description}
                         onChange={handleChange}
+                        maxLength={1000}
                         rows={3}
                       />
                     </div>
@@ -1060,6 +1084,7 @@ const Project = () => {
                       <input
                         type="date"
                         name="end_date"
+                        min={form.start_date || undefined}
                         value={form.end_date}
                         onChange={handleChange}
                       />
@@ -1107,6 +1132,11 @@ const Project = () => {
                     <div className="admin-field">
                       <label>
                         Assigned Employees <span>*</span>
+                        {form.created_by.length > 0 && (
+                          <em className="proj-emp-count">
+                            {form.created_by.length} selected
+                          </em>
+                        )}
                       </label>
 
                       <div
@@ -1270,6 +1300,37 @@ const Project = () => {
                           </div>
                         )}
                       </div>
+
+                      {/* SELECTED EMPLOYEE CHIPS */}
+                      {form.created_by.length > 0 && (
+                        <div className="proj-emp-chips">
+                          {form.created_by.map((code) => {
+                            const employee = employees.find(
+                              (item) => item.employee_code === code
+                            );
+
+                            return (
+                              <span key={code} className="proj-emp-chip">
+                                {employee?.emp_name || code}
+                                <button
+                                  type="button"
+                                  aria-label={`Remove ${employee?.emp_name || code}`}
+                                  onClick={() =>
+                                    setForm((previous) => ({
+                                      ...previous,
+                                      created_by: previous.created_by.filter(
+                                        (item) => item !== code
+                                      ),
+                                    }))
+                                  }
+                                >
+                                  <X size={12} />
+                                </button>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
