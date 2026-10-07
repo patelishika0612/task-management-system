@@ -1,0 +1,802 @@
+:root {
+    --cp-primary: #2948e8;
+    --cp-primary-dark: #18257a;
+    --cp-primary-light: #eef2ff;
+
+    --cp-navy: #10164f;
+
+    --cp-green: #15966a;
+    --cp-green-light: #eafaf4;
+
+    --cp-bg: #f5f7fb;
+    --cp-white: #ffffff;
+
+    --cp-text: #171c35;
+    --cp-muted: #70798d;
+
+    --cp-border: #e1e5ef;
+
+    --cp-danger: #d9534f;
+    --cp-danger-light: #fff1f0;
+
+    --cp-shadow: 0 15px 45px rgba(16, 22, 79, 0.08);
+}
+
+.cp-profile-page-wrapper {
+    min-height: 100vh;
+    background: var(--cp-bg);
+    color: var(--cp-text);
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+}
+
+.cp-profile-page-wrapper *,
+.cp-profile-page-wrapper *::before,
+.cp-profile-page-wrapper *::after {
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.cp-profile-top-header {
+    height: 72px;
+    background: var(--cp-white);
+    border-bottom: 1px solid var(--cp-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 6%;
+}
+
+.cp-profile-logo {
+    width: 145px;
+    height: auto;
+}
+
+.cp-profile-header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--cp-green);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.cp-profile-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cp-green);
+}
+
+
+/* =========================================
+   PAGE
+========================================= */
+
+.cp-profile-page {
+    width: min(1080px, 92%);
+    margin: 0 auto;
+    padding: 42px 0 60px;
+}
+
+
+/* =========================================
+   INTRO
+========================================= */
+
+.cp-profile-intro {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 30px;
+    margin-bottom: 25px;
+}
+
+.cp-profile-step-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--cp-primary-light);
+    color: var(--cp-primary);
+    padding: 7px 13px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 13px;
+}
+
+.cp-profile-step-circle {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--cp-primary);
+    color: white;
+    font-size: 10px;
+}
+
+.cp-profile-intro h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    letter-spacing: -0.8px;
+    margin: 0 0 8px;
+}
+
+.cp-profile-intro p {
+    color: var(--cp-muted);
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 650px;
+    margin: 0;
+}
+
+.cp-profile-completion-badge {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--cp-green-light);
+    color: var(--cp-green);
+    padding: 10px 13px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+/* =========================================
+   PROGRESS
+========================================= */
+
+.cp-profile-progress-card {
+    background: var(--cp-white);
+    border: 1px solid var(--cp-border);
+    border-radius: 15px;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 24px;
+}
+
+.cp-profile-progress-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--cp-muted);
+    font-size: 11px;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.cp-profile-progress-circle {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: #f0f2f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.cp-profile-progress-item.completed {
+    color: var(--cp-green);
+}
+
+.cp-profile-progress-item.completed
+.cp-profile-progress-circle {
+    background: var(--cp-green-light);
+    color: var(--cp-green);
+}
+
+.cp-profile-progress-item.active {
+    color: var(--cp-primary);
+}
+
+.cp-profile-progress-item.active
+.cp-profile-progress-circle {
+    background: var(--cp-primary);
+    color: white;
+}
+
+.cp-profile-progress-arrow {
+    color: #b8becb;
+    display: flex;
+}
+
+
+/* =========================================
+   PROFILE CARD
+========================================= */
+
+.cp-profile-card {
+    background: var(--cp-white);
+    border: 1px solid var(--cp-border);
+    border-radius: 22px;
+    box-shadow: var(--cp-shadow);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+}
+
+
+/* =========================================
+   LEFT PANEL
+========================================= */
+
+.cp-profile-side {
+    background:
+        linear-gradient(
+            150deg,
+            #10164f 0%,
+            #182477 58%,
+            #2948e8 100%
+        );
+
+    color: white;
+    padding: 32px 27px;
+    position: relative;
+    overflow: hidden;
+}
+
+.cp-profile-side::before {
+    content: "";
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    top: -80px;
+    right: -70px;
+}
+
+.cp-profile-side::after {
+    content: "";
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.04);
+    bottom: -65px;
+    left: -50px;
+}
+
+.cp-profile-side-step {
+    position: relative;
+    z-index: 2;
+    color: #bfc7e8;
+    font-size: 12px;
+    margin-bottom: 24px;
+}
+
+.cp-profile-side-step strong {
+    color: white;
+    font-size: 14px;
+}
+
+.cp-profile-photo-wrapper {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 18px;
+}
+
+.cp-profile-photo {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #dbe1f5;
+    overflow: hidden;
+}
+
+.cp-profile-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cp-profile-photo-text {
+    color: #cbd1e9;
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+.cp-profile-side h2 {
+    position: relative;
+    z-index: 2;
+    font-size: 20px;
+    line-height: 1.35;
+    margin: 0 0 8px;
+}
+
+.cp-profile-side > p {
+    position: relative;
+    z-index: 2;
+    color: #c3c9e4;
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.cp-profile-side-checklist {
+    position: relative;
+    z-index: 2;
+    margin-top: 27px;
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.cp-profile-check-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #d7dcf0;
+    font-size: 12px;
+}
+
+.cp-profile-check {
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.11);
+    color: #8ff0c9;
+}
+
+
+/* =========================================
+   FORM AREA
+========================================= */
+
+.cp-profile-form-area {
+    padding: 32px 34px 0;
+}
+
+.cp-profile-form-header {
+    margin-bottom: 23px;
+}
+
+.cp-profile-form-header h2 {
+    font-size: 20px;
+    margin: 0 0 6px;
+}
+
+.cp-profile-form-header p {
+    color: var(--cp-muted);
+    font-size: 12px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+
+/* =========================================
+   FORM SECTION
+========================================= */
+
+.cp-profile-form-section {
+    padding-bottom: 23px;
+    margin-bottom: 23px;
+    border-bottom: 1px solid var(--cp-border);
+}
+
+.cp-profile-section-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 16px;
+    font-weight: 750;
+    margin-bottom: 15px;
+}
+
+.cp-profile-section-number {
+    width: 23px;
+    height: 23px;
+    border-radius: 7px;
+    background: var(--cp-primary-light);
+    color: var(--cp-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* =========================================
+   FORM GRID
+========================================= */
+
+.cp-profile-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.cp-profile-form-group {
+    min-width: 0;
+}
+
+.cp-profile-full {
+    grid-column: span 2;
+}
+
+.cp-profile-form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 7px;
+}
+
+.cp-profile-required {
+    color: var(--cp-danger);
+    margin-left: 3px;
+}
+
+.cp-profile-input,
+.cp-profile-select,
+.cp-profile-textarea {
+    width: 100%;
+    border: 1px solid var(--cp-border);
+    border-radius: 9px;
+    background: white;
+    color: var(--cp-text);
+    font-size: 12px;
+    outline: none;
+    transition: 0.2s;
+}
+
+.cp-profile-input,
+.cp-profile-select {
+    height: 43px;
+    padding: 0 12px;
+}
+
+.cp-profile-textarea {
+    min-height: 75px;
+    padding: 11px 12px;
+    resize: vertical;
+}
+
+.cp-profile-input:focus,
+.cp-profile-select:focus,
+.cp-profile-textarea:focus {
+    border-color: var(--cp-primary);
+    box-shadow: 0 0 0 3px rgba(41, 72, 232, 0.07);
+}
+
+.cp-profile-input:disabled,
+.cp-profile-select:disabled {
+    background: #f6f7fa;
+    color: #858c9d;
+    cursor: not-allowed;
+}
+
+.cp-profile-field-note {
+    color: var(--cp-muted);
+    font-size: 9px;
+    margin-top: 5px;
+}
+
+
+/* =========================================
+   PHOTO UPLOAD
+========================================= */
+
+.cp-profile-photo-upload {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 3px;
+}
+
+.cp-profile-upload-preview {
+    width: 60px;
+    height: 60px;
+    border-radius: 13px;
+    background: #f2f4f8;
+    border: 1px dashed #cbd1dd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cp-muted);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.cp-profile-upload-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cp-profile-upload-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 37px;
+    padding: 0 13px;
+    border-radius: 8px;
+    background: var(--cp-primary-light);
+    color: var(--cp-primary);
+    border: 1px solid #d8dfff;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.cp-profile-upload-button:hover {
+    background: #e2e7ff;
+}
+
+.cp-profile-form-area input[type="file"] {
+    display: none;
+}
+
+.cp-profile-upload-info {
+    color: var(--cp-muted);
+    font-size: 9px;
+    margin-top: 5px;
+}
+
+
+/* =========================================
+   ERROR
+========================================= */
+
+.cp-profile-error {
+    margin: -5px 0 18px;
+    padding: 10px 12px;
+    border: 1px solid #f1c8c5;
+    border-radius: 8px;
+    background: var(--cp-danger-light);
+    color: var(--cp-danger);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+
+/* =========================================
+   FOOTER
+========================================= */
+
+.cp-profile-form-footer {
+    margin: 0 -34px;
+    padding: 18px 34px;
+    background: #fafbfc;
+    border-top: 1px solid var(--cp-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.cp-profile-footer-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: var(--cp-muted);
+    font-size: 11px;
+    line-height: 1.5;
+    max-width: 340px;
+}
+
+.cp-profile-footer-icon {
+    color: var(--cp-green);
+    flex-shrink: 0;
+}
+
+.cp-profile-complete-button {
+    min-width: 190px;
+    min-height: 45px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--cp-primary);
+    color: white;
+    font-size: 12px;
+    font-weight: 750;
+    cursor: pointer;
+    transition: 0.2s;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.cp-profile-complete-button:hover {
+    background: var(--cp-primary-dark);
+    transform: translateY(-1px);
+}
+
+
+/* =========================================
+   SUCCESS OVERLAY
+========================================= */
+
+.cp-profile-success-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 15, 45, 0.60);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+}
+
+.cp-profile-success-box {
+    width: min(450px, 100%);
+    background: white;
+    border-radius: 22px;
+    padding: 35px;
+    text-align: center;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.20);
+    animation: cpProfileSuccessIn 0.25s ease;
+}
+
+@keyframes cpProfileSuccessIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.cp-profile-success-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: var(--cp-green-light);
+    color: var(--cp-green);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cp-profile-success-box h2 {
+    font-size: 24px;
+    margin: 0 0 9px;
+}
+
+.cp-profile-success-box p {
+    color: var(--cp-muted);
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 0 0 23px;
+}
+
+.cp-profile-dashboard-button {
+    width: 100%;
+    min-height: 47px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--cp-primary);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.cp-profile-dashboard-button:hover {
+    background: var(--cp-primary-dark);
+}
+.border-none1{
+    border-bottom: none;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 850px) {
+
+    .cp-profile-card {
+        grid-template-columns: 1fr;
+    }
+
+    .cp-profile-side {
+        padding: 28px;
+    }
+
+    .cp-profile-side-checklist {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+
+@media (max-width: 650px) {
+
+    .cp-profile-top-header {
+        padding: 0 5%;
+    }
+
+    .cp-profile-header-status {
+        font-size: 0;
+    }
+
+    .cp-profile-header-status
+    .cp-profile-status-dot {
+        width: 9px;
+        height: 9px;
+    }
+
+    .cp-profile-page {
+        width: 94%;
+        padding-top: 30px;
+    }
+
+    .cp-profile-intro {
+        display: block;
+    }
+
+    .cp-profile-completion-badge {
+        display: inline-flex;
+        margin-top: 15px;
+    }
+
+    .cp-profile-progress-card {
+        justify-content: flex-start;
+        overflow-x: auto;
+    }
+
+    .cp-profile-form-area {
+        padding: 27px 21px 0;
+    }
+
+    .cp-profile-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .cp-profile-full {
+        grid-column: span 1;
+    }
+
+    .cp-profile-form-footer {
+        margin: 0 -21px;
+        padding: 18px 21px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .cp-profile-complete-button {
+        width: 100%;
+    }
+
+    .cp-profile-side-checklist {
+        grid-template-columns: 1fr;
+    }
+}

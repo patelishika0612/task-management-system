@@ -259,7 +259,7 @@ const Settings = () => {
       localStorage.removeItem("token");
       localStorage.removeItem("keepLogged");
 
-      navigate("/adminLogin");
+      navigate("/admin-login");
     }
   };
 
