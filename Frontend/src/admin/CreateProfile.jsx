@@ -1,6 +1,17 @@
+
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+    Check,
+    User,
+    LockKeyhole,
+    Upload,
+    ArrowRight,
+} from "lucide-react";
+
 import API from "../api";
+import Logo from "../img/nirvanza-logo.png";
+import "./CompleteProfile.css";
 
 const CreateProfile = () => {
     const [searchParams] = useSearchParams();
@@ -17,7 +28,7 @@ const CreateProfile = () => {
     const [submitting, setSubmitting] = useState(false);
 
     const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+    const [success, setSuccess] = useState(false);
 
     /*
     =====================================================
@@ -41,13 +52,11 @@ const CreateProfile = () => {
                 );
 
                 if (response.data.success) {
-                    const employeeData = response.data.data;
-
-                    setEmployee(employeeData);
+                    setEmployee(response.data.data);
                 } else {
                     setError(
                         response.data.message ||
-                        "Employee profile not found."
+                            "Employee profile not found."
                     );
                 }
             } catch (err) {
@@ -58,7 +67,7 @@ const CreateProfile = () => {
 
                 setError(
                     err.response?.data?.message ||
-                    "Failed to load employee profile."
+                        "Failed to load employee profile."
                 );
             } finally {
                 setLoading(false);
@@ -81,19 +90,11 @@ const CreateProfile = () => {
             return;
         }
 
-        /*
-        Check file type
-        */
-
         if (!selectedFile.type.startsWith("image/")) {
             setError("Please select a valid image file.");
             e.target.value = "";
             return;
         }
-
-        /*
-        Check file size - 5 MB
-        */
 
         if (selectedFile.size > 5 * 1024 * 1024) {
             setError("Image size must be less than 5 MB.");
@@ -103,10 +104,6 @@ const CreateProfile = () => {
 
         setError("");
         setImage(selectedFile);
-
-        /*
-        Preview
-        */
 
         const previewUrl = URL.createObjectURL(selectedFile);
         setImagePreview(previewUrl);
@@ -122,16 +119,11 @@ const CreateProfile = () => {
         e.preventDefault();
 
         setError("");
-        setSuccess("");
 
         if (!employee) {
             setError("Employee information not found.");
             return;
         }
-
-        /*
-        Image required
-        */
 
         if (!image) {
             setError("Please select a profile image.");
@@ -140,10 +132,6 @@ const CreateProfile = () => {
 
         try {
             setSubmitting(true);
-
-            /*
-            FormData is required for image upload
-            */
 
             const formData = new FormData();
 
@@ -155,7 +143,7 @@ const CreateProfile = () => {
             );
 
             if (response.data.success) {
-                setSuccess("Profile created successfully.");
+                setSuccess(true);
 
                 setTimeout(() => {
                     navigate(
@@ -163,11 +151,11 @@ const CreateProfile = () => {
                             employee.email
                         )}`
                     );
-                }, 1000);
+                }, 1200);
             } else {
                 setError(
                     response.data.message ||
-                    "Failed to create profile."
+                        "Failed to create profile."
                 );
             }
         } catch (err) {
@@ -178,11 +166,25 @@ const CreateProfile = () => {
 
             setError(
                 err.response?.data?.message ||
-                "Failed to create profile."
+                    "Failed to create profile."
             );
         } finally {
             setSubmitting(false);
         }
+    };
+
+    /*
+    =====================================================
+    DASHBOARD / LOGIN
+    =====================================================
+    */
+
+    const handleLogin = () => {
+        navigate(
+            `/admin-login?email=${encodeURIComponent(
+                employee?.email || emailFromLogin
+            )}`
+        );
     };
 
     /*
@@ -193,23 +195,10 @@ const CreateProfile = () => {
 
     if (loading) {
         return (
-            <div style={styles.center}>
-                Loading employee profile...
-            </div>
-        );
-    }
-
-    /*
-    =====================================================
-    ERROR
-    =====================================================
-    */
-
-    if (error && !employee) {
-        return (
-            <div style={styles.center}>
-                <div style={styles.errorBox}>
-                    {error}
+            <div className="cp-profile-page-wrapper">
+                <div className="cp-profile-loading">
+                    <div className="cp-profile-loading-spinner"></div>
+                    <span>Loading employee profile...</span>
                 </div>
             </div>
         );
@@ -217,303 +206,673 @@ const CreateProfile = () => {
 
     /*
     =====================================================
-    PAGE
+    EMPLOYEE NOT FOUND
     =====================================================
     */
 
-    return (
-        <div style={styles.page}>
-            <div style={styles.card}>
-
-                <h1 style={styles.title}>
-                    Create Profile
-                </h1>
-
-                <p style={styles.subtitle}>
-                    Employee details are automatically
-                    loaded from the database.
-                </p>
-
-                {error && (
-                    <div style={styles.errorBox}>
-                        {error}
-                    </div>
-                )}
-
-                {success && (
-                    <div style={styles.successBox}>
-                        {success}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit}>
-
-                    {/* Employee Code */}
-
-                    <div style={styles.field}>
-                        <label style={styles.label}>
-                            Employee Code
-                        </label>
-
-                        <input
-                            type="text"
-                            value={
-                                employee?.employee_code || ""
-                            }
-                            readOnly
-                            style={styles.input}
-                        />
+    if (error && !employee) {
+        return (
+            <div className="cp-profile-page-wrapper">
+                <div className="cp-profile-error-page">
+                    <div className="cp-profile-error-icon">
+                        !
                     </div>
 
-                    {/* Employee Name */}
+                    <h2>Unable to load profile</h2>
 
-                    <div style={styles.field}>
-                        <label style={styles.label}>
-                            Employee Name
-                        </label>
-
-                        <input
-                            type="text"
-                            value={
-                                employee?.emp_name || ""
-                            }
-                            readOnly
-                            style={styles.input}
-                        />
-                    </div>
-
-                    {/* Email */}
-
-                    <div style={styles.field}>
-                        <label style={styles.label}>
-                            Email
-                        </label>
-
-                        <input
-                            type="email"
-                            value={
-                                employee?.email || ""
-                            }
-                            readOnly
-                            style={styles.input}
-                        />
-                    </div>
-
-                    {/* Phone */}
-
-                    <div style={styles.field}>
-                        <label style={styles.label}>
-                            Phone
-                        </label>
-
-                        <input
-                            type="text"
-                            value={
-                                employee?.phone || ""
-                            }
-                            readOnly
-                            style={styles.input}
-                        />
-                    </div>
-
-                    {/* Department */}
-
-                    <div style={styles.field}>
-                        <label style={styles.label}>
-                            Department
-                        </label>
-
-                        <input
-                            type="text"
-                            value={
-                                employee?.department_name || ""
-                            }
-                            readOnly
-                            style={styles.input}
-                        />
-                    </div>
-
-                    {/* Date Of Join */}
-
-                    <div style={styles.field}>
-                        <label style={styles.label}>
-                            Date Of Join
-                        </label>
-
-                        <input
-                            type="date"
-                            value={
-                                employee?.date_of_join
-                                    ? employee.date_of_join.substring(
-                                          0,
-                                          10
-                                      )
-                                    : ""
-                            }
-                            readOnly
-                            style={styles.input}
-                        />
-                    </div>
-
-                    {/* Profile Image */}
-
-                    <div style={styles.field}>
-                        <label style={styles.label}>
-                            Profile Image
-                        </label>
-
-                        <input
-                            type="file"
-                            accept="image/png,image/jpeg,image/jpg,image/webp"
-                            onChange={handleImageChange}
-                            style={styles.fileInput}
-                        />
-
-                        {imagePreview && (
-                            <div style={styles.previewContainer}>
-                                <img
-                                    src={imagePreview}
-                                    alt="Profile Preview"
-                                    style={styles.preview}
-                                />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Submit */}
+                    <p>{error}</p>
 
                     <button
-                        type="submit"
-                        disabled={submitting}
-                        style={{
-                            ...styles.button,
-                            opacity: submitting ? 0.6 : 1
-                        }}
+                        type="button"
+                        onClick={() => navigate("/admin-login")}
+                        className="cp-profile-error-button"
                     >
-                        {submitting
-                            ? "Creating Profile..."
-                            : "Submit"}
+                        Back to Login
                     </button>
-
-                </form>
+                </div>
             </div>
+        );
+    }
+
+    return (
+        <div className="cp-profile-page-wrapper">
+
+            {/* =========================================
+                HEADER
+            ========================================= */}
+
+            <header className="cp-profile-top-header">
+
+                <img
+                    src={Logo}
+                    alt="Nirvanza Infotech"
+                    className="cp-profile-logo"
+                />
+
+                <div className="cp-profile-header-status">
+                    <span className="cp-profile-status-dot"></span>
+                    Final account setup
+                </div>
+
+            </header>
+
+
+            <main className="cp-profile-page">
+
+                {/* =========================================
+                    INTRO
+                ========================================= */}
+
+                <section className="cp-profile-intro">
+
+                    <div>
+
+                        <div className="cp-profile-step-label">
+
+                            <span className="cp-profile-step-circle">
+                                4
+                            </span>
+
+                            Step 4 of 4
+
+                        </div>
+
+                        <h1>
+                            Complete your profile
+                        </h1>
+
+                        <p>
+                            Your account is almost ready. Review
+                            your employee information and upload
+                            your profile photo to complete your
+                            account.
+                        </p>
+
+                    </div>
+
+
+                    <div className="cp-profile-completion-badge">
+
+                        <Check size={14} />
+
+                        Account information loaded
+
+                    </div>
+
+                </section>
+
+
+                {/* =========================================
+                    PROGRESS
+                ========================================= */}
+
+                <div className="cp-profile-progress-card">
+
+                    <div className="cp-profile-progress-item completed">
+
+                        <div className="cp-profile-progress-circle">
+                            <Check size={12} />
+                        </div>
+
+                        Access Approved
+
+                    </div>
+
+
+                    <div className="cp-profile-progress-arrow">
+                        <ArrowRight size={15} />
+                    </div>
+
+
+                    <div className="cp-profile-progress-item completed">
+
+                        <div className="cp-profile-progress-circle">
+                            <Check size={12} />
+                        </div>
+
+                        Password Created
+
+                    </div>
+
+
+                    <div className="cp-profile-progress-arrow">
+                        <ArrowRight size={15} />
+                    </div>
+
+
+                    <div className="cp-profile-progress-item active">
+
+                        <div className="cp-profile-progress-circle">
+                            3
+                        </div>
+
+                        Complete Profile
+
+                    </div>
+
+                </div>
+
+
+                {/* =========================================
+                    PROFILE CARD
+                ========================================= */}
+
+                <section className="cp-profile-card">
+
+                    {/* =====================================
+                        LEFT SIDE
+                    ====================================== */}
+
+                    <aside className="cp-profile-side">
+
+                        <div className="cp-profile-side-step">
+
+                            <strong>
+                                Almost there!
+                            </strong>
+
+                            <br />
+
+                            Just complete your profile.
+
+                        </div>
+
+
+                        {/* PHOTO */}
+
+                        <div className="cp-profile-photo-wrapper">
+
+                            <div className="cp-profile-photo">
+
+                                {imagePreview ? (
+                                    <img
+                                        src={imagePreview}
+                                        alt="Profile"
+                                    />
+                                ) : (
+                                    <User size={30} />
+                                )}
+
+                            </div>
+
+                            <div className="cp-profile-photo-text">
+                                Your profile photo
+                            </div>
+
+                        </div>
+
+
+                        <h2>
+                            Make your profile complete
+                        </h2>
+
+
+                        <p>
+                            Your employee information has already
+                            been provided by HR. Just add your
+                            profile photo to finish the setup.
+                        </p>
+
+
+                        <div className="cp-profile-side-checklist">
+
+                            <div className="cp-profile-check-item">
+
+                                <div className="cp-profile-check">
+                                    <Check size={11} />
+                                </div>
+
+                                Personal information
+
+                            </div>
+
+
+                            <div className="cp-profile-check-item">
+
+                                <div className="cp-profile-check">
+                                    <Check size={11} />
+                                </div>
+
+                                Employee details
+
+                            </div>
+
+
+                            <div className="cp-profile-check-item">
+
+                                <div className="cp-profile-check">
+                                    <Check size={11} />
+                                </div>
+
+                                Contact information
+
+                            </div>
+
+
+                            <div className="cp-profile-check-item">
+
+                                <div className="cp-profile-check">
+                                    <Check size={11} />
+                                </div>
+
+                                Profile photo
+
+                            </div>
+
+                        </div>
+
+                    </aside>
+
+
+                    {/* =====================================
+                        FORM
+                    ====================================== */}
+
+                    <section className="cp-profile-form-area">
+
+                        <div className="cp-profile-form-header">
+
+                            <h2>
+                                Your information
+                            </h2>
+
+                            <p>
+                                The following information has been
+                                provided by HR and cannot be edited.
+                            </p>
+
+                        </div>
+
+
+                        <form onSubmit={handleSubmit}>
+
+                            {/* =================================
+                                PHOTO
+                            ================================== */}
+
+                            <div className="cp-profile-form-section">
+
+                                <div className="cp-profile-section-title">
+
+                                    <div className="cp-profile-section-number">
+                                        1
+                                    </div>
+
+                                    Profile Photo
+
+                                </div>
+
+
+                                <div className="cp-profile-photo-upload">
+
+                                    <div className="cp-profile-upload-preview">
+
+                                        {imagePreview ? (
+                                            <img
+                                                src={imagePreview}
+                                                alt="Preview"
+                                            />
+                                        ) : (
+                                            <User size={20} />
+                                        )}
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <label
+                                            htmlFor="cp-profile-photoInput"
+                                            className="cp-profile-upload-button"
+                                        >
+                                            <Upload size={13} />
+
+                                            Upload Photo
+                                        </label>
+
+                                        <input
+                                            type="file"
+                                            id="cp-profile-photoInput"
+                                            accept="image/png,image/jpeg,image/jpg,image/webp"
+                                            onChange={handleImageChange}
+                                        />
+
+                                        <div className="cp-profile-upload-info">
+                                            JPG, PNG or WebP · Maximum 5 MB
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* =================================
+                                PERSONAL INFORMATION
+                            ================================== */}
+
+                            <div className="cp-profile-form-section">
+
+                                <div className="cp-profile-section-title">
+
+                                    <div className="cp-profile-section-number">
+                                        2
+                                    </div>
+
+                                    Personal Information
+
+                                </div>
+
+
+                                <div className="cp-profile-form-grid">
+
+                                    {/* FULL NAME */}
+
+                                    <div className="cp-profile-form-group">
+
+                                        <label className="cp-profile-form-label">
+                                            Full Name
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            className="cp-profile-input"
+                                            value={
+                                                employee?.emp_name || ""
+                                            }
+                                            disabled
+                                            readOnly
+                                        />
+
+                                    </div>
+
+
+                                    {/* EMAIL */}
+
+                                    <div className="cp-profile-form-group">
+
+                                        <label className="cp-profile-form-label">
+                                            Email Address
+                                        </label>
+
+                                        <input
+                                            type="email"
+                                            className="cp-profile-input"
+                                            value={
+                                                employee?.email || ""
+                                            }
+                                            disabled
+                                            readOnly
+                                        />
+
+                                        <div className="cp-profile-field-note">
+                                            Your registered employee email
+                                        </div>
+
+                                    </div>
+
+
+                                    {/* PHONE */}
+
+                                    <div className="cp-profile-form-group">
+
+                                        <label className="cp-profile-form-label">
+                                            Phone Number
+                                        </label>
+
+                                        <input
+                                            type="tel"
+                                            className="cp-profile-input"
+                                            value={
+                                                employee?.phone || ""
+                                            }
+                                            disabled
+                                            readOnly
+                                        />
+
+                                    </div>
+
+
+                                    {/* JOINING DATE */}
+
+                                    <div className="cp-profile-form-group">
+
+                                        <label className="cp-profile-form-label">
+                                            Joining Date
+                                        </label>
+
+                                        <input
+                                            type="date"
+                                            className="cp-profile-input"
+                                            value={
+                                                employee?.date_of_join
+                                                    ? employee.date_of_join.substring(
+                                                          0,
+                                                          10
+                                                      )
+                                                    : ""
+                                            }
+                                            disabled
+                                            readOnly
+                                        />
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* =================================
+                                EMPLOYEE INFORMATION
+                            ================================== */}
+
+                            <div className="cp-profile-form-section border-none1">
+
+                                <div className="cp-profile-section-title">
+
+                                    <div className="cp-profile-section-number">
+                                        3
+                                    </div>
+
+                                    Employee Information
+
+                                </div>
+
+
+                                <div className="cp-profile-form-grid">
+
+                                    {/* EMPLOYEE CODE */}
+
+                                    <div className="cp-profile-form-group">
+
+                                        <label className="cp-profile-form-label">
+                                            Employee Code
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            className="cp-profile-input"
+                                            value={
+                                                employee?.employee_code || ""
+                                            }
+                                            disabled
+                                            readOnly
+                                        />
+
+                                    </div>
+
+
+                                    {/* DEPARTMENT */}
+
+                                    <div className="cp-profile-form-group">
+
+                                        <label className="cp-profile-form-label">
+                                            Department
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            className="cp-profile-input"
+                                            value={
+                                                employee?.department_name || ""
+                                            }
+                                            disabled
+                                            readOnly
+                                        />
+
+                                    </div>
+
+
+                                    {/* DESIGNATION */}
+
+                                    <div className="cp-profile-form-group">
+
+                                        <label className="cp-profile-form-label">
+                                            Designation
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            className="cp-profile-input"
+                                            value={
+                                                employee?.designation || ""
+                                            }
+                                            disabled
+                                            readOnly
+                                        />
+
+                                    </div>
+
+
+                                    {/* EMPLOYEE STATUS */}
+
+                                    <div className="cp-profile-form-group">
+
+                                        <label className="cp-profile-form-label">
+                                            Employee Status
+                                        </label>
+
+                                        <input
+                                            type="text"
+                                            className="cp-profile-input"
+                                            value={
+                                                employee?.status || "Active"
+                                            }
+                                            disabled
+                                            readOnly
+                                        />
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* =================================
+                                ERROR
+                            ================================== */}
+
+                            {error && (
+                                <div className="cp-profile-error">
+                                    {error}
+                                </div>
+                            )}
+
+
+                            {/* =================================
+                                FOOTER
+                            ================================== */}
+
+                            <div className="cp-profile-form-footer">
+
+                                <div className="cp-profile-footer-note">
+
+                                    <LockKeyhole
+                                        size={16}
+                                        className="cp-profile-footer-icon"
+                                    />
+
+                                    <span>
+                                        Your employee information is
+                                        securely managed by HR.
+                                    </span>
+
+                                </div>
+
+
+                                <button
+                                    type="submit"
+                                    className="cp-profile-complete-button"
+                                    disabled={submitting}
+                                >
+                                    {submitting
+                                        ? "Creating Profile..."
+                                        : "Complete My Profile"}
+
+                                    {!submitting && (
+                                        <ArrowRight size={15} />
+                                    )}
+
+                                </button>
+
+                            </div>
+
+                        </form>
+
+                    </section>
+
+                </section>
+
+            </main>
+
+
+            {/* =========================================
+                SUCCESS OVERLAY
+            ========================================= */}
+
+            {success && (
+                <div className="cp-profile-success-overlay">
+
+                    <div className="cp-profile-success-box">
+
+                        <div className="cp-profile-success-icon">
+                            <Check size={32} />
+                        </div>
+
+
+                        <h2>
+                            Your profile is complete!
+                        </h2>
+
+
+                        <p>
+                            Your employee profile has been successfully
+                            created. You can now continue to the login
+                            page and access your account.
+                        </p>
+
+
+                        <button
+                            type="button"
+                            className="cp-profile-dashboard-button"
+                            onClick={handleLogin}
+                        >
+                            Continue to Login
+
+                            <ArrowRight size={16} />
+
+                        </button>
+
+                    </div>
+
+                </div>
+            )}
+
         </div>
     );
-};
-
-/*
-=====================================================
-STYLES
-=====================================================
-*/
-
-const styles = {
-    page: {
-        minHeight: "100vh",
-        background: "#f5f6fa",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "30px"
-    },
-
-    card: {
-        width: "100%",
-        maxWidth: "600px",
-        background: "#ffffff",
-        padding: "35px",
-        borderRadius: "12px",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.10)"
-    },
-
-    title: {
-        textAlign: "center",
-        marginBottom: "10px"
-    },
-
-    subtitle: {
-        textAlign: "center",
-        color: "#666",
-        marginBottom: "25px"
-    },
-
-    field: {
-        marginBottom: "18px"
-    },
-
-    label: {
-        display: "block",
-        marginBottom: "7px",
-        fontWeight: "600"
-    },
-
-    input: {
-        width: "100%",
-        boxSizing: "border-box",
-        padding: "11px",
-        border: "1px solid #d1d5db",
-        borderRadius: "6px",
-        fontSize: "15px",
-        background: "#f9fafb"
-    },
-
-    fileInput: {
-        width: "100%",
-        boxSizing: "border-box",
-        padding: "10px",
-        border: "1px solid #d1d5db",
-        borderRadius: "6px",
-        background: "#ffffff"
-    },
-
-    previewContainer: {
-        marginTop: "15px",
-        display: "flex",
-        justifyContent: "center"
-    },
-
-    preview: {
-        width: "120px",
-        height: "120px",
-        objectFit: "cover",
-        borderRadius: "50%",
-        border: "3px solid #ddd"
-    },
-
-    button: {
-        width: "100%",
-        padding: "12px",
-        border: "none",
-        borderRadius: "7px",
-        background: "#2563eb",
-        color: "#ffffff",
-        fontSize: "16px",
-        cursor: "pointer"
-    },
-
-    errorBox: {
-        background: "#fee2e2",
-        color: "#b91c1c",
-        padding: "12px",
-        borderRadius: "6px",
-        marginBottom: "15px"
-    },
-
-    successBox: {
-        background: "#dcfce7",
-        color: "#166534",
-        padding: "12px",
-        borderRadius: "6px",
-        marginBottom: "15px"
-    },
-
-    center: {
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "20px"
-    }
 };
 
 export default CreateProfile;
