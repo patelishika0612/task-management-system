@@ -27,8 +27,7 @@ import Client from "./admin/Client";
 
 import AdminApprovalRequest from "./admin/AdminApprovalRequest";
 import AdminReviewRequests from "./admin/AdminReviewRequests";
-import CreatePassword from "./admin/CreatePassword";
-import CompleteProfile from "./admin/CompleteProfile";
+
 
 
 function App() {
@@ -207,14 +206,7 @@ useEffect(() => {
         path="/admin/approval/:token"
         element={<AdminReviewRequests />}
       />
-<Route
-    path="/create-password"
-    element={<CreatePassword />}
-/>
-<Route
-    path="/complete-profile"
-    element={<CompleteProfile />}
-/>
+
       {/* 
       <Route
         path="/approvedrequests"

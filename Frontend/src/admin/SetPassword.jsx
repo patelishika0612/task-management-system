@@ -262,7 +262,7 @@ const SetPassword = () => {
 
     const handleCompleteProfile = () => {
         navigate(
-            `/complete-profile?email=${encodeURIComponent(
+            `/create-profile?email=${encodeURIComponent(
                 email
             )}`
         );
