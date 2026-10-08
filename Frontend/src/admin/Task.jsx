@@ -58,13 +58,24 @@ const toDateInput = (value) => {
 const capitalize = (text = "") =>
   text.charAt(0).toUpperCase() + text.slice(1);
 
-const getInitials = (name = "") =>
-  name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0].toUpperCase())
-    .join("") || "?";
+const getInitials = (name) => {
+    if (!name || typeof name !== "string") {
+        return "NA";
+    }
+
+    const cleanName = name.trim();
+
+    if (!cleanName) {
+        return "NA";
+    }
+
+    return cleanName
+        .split(/\s+/)
+        .map((word) => word.charAt(0))
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+};
 
 // Show task_id exactly as stored in the database
 const formatTaskCode = (id) => String(id ?? "");

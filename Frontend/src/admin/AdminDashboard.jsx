@@ -56,6 +56,7 @@ const AdminDashboard = () => {
     const [employees, setEmployees] = useState([]);
     const [projects, setProjects] = useState([]);
     const [departments, setDepartments] = useState([]);
+    const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const today = new Date();
 
@@ -68,14 +69,16 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchAll = async () => {
             try {
-                const [empRes, projRes, deptRes] = await Promise.all([
+                const [empRes, projRes, deptRes, taskRes] = await Promise.all([
                     API.get("/employees"),
                     API.get("/projects"),
                     API.get("/departments"),
+                    API.get("/tasks"),
                 ]);
                 setEmployees(empRes.data.data || []);
                 setProjects(projRes.data.data || []);
                 setDepartments(deptRes.data.data || []);
+                setTasks(taskRes.data.data || []);
             } catch (error) {
                 console.error("Dashboard fetch error:", error);
             } finally {
@@ -177,10 +180,18 @@ const AdminDashboard = () => {
         },
     ];
 
+    const completedTasks = tasks.filter((t) => t.status === "completed");
+    const overdueTasks = tasks.filter(
+        (t) => t.status !== "completed" && t.due_date && new Date(t.due_date) < new Date()
+    );
+    const completionRate = tasks.length
+        ? Math.round((completedTasks.length / tasks.length) * 100)
+        : 0;
+
     const attentionItems = [
         {
             title: "Overdue Tasks",
-            count: "05",
+            count: loading ? "—" : String(overdueTasks.length).padStart(2, "0"),
             text: "Tasks need immediate attention",
             icon: AlertCircle,
             className: "attention-red",
@@ -202,121 +213,84 @@ const AdminDashboard = () => {
     ];
 
     useEffect(() => {
+        if (loading) return;
         const canvas = performanceChartRef.current;
-
         if (!canvas) return;
-
-        // Destroy existing chart attached to this canvas
         const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
 
-        if (existingChart) {
-            existingChart.destroy();
+        // Build last 7 months labels
+        const monthLabels = [];
+        const monthKeys = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            monthLabels.push(d.toLocaleString("en-US", { month: "short" }));
+            monthKeys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
         }
+
+        const createdByMonth = monthKeys.map((key) =>
+            tasks.filter((t) => t.created_at && t.created_at.slice(0, 7) === key).length
+        );
+        const completedByMonth = monthKeys.map((key) =>
+            tasks.filter((t) => t.status === "completed" && t.updated_at && t.updated_at.slice(0, 7) === key).length
+        );
 
         const chart = new Chart(canvas, {
             type: "line",
-
             data: {
-                labels: [
-                    "Apr",
-                    "May",
-                    "Jun",
-                    "Jul",
-                    "Aug",
-                    "Sep",
-                    "Oct",
-                ],
-
+                labels: monthLabels,
                 datasets: [
                     {
                         label: "Tasks Created",
-                        data: [42, 55, 48, 68, 73, 81, 92],
-
+                        data: createdByMonth,
                         borderWidth: 2,
                         tension: 0.4,
                         fill: true,
-
                         backgroundColor: "rgba(59, 130, 246, 0.08)",
                         borderColor: "#3b82f6",
-
                         pointBackgroundColor: "#3b82f6",
                         pointRadius: 3,
                     },
-
                     {
                         label: "Tasks Completed",
-                        data: [35, 43, 42, 55, 64, 72, 78],
-
+                        data: completedByMonth,
                         borderWidth: 2,
                         tension: 0.4,
                         fill: true,
-
                         backgroundColor: "rgba(16, 185, 129, 0.06)",
                         borderColor: "#10b981",
-
                         pointBackgroundColor: "#10b981",
                         pointRadius: 3,
                     },
                 ],
             },
-
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-
-                interaction: {
-                    mode: "index",
-                    intersect: false,
-                },
-
+                interaction: { mode: "index", intersect: false },
                 plugins: {
                     legend: {
                         position: "top",
                         align: "end",
-
-                        labels: {
-                            usePointStyle: true,
-                            boxWidth: 8,
-                            padding: 18,
-                        },
+                        labels: { usePointStyle: true, boxWidth: 8, padding: 18 },
                     },
                 },
-
                 scales: {
-                    y: {
-                        beginAtZero: true,
-
-                        grid: {
-                            color: "#eef2f7",
-                        },
-
-                        ticks: {
-                            color: "#8a94a6",
-                        },
-                    },
-
-                    x: {
-                        grid: {
-                            display: false,
-                        },
-
-                        ticks: {
-                            color: "#8a94a6",
-                        },
-                    },
+                    y: { beginAtZero: true, grid: { color: "#eef2f7" }, ticks: { color: "#8a94a6" } },
+                    x: { grid: { display: false }, ticks: { color: "#8a94a6" } },
                 },
             },
         });
 
         performanceChartInstance.current = chart;
-
         return () => {
             if (performanceChartInstance.current) {
                 performanceChartInstance.current.destroy();
                 performanceChartInstance.current = null;
             }
         };
-    }, []);
+    }, [tasks, loading]);
 
     useEffect(() => {
         if (loading || departments.length === 0) return;
@@ -329,7 +303,6 @@ const AdminDashboard = () => {
 
         const barColors = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#14b8a6", "#f97316"];
 
-        // Count employees per department
         const deptLabels = departments.map((d) => d.department_name);
         const deptCounts = departments.map(
             (d) => employees.filter((e) => e.department_id === d.department_id).length
@@ -369,9 +342,17 @@ const AdminDashboard = () => {
         };
     }, [departments, employees, loading]);
 
-    const completionRate = 82; // static placeholder
-
-
+    const onTimeTasks = completedTasks.filter(
+        (t) => t.due_date && t.updated_at && t.updated_at.slice(0, 10) <= t.due_date.slice(0, 10)
+    );
+    const onTimeRate = completedTasks.length
+        ? Math.round((onTimeTasks.length / completedTasks.length) * 100)
+        : 0;
+    const activeEmpCodes = new Set(tasks.map((t) => t.employee_code));
+    const utilizationRate = employees.length
+        ? Math.round((activeEmpCodes.size / employees.length) * 100)
+        : 0;
+    const overallScore = Math.round((completionRate + onTimeRate + utilizationRate) / 3);
 
     return (
         <AdminLayout>
@@ -462,11 +443,11 @@ const AdminDashboard = () => {
                             </span>
                         </div>
 
-                        <div className="stat-number">186</div>
+                        <div className="stat-number">{loading ? "—" : tasks.length}</div>
                         <div className="stat-label">Total Tasks</div>
 
                         <div className="stat-bottom">
-                            <span>78 completed this month</span>
+                            <span>{loading ? "" : `${completedTasks.length} completed`}</span>
                         </div>
                     </div>
 
@@ -533,14 +514,14 @@ const AdminDashboard = () => {
                         <div className="score-section">
                             <div className="score-circle">
                                 <div>
-                                    <strong>78</strong>
+                                    <strong>{loading ? "—" : overallScore}</strong>
                                     <span>/ 100</span>
                                 </div>
                             </div>
 
                             <div className="score-status">
                                 <CheckCircle2 size={17} />
-                                Good Performance
+                                {overallScore >= 75 ? "Good Performance" : overallScore >= 50 ? "Average Performance" : "Needs Improvement"}
                             </div>
                         </div>
 
@@ -549,12 +530,12 @@ const AdminDashboard = () => {
                             <div className="score-metric">
                                 <div>
                                     <span>Task Completion</span>
-                                    <strong>82%</strong>
+                                    <strong>{completionRate}%</strong>
                                 </div>
 
                                 <div className="metric-progress">
                                     <span
-                                        style={{ width: "82%" }}
+                                        style={{ width: `${completionRate}%` }}
                                         className="blue-progress"
                                     ></span>
                                 </div>
@@ -563,12 +544,12 @@ const AdminDashboard = () => {
                             <div className="score-metric">
                                 <div>
                                     <span>On-Time Delivery</span>
-                                    <strong>74%</strong>
+                                    <strong>{onTimeRate}%</strong>
                                 </div>
 
                                 <div className="metric-progress">
                                     <span
-                                        style={{ width: "74%" }}
+                                        style={{ width: `${onTimeRate}%` }}
                                         className="purple-progress"
                                     ></span>
                                 </div>
@@ -577,12 +558,12 @@ const AdminDashboard = () => {
                             <div className="score-metric">
                                 <div>
                                     <span>Team Utilization</span>
-                                    <strong>81%</strong>
+                                    <strong>{utilizationRate}%</strong>
                                 </div>
 
                                 <div className="metric-progress">
                                     <span
-                                        style={{ width: "81%" }}
+                                        style={{ width: `${utilizationRate}%` }}
                                         className="green-progress"
                                     ></span>
                                 </div>
