@@ -21,6 +21,7 @@ import CreateProfile from "./admin/CreateProfile";
 import Department from "./admin/Department";
 import Employee from "./admin/Employee";
 import Project from "./admin/Project";
+import Task from "./admin/Task";
 
 import Calendar from "./admin/Calendar";
 import Client from "./admin/Client";
@@ -180,6 +181,11 @@ useEffect(() => {
       <Route
         path="/projects"
         element={<Project />}
+      />
+
+      <Route
+        path="/tasks"
+        element={<Task />}
       />
 
       <Route

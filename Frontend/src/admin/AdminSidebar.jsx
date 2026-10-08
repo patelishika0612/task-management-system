@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Users,
   FolderKanban,
+  ListChecks,
   CalendarDays,
   UserRound,
   Building2,
@@ -67,6 +68,11 @@ const Sidebar = () => {
       title: "Projects",
       path: "/projects",
       icon: <FolderKanban size={19} strokeWidth={2} />,
+    },
+    {
+      title: "Tasks",
+      path: "/tasks",
+      icon: <ListChecks size={19} strokeWidth={2} />,
     },
     {
       title: "Calendar",
