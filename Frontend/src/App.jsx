@@ -27,6 +27,7 @@ import Client from "./admin/Client";
 
 import AdminApprovalRequest from "./admin/AdminApprovalRequest";
 import AdminReviewRequests from "./admin/AdminReviewRequests";
+import AdminDashboard from "./admin/AdminDashboard";
 
 
 
@@ -206,6 +207,8 @@ useEffect(() => {
         path="/admin/approval/:token"
         element={<AdminReviewRequests />}
       />
+
+      <Route path="/admindashboard" element={<AdminDashboard/>}/>
 
       {/* 
       <Route

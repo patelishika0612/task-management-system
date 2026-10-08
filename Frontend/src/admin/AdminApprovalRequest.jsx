@@ -9,19 +9,18 @@ import {
     IdCard,
     Building2,
     BriefcaseBusiness,
+    MapPin,
     FileText,
     ShieldCheck,
     Send,
     X,
-    Info,
     KeyRound,
     BadgeCheck,
-
-    
     CheckCircle2,
 } from "lucide-react";
-import "./AdminReviewRequests.css";
+
 import Swal from "sweetalert2";
+
 import "./AdminApprovalRequest.css";
 
 const API_BASE_URL = "http://localhost:5000/api";
@@ -36,22 +35,26 @@ const Field = ({
     required,
     error,
     children,
-}) => (
-    <div className="apr-field">
-        <label htmlFor={id}>
-            {label}
-            {required && <span className="apr-required"> *</span>}
-        </label>
+}) => {
+    return (
+        <div className="apr-field">
+            <label htmlFor={id}>
+                {label}
+                {required && (
+                    <span className="apr-required"> *</span>
+                )}
+            </label>
 
-        {children}
+            {children}
 
-        {error && (
-            <small className="apr-error">
-                {error}
-            </small>
-        )}
-    </div>
-);
+            {error && (
+                <small className="apr-error">
+                    {error}
+                </small>
+            )}
+        </div>
+    );
+};
 
 // =====================================================
 // MAIN COMPONENT
@@ -71,6 +74,8 @@ const AdminApprovalRequest = () => {
         dateOfBirth: "",
         employeeCode: "",
         department: "",
+        designation: "",
+        location: "",
         joiningDate: "",
         reason: "",
     });
@@ -187,13 +192,15 @@ const AdminApprovalRequest = () => {
             phoneNumber,
             emailAddress,
             employeeCode,
+            department,
+            designation,
+            location,
             reason,
             dateOfBirth,
             joiningDate,
-            department,
         } = formData;
 
-        // Full Name
+        // FULL NAME
         if (!fullName.trim()) {
             newErrors.fullName =
                 "Full name is required.";
@@ -202,7 +209,7 @@ const AdminApprovalRequest = () => {
                 "Full name must be at least 3 characters.";
         }
 
-        // Phone
+        // PHONE
         if (!phoneNumber.trim()) {
             newErrors.phoneNumber =
                 "Phone number is required.";
@@ -213,7 +220,7 @@ const AdminApprovalRequest = () => {
                 "Enter a valid 10-digit phone number.";
         }
 
-        // Email
+        // EMAIL
         if (!emailAddress.trim()) {
             newErrors.emailAddress =
                 "Email address is required.";
@@ -226,22 +233,36 @@ const AdminApprovalRequest = () => {
                 "Enter a valid email address.";
         }
 
-        // Employee Code
+        // EMPLOYEE ID
         if (!employeeCode.trim()) {
             newErrors.employeeCode =
-                "Employee Code is required.";
-        } else if (employeeCode.trim().length > 50) {
+                "Employee ID is required.";
+        } else if (
+            employeeCode.trim().length > 50
+        ) {
             newErrors.employeeCode =
-                "Employee Code cannot exceed 50 characters.";
+                "Employee ID cannot exceed 50 characters.";
         }
 
-        // Department
+        // DEPARTMENT
         if (!department) {
             newErrors.department =
                 "Please select a department.";
         }
 
-        // Reason
+        // DESIGNATION
+        if (!designation.trim()) {
+            newErrors.designation =
+                "Designation is required.";
+        }
+
+        // LOCATION
+        if (!location.trim()) {
+            newErrors.location =
+                "Location is required.";
+        }
+
+        // REASON
         if (!reason.trim()) {
             newErrors.reason =
                 "Please provide a reason for admin access.";
@@ -255,6 +276,7 @@ const AdminApprovalRequest = () => {
             const dob = new Date(
                 `${dateOfBirth}T00:00:00`
             );
+
             const today = new Date();
 
             today.setHours(0, 0, 0, 0);
@@ -265,7 +287,7 @@ const AdminApprovalRequest = () => {
             }
         }
 
-        // Joining Date
+        // JOINING DATE
         if (!joiningDate) {
             newErrors.joiningDate =
                 "Joining date is required.";
@@ -284,7 +306,7 @@ const AdminApprovalRequest = () => {
             }
         }
 
-        // DOB vs Joining Date
+        // DOB VS JOINING DATE
         if (dateOfBirth && joiningDate) {
             const dob = new Date(
                 `${dateOfBirth}T00:00:00`
@@ -327,7 +349,8 @@ const AdminApprovalRequest = () => {
             setSubmitting(true);
 
             // =================================================
-            // CREATE ACCESS REQUEST
+            // IMPORTANT:
+            // ALL FORM FIELDS ARE SENT HERE
             // =================================================
 
             const payload = {
@@ -351,12 +374,29 @@ const AdminApprovalRequest = () => {
                 Department_ID:
                     Number(formData.department),
 
+                // NEW
+                Designation:
+                    formData.designation.trim(),
+
+                // NEW
+                Location:
+                    formData.location.trim(),
+
                 Joining_Date:
                     formData.joiningDate,
 
                 Reason:
                     formData.reason.trim(),
             };
+
+            console.log(
+                "ADMIN ACCESS REQUEST PAYLOAD:",
+                payload
+            );
+
+            // =================================================
+            // CREATE ACCESS REQUEST
+            // =================================================
 
             const response = await fetch(
                 `${API_BASE_URL}/admin-access-requests`,
@@ -388,6 +428,8 @@ const AdminApprovalRequest = () => {
             const requestId =
                 data.data?.Request_ID ||
                 data.data?.request_id ||
+                data.data?.RequestId ||
+                data.data?.requestId ||
                 data.Request_ID ||
                 data.request_id;
 
@@ -426,9 +468,35 @@ const AdminApprovalRequest = () => {
             ) {
                 throw new Error(
                     approvalData.message ||
-                        "Request was created, but approval email could not be sent."
+                        "Request was created, but approval process could not be started."
                 );
             }
+
+            // =================================================
+            // SAVE REQUEST DATA
+            // =================================================
+
+            sessionStorage.setItem(
+                "accessRequest",
+                JSON.stringify({
+                    email:
+                        formData.emailAddress.trim(),
+                    fullName:
+                        formData.fullName.trim(),
+                    phone:
+                        formData.phoneNumber.trim(),
+                    employeeId:
+                        formData.employeeCode.trim(),
+                    department:
+                        formData.department,
+                    designation:
+                        formData.designation.trim(),
+                    location:
+                        formData.location.trim(),
+                    requestId:
+                        requestId,
+                })
+            );
 
             // =================================================
             // SUCCESS
@@ -444,6 +512,8 @@ const AdminApprovalRequest = () => {
                 dateOfBirth: "",
                 employeeCode: "",
                 department: "",
+                designation: "",
+                location: "",
                 joiningDate: "",
                 reason: "",
             });
@@ -513,15 +583,7 @@ const AdminApprovalRequest = () => {
         `apr-input ${
             errors[field] ? "apr-input-error" : ""
         }`;
-sessionStorage.setItem(
-    "accessRequest",
-    JSON.stringify({
-        email: formData.email,
-        fullName: formData.fullName,
-        phone: formData.phone,
-        employeeId: formData.employeeId,
-    })
-);
+
     // =====================================================
     // JSX
     // =====================================================
@@ -531,9 +593,7 @@ sessionStorage.setItem(
 
             <div className="apr-body">
 
-                {/* =================================================
-                    TOP STEP BADGE
-                ================================================= */}
+                {/* TOP STEP */}
 
                 <div className="apr-top-step">
                     <span className="apr-top-step-number">
@@ -545,9 +605,7 @@ sessionStorage.setItem(
                     </span>
                 </div>
 
-                {/* =================================================
-                    PAGE HEADING
-                ================================================= */}
+                {/* HEADING */}
 
                 <div className="apr-page-heading">
 
@@ -563,81 +621,83 @@ sessionStorage.setItem(
 
                 </div>
 
-                {/* =================================================
-                    STEP PROGRESS
-                ================================================= */}
+                {/* PROCESS */}
 
-               
-        <div className="arv-process">
+                <div className="arv-process">
 
-          <div className="arv-process-step arv-active">
+                    <div className="arv-process-step arv-active">
 
-            <div className="arv-step-number">
-              <CheckCircle2 size={17} />
-            </div>
+                        <div className="arv-step-number">
+                            <CheckCircle2 size={17} />
+                        </div>
 
-            <div>
-              <span>01</span>
-              <strong>Request Submitted</strong>
-            </div>
+                        <div>
+                            <span>01</span>
+                            <strong>
+                                Request Submitted
+                            </strong>
+                        </div>
 
-          </div>
+                    </div>
 
-          <div className="arv-process-line active"></div>
+                    <div className="arv-process-line active"></div>
 
-          <div className="arv-process-step ">
+                    <div className="arv-process-step">
 
-            <div className="arv-step-number">
-              <FileText size={17} />
-            </div>
+                        <div className="arv-step-number">
+                            <FileText size={17} />
+                        </div>
 
-            <div>
-              <span>02</span>
-              <strong>Review Request</strong>
-            </div>
+                        <div>
+                            <span>02</span>
+                            <strong>
+                                Review Request
+                            </strong>
+                        </div>
 
-          </div>
+                    </div>
 
-          <div className="arv-process-line"></div>
+                    <div className="arv-process-line"></div>
 
-          <div className="arv-process-step">
+                    <div className="arv-process-step">
 
-            <div className="arv-step-number">
-              <KeyRound size={17} />
-            </div>
+                        <div className="arv-step-number">
+                            <KeyRound size={17} />
+                        </div>
 
-            <div>
-              <span>03</span>
-              <strong>Create Password</strong>
-            </div>
+                        <div>
+                            <span>03</span>
+                            <strong>
+                                Create Password
+                            </strong>
+                        </div>
 
-          </div>
+                    </div>
 
-          <div className="arv-process-line"></div>
+                    <div className="arv-process-line"></div>
 
-          <div className="arv-process-step">
+                    <div className="arv-process-step">
 
-            <div className="arv-step-number">
-              <BadgeCheck size={17} />
-            </div>
+                        <div className="arv-step-number">
+                            <BadgeCheck size={17} />
+                        </div>
 
-            <div>
-              <span>04</span>
-              <strong>Complete Profile</strong>
-            </div>
+                        <div>
+                            <span>04</span>
+                            <strong>
+                                Complete Profile
+                            </strong>
+                        </div>
 
-          </div>
+                    </div>
 
-        </div>
-                {/* =================================================
-                    MAIN CARD
-                ================================================= */}
+                </div>
+
+                {/* MAIN CARD */}
 
                 <div className="apr-box">
 
-                    {/* =================================================
-                        CARD HEADER
-                    ================================================= */}
+                    {/* HEADER */}
 
                     <div className="apr-box-header">
 
@@ -659,15 +719,9 @@ sessionStorage.setItem(
 
                     </div>
 
-                    {/* =================================================
-                        CONTENT
-                    ================================================= */}
-
                     <div className="apr-content">
 
-                        {/* =================================================
-                            LEFT FORM
-                        ================================================= */}
+                        {/* FORM */}
 
                         <div className="apr-form-area">
 
@@ -676,9 +730,7 @@ sessionStorage.setItem(
                                 noValidate
                             >
 
-                                {/* =================================================
-                                    PERSONAL DETAILS
-                                ================================================= */}
+                                {/* PERSONAL */}
 
                                 <div className="apr-section">
 
@@ -704,7 +756,6 @@ sessionStorage.setItem(
                                                     "fullName"
                                                 )}
                                             >
-
                                                 <User size={15} />
 
                                                 <input
@@ -719,7 +770,6 @@ sessionStorage.setItem(
                                                     }
                                                     placeholder="Enter your full name"
                                                 />
-
                                             </div>
 
                                         </Field>
@@ -740,7 +790,6 @@ sessionStorage.setItem(
                                                     "emailAddress"
                                                 )}
                                             >
-
                                                 <Mail size={15} />
 
                                                 <input
@@ -755,7 +804,6 @@ sessionStorage.setItem(
                                                     }
                                                     placeholder="name@company.com"
                                                 />
-
                                             </div>
 
                                         </Field>
@@ -776,7 +824,6 @@ sessionStorage.setItem(
                                                     "phoneNumber"
                                                 )}
                                             >
-
                                                 <Phone size={15} />
 
                                                 <input
@@ -792,7 +839,6 @@ sessionStorage.setItem(
                                                     }
                                                     placeholder="Enter phone number"
                                                 />
-
                                             </div>
 
                                         </Field>
@@ -812,7 +858,6 @@ sessionStorage.setItem(
                                                     "dateOfBirth"
                                                 )}
                                             >
-
                                                 <CalendarDays
                                                     size={15}
                                                 />
@@ -828,18 +873,14 @@ sessionStorage.setItem(
                                                         handleChange
                                                     }
                                                 />
-
                                             </div>
 
                                         </Field>
 
                                     </div>
-
                                 </div>
 
-                                {/* =================================================
-                                    WORK INFORMATION
-                                ================================================= */}
+                                {/* WORK INFORMATION */}
 
                                 <div className="apr-section">
 
@@ -854,6 +895,7 @@ sessionStorage.setItem(
                                         <Field
                                             id="employeeCode"
                                             label="Employee ID"
+                                            required
                                             error={
                                                 errors.employeeCode
                                             }
@@ -864,7 +906,6 @@ sessionStorage.setItem(
                                                     "employeeCode"
                                                 )}
                                             >
-
                                                 <IdCard size={15} />
 
                                                 <input
@@ -880,12 +921,7 @@ sessionStorage.setItem(
                                                     placeholder="e.g. EMP001"
                                                     maxLength={50}
                                                 />
-
                                             </div>
-
-                                            <small className="apr-help-text">
-                                                Leave blank if you don't have one.
-                                            </small>
 
                                         </Field>
 
@@ -905,7 +941,6 @@ sessionStorage.setItem(
                                                     "department"
                                                 )}
                                             >
-
                                                 <Building2 size={15} />
 
                                                 <select
@@ -929,7 +964,9 @@ sessionStorage.setItem(
                                                     </option>
 
                                                     {departments.map(
-                                                        (department) => (
+                                                        (
+                                                            department
+                                                        ) => (
                                                             <option
                                                                 key={
                                                                     department.department_id
@@ -951,6 +988,78 @@ sessionStorage.setItem(
 
                                         </Field>
 
+                                        {/* DESIGNATION */}
+
+                                        <Field
+                                            id="designation"
+                                            label="Designation"
+                                            required
+                                            error={
+                                                errors.designation
+                                            }
+                                        >
+
+                                            <div
+                                                className={inputClass(
+                                                    "designation"
+                                                )}
+                                            >
+                                                <BriefcaseBusiness
+                                                    size={15}
+                                                />
+
+                                                <input
+                                                    id="designation"
+                                                    type="text"
+                                                    name="designation"
+                                                    value={
+                                                        formData.designation
+                                                    }
+                                                    onChange={
+                                                        handleChange
+                                                    }
+                                                    placeholder="e.g. HR Manager"
+                                                    maxLength={100}
+                                                />
+                                            </div>
+
+                                        </Field>
+
+                                        {/* LOCATION */}
+
+                                        <Field
+                                            id="location"
+                                            label="Location"
+                                            required
+                                            error={
+                                                errors.location
+                                            }
+                                        >
+
+                                            <div
+                                                className={inputClass(
+                                                    "location"
+                                                )}
+                                            >
+                                                <MapPin size={15} />
+
+                                                <input
+                                                    id="location"
+                                                    type="text"
+                                                    name="location"
+                                                    value={
+                                                        formData.location
+                                                    }
+                                                    onChange={
+                                                        handleChange
+                                                    }
+                                                    placeholder="e.g. Ahmedabad"
+                                                    maxLength={150}
+                                                />
+                                            </div>
+
+                                        </Field>
+
                                         {/* JOINING DATE */}
 
                                         <Field
@@ -967,7 +1076,6 @@ sessionStorage.setItem(
                                                     "joiningDate"
                                                 )}
                                             >
-
                                                 <CalendarDays
                                                     size={15}
                                                 />
@@ -983,18 +1091,14 @@ sessionStorage.setItem(
                                                         handleChange
                                                     }
                                                 />
-
                                             </div>
 
                                         </Field>
 
                                     </div>
-
                                 </div>
 
-                                {/* =================================================
-                                    REASON
-                                ================================================= */}
+                                {/* REASON */}
 
                                 <div className="apr-section apr-reason-section">
 
@@ -1006,7 +1110,9 @@ sessionStorage.setItem(
                                         id="reason"
                                         label="Reason for Admin Access"
                                         required
-                                        error={errors.reason}
+                                        error={
+                                            errors.reason
+                                        }
                                     >
 
                                         <div
@@ -1036,16 +1142,18 @@ sessionStorage.setItem(
                                         </div>
 
                                         <div className="apr-char-count">
-                                            {formData.reason.length}/500
+                                            {
+                                                formData.reason
+                                                    .length
+                                            }
+                                            /500
                                         </div>
 
                                     </Field>
 
                                 </div>
 
-                                {/* =================================================
-                                    ACTION BUTTONS
-                                ================================================= */}
+                                {/* BUTTONS */}
 
                                 <div className="apr-actions">
 
@@ -1088,7 +1196,9 @@ sessionStorage.setItem(
                                 <div className="apr-success-message">
 
                                     <div className="apr-success-icon">
-                                        <CheckCircle2 size={20} />
+                                        <CheckCircle2
+                                            size={20}
+                                        />
                                     </div>
 
                                     <div>
@@ -1113,7 +1223,9 @@ sessionStorage.setItem(
                                                 <strong>
                                                     Request ID:
                                                 </strong>{" "}
-                                                {submittedRequestId}
+                                                {
+                                                    submittedRequestId
+                                                }
                                             </p>
                                         )}
 
@@ -1124,9 +1236,7 @@ sessionStorage.setItem(
 
                         </div>
 
-                        {/* =================================================
-                            RIGHT SIDEBAR
-                        ================================================= */}
+                        {/* RIGHT PANEL */}
 
                         <aside className="apr-next-panel">
 
@@ -1140,8 +1250,6 @@ sessionStorage.setItem(
                                 and follow the next steps.
                             </p>
 
-                            {/* STEP 1 */}
-
                             <div className="apr-next-step">
 
                                 <div className="apr-next-number">
@@ -1149,7 +1257,6 @@ sessionStorage.setItem(
                                 </div>
 
                                 <div>
-
                                     <h4>
                                         Submit your request
                                     </h4>
@@ -1158,12 +1265,9 @@ sessionStorage.setItem(
                                         Click the button below to
                                         send your information.
                                     </p>
-
                                 </div>
 
                             </div>
-
-                            {/* STEP 2 */}
 
                             <div className="apr-next-step">
 
@@ -1172,7 +1276,6 @@ sessionStorage.setItem(
                                 </div>
 
                                 <div>
-
                                     <h4>
                                         Wait for approval
                                     </h4>
@@ -1181,12 +1284,9 @@ sessionStorage.setItem(
                                         The authorized person will
                                         review your request.
                                     </p>
-
                                 </div>
 
                             </div>
-
-                            {/* STEP 3 */}
 
                             <div className="apr-next-step">
 
@@ -1195,7 +1295,6 @@ sessionStorage.setItem(
                                 </div>
 
                                 <div>
-
                                     <h4>
                                         Check your email
                                     </h4>
@@ -1204,12 +1303,9 @@ sessionStorage.setItem(
                                         If approved, you will receive
                                         a secure setup link.
                                     </p>
-
                                 </div>
 
                             </div>
-
-                            {/* STEP 4 */}
 
                             <div className="apr-next-step">
 
@@ -1218,7 +1314,6 @@ sessionStorage.setItem(
                                 </div>
 
                                 <div>
-
                                     <h4>
                                         Complete setup
                                     </h4>
@@ -1227,7 +1322,6 @@ sessionStorage.setItem(
                                         Create your password and
                                         complete your profile.
                                     </p>
-
                                 </div>
 
                             </div>
@@ -1236,9 +1330,7 @@ sessionStorage.setItem(
 
                     </div>
 
-                    {/* =================================================
-                        FOOTER
-                    ================================================= */}
+                    {/* FOOTER */}
 
                     <div className="apr-footer-note">
 

@@ -1000,7 +1000,7 @@ const Employee = () => {
                             <tbody>
 
                                 {loading &&
-                                employees.length === 0 ? (
+                                    employees.length === 0 ? (
 
                                     <tr>
 
@@ -1299,11 +1299,10 @@ const Employee = () => {
 
                                     <button
                                         key={page}
-                                        className={`admin-page-btn ${
-                                            currentPage === page
+                                        className={`admin-page-btn ${currentPage === page
                                                 ? "admin-page-active"
                                                 : ""
-                                        }`}
+                                            }`}
                                         onClick={() =>
                                             setCurrentPage(
                                                 page
@@ -1956,8 +1955,8 @@ const Employee = () => {
                                             value:
                                                 viewEmployee.date_of_join
                                                     ? String(
-                                                          viewEmployee.date_of_join
-                                                      ).split("T")[0]
+                                                        viewEmployee.date_of_join
+                                                    ).split("T")[0]
                                                     : "—"
                                         },
 
@@ -1972,8 +1971,8 @@ const Employee = () => {
                                             value:
                                                 viewEmployee.created_at
                                                     ? new Date(
-                                                          viewEmployee.created_at
-                                                      ).toLocaleString()
+                                                        viewEmployee.created_at
+                                                    ).toLocaleString()
                                                     : "—"
                                         },
 
@@ -1982,8 +1981,8 @@ const Employee = () => {
                                             value:
                                                 viewEmployee.updated_at
                                                     ? new Date(
-                                                          viewEmployee.updated_at
-                                                      ).toLocaleString()
+                                                        viewEmployee.updated_at
+                                                    ).toLocaleString()
                                                     : "—"
                                         },
 

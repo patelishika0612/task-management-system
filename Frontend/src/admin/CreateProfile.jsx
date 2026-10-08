@@ -8,7 +8,6 @@ import {
     Upload,
     ArrowRight,
 } from "lucide-react";
-
 import API from "../api";
 import Logo from "../img/nirvanza-logo.png";
 import "./CompleteProfile.css";
