@@ -56,7 +56,7 @@ const Sidebar = () => {
   const menuItems = [
     {
       title: "Dashboard",
-      path: "/",
+      path: "/admindashboard",
       icon: <LayoutDashboard size={19} strokeWidth={2} />,
     },
     {

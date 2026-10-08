@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import {
@@ -9,7 +8,6 @@ import {
   BriefcaseBusiness,
   Building2,
   CalendarDays,
-  MapPin,
   FileText,
   KeyRound,
   CheckCircle2,
@@ -77,6 +75,24 @@ const AdminReviewRequests = () => {
       day: "2-digit",
       month: "long",
       year: "numeric",
+    });
+  };
+
+  const formatDateTime = (date) => {
+    if (!date) return "Not provided";
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return date;
+    }
+
+    return parsedDate.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -153,12 +169,6 @@ const AdminReviewRequests = () => {
 
   // ==================================================
   // GET EXPIRY TIME
-  //
-  // If backend already gives expires_at,
-  // use that.
-  //
-  // Otherwise calculate:
-  // created_at + APPROVAL_TIMEOUT_HOURS
   // ==================================================
 
   const getExpiryDate = (request) => {
@@ -205,9 +215,7 @@ const AdminReviewRequests = () => {
       return "00:00:00";
     }
 
-    const totalSeconds = Math.floor(
-      milliseconds / 1000
-    );
+    const totalSeconds = Math.floor(milliseconds / 1000);
 
     const hours = Math.floor(totalSeconds / 3600);
 
@@ -289,8 +297,6 @@ const AdminReviewRequests = () => {
 
   // ==================================================
   // LIVE CLOCK
-  //
-  // Updates every second.
   // ==================================================
 
   useEffect(() => {
@@ -316,7 +322,6 @@ const AdminReviewRequests = () => {
 
     const status = getStatus(selectedRequest);
 
-    // Already approved/rejected
     if (status !== "pending") {
       setTimeRemaining(null);
       setRequestExpired(false);
@@ -398,7 +403,6 @@ const AdminReviewRequests = () => {
           return;
         }
 
-        // Update local selected request
         setSelectedRequest((previous) => {
           if (!previous) return previous;
 
@@ -410,7 +414,6 @@ const AdminReviewRequests = () => {
           };
         });
 
-        // Refresh request list
         await fetchRequests();
       } catch (error) {
         console.error(
@@ -737,32 +740,45 @@ const AdminReviewRequests = () => {
     "mobile"
   );
 
+  // FIXED EMPLOYEE ID
   const employeeId = getValue(
     selectedRequest,
     "Employee_ID",
     "employee_id",
     "EmployeeId",
-    "employeeId"
+    "employeeId",
+    "employee_code",
+    "Employee_Code",
+    "EmployeeCode"
   );
 
   const department = getValue(
     selectedRequest,
     "Department",
-    "department"
+    "department",
+    "Department_Name",
+    "department_name",
+    "DepartmentName"
   );
 
-  const designation = getValue(
+  // NEW - DATE OF BIRTH
+  const dateOfBirth = getValue(
     selectedRequest,
-    "Designation",
-    "designation",
-    "Job_Title",
-    "job_title"
+    "DOB",
+    "dob",
+    "Date_of_Birth",
+    "date_of_birth",
+    "DateOfBirth",
+    "dateOfBirth"
   );
 
-  const location = getValue(
+  // NEW - JOINING DATE
+  const joiningDate = getValue(
     selectedRequest,
-    "Location",
-    "location"
+    "Joining_Date",
+    "joining_date",
+    "JoiningDate",
+    "joiningDate"
   );
 
   const reason = getValue(
@@ -775,30 +791,21 @@ const AdminReviewRequests = () => {
     "access_reason"
   );
 
+  // REQUESTED ON
   const requestedDate = getValue(
     selectedRequest,
     "Created_At",
     "created_at",
+    "CreatedAt",
+    "createdAt",
     "Requested_At",
     "requested_at",
     "Request_Date",
-    "request_date"
-  );
-
-  const requestedRole = getValue(
-    selectedRequest,
-    "Requested_Role",
-    "requested_role",
-    "Role",
-    "role"
-  );
-
-  const accessLevel = getValue(
-    selectedRequest,
-    "Access_Level",
-    "access_level",
-    "Access_Type",
-    "access_type"
+    "request_date",
+    "Requested_On",
+    "requested_on",
+    "RequestedOn",
+    "requestedOn"
   );
 
   // ==================================================
@@ -1028,6 +1035,8 @@ const AdminReviewRequests = () => {
 
               <div className="arv-info-grid">
 
+                {/* FULL NAME */}
+
                 <div className="arv-info-item">
 
                   <div className="arv-info-icon">
@@ -1038,11 +1047,14 @@ const AdminReviewRequests = () => {
                     <span>Full Name</span>
 
                     <strong>
-                      {fullName || "Not provided"}
+                      {fullName ||
+                        "Not provided"}
                     </strong>
                   </div>
 
                 </div>
+
+                {/* EMAIL */}
 
                 <div className="arv-info-item">
 
@@ -1054,11 +1066,14 @@ const AdminReviewRequests = () => {
                     <span>Email Address</span>
 
                     <strong>
-                      {email || "Not provided"}
+                      {email ||
+                        "Not provided"}
                     </strong>
                   </div>
 
                 </div>
+
+                {/* PHONE */}
 
                 <div className="arv-info-item">
 
@@ -1070,16 +1085,43 @@ const AdminReviewRequests = () => {
                     <span>Phone Number</span>
 
                     <strong>
-                      {phone || "Not provided"}
+                      {phone ||
+                        "Not provided"}
                     </strong>
                   </div>
 
                 </div>
 
+                {/* DATE OF BIRTH */}
+
                 <div className="arv-info-item">
 
                   <div className="arv-info-icon">
-                    <BriefcaseBusiness size={17} />
+                    <CalendarDays size={17} />
+                  </div>
+
+                  <div>
+                    <span>Date of Birth</span>
+
+                    <strong>
+                      {dateOfBirth
+                        ? formatDate(
+                            dateOfBirth
+                          )
+                        : "Not provided"}
+                    </strong>
+                  </div>
+
+                </div>
+
+                {/* EMPLOYEE ID */}
+
+                <div className="arv-info-item">
+
+                  <div className="arv-info-icon">
+                    <BriefcaseBusiness
+                      size={17}
+                    />
                   </div>
 
                   <div>
@@ -1092,6 +1134,8 @@ const AdminReviewRequests = () => {
                   </div>
 
                 </div>
+
+                {/* DEPARTMENT */}
 
                 <div className="arv-info-item">
 
@@ -1110,39 +1154,7 @@ const AdminReviewRequests = () => {
 
                 </div>
 
-                <div className="arv-info-item">
-
-                  <div className="arv-info-icon">
-                    <BriefcaseBusiness size={17} />
-                  </div>
-
-                  <div>
-                    <span>Designation</span>
-
-                    <strong>
-                      {designation ||
-                        "Not provided"}
-                    </strong>
-                  </div>
-
-                </div>
-
-                <div className="arv-info-item">
-
-                  <div className="arv-info-icon">
-                    <MapPin size={17} />
-                  </div>
-
-                  <div>
-                    <span>Location</span>
-
-                    <strong>
-                      {location ||
-                        "Not provided"}
-                    </strong>
-                  </div>
-
-                </div>
+                {/* JOINING DATE */}
 
                 <div className="arv-info-item">
 
@@ -1151,69 +1163,38 @@ const AdminReviewRequests = () => {
                   </div>
 
                   <div>
-                    <span>Requested On</span>
+                    <span>Joining Date</span>
 
                     <strong>
-                      {formatDate(
-                        requestedDate
-                      )}
+                      {joiningDate
+                        ? formatDate(
+                            joiningDate
+                          )
+                        : "Not provided"}
                     </strong>
                   </div>
 
                 </div>
 
-              </div>
+                {/* REQUESTED ON */}
 
-            </div>
+                <div className="arv-info-item">
 
-            {/* ACCESS INFORMATION */}
+                  <div className="arv-info-icon">
+                    <Clock3 size={17} />
+                  </div>
 
-            <div className="arv-section">
+                  <div>
+                    <span>Requested On</span>
 
-              <div className="arv-section-heading">
-
-                <ShieldCheck size={18} />
-
-                <div>
-
-                  <h3>
-                    Access Information
-                  </h3>
-
-                  <p>
-                    Requested administrator
-                    permissions and access level.
-                  </p>
-
-                </div>
-
-              </div>
-
-              <div className="arv-access-grid">
-
-                <div className="arv-access-box">
-
-                  <span>
-                    Requested Role
-                  </span>
-
-                  <strong>
-                    {requestedRole ||
-                      "Administrator"}
-                  </strong>
-
-                </div>
-
-                <div className="arv-access-box">
-
-                  <span>
-                    Access Level
-                  </span>
-
-                  <strong>
-                    {accessLevel ||
-                      "Administrator Access"}
-                  </strong>
+                    <strong>
+                      {requestedDate
+                        ? formatDateTime(
+                            requestedDate
+                          )
+                        : "Not provided"}
+                    </strong>
+                  </div>
 
                 </div>
 
@@ -1232,7 +1213,7 @@ const AdminReviewRequests = () => {
                 <div>
 
                   <h3>
-                    Reason for Access
+                    Reason for Admin Access
                   </h3>
 
                   <p>
@@ -1480,8 +1461,7 @@ const AdminReviewRequests = () => {
                   {requestExpired
                     ? "Approval time has expired"
                     : `This request must be reviewed within ${APPROVAL_TIMEOUT_HOURS} hour${
-                        APPROVAL_TIMEOUT_HOURS >
-                        1
+                        APPROVAL_TIMEOUT_HOURS > 1
                           ? "s"
                           : ""
                       }.`}
