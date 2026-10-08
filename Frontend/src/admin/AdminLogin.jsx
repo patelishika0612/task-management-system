@@ -10,6 +10,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import "./AdminLogin.css";
+// Form validation helpers
+const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
 
 import API from "../api";
 

@@ -28,6 +28,26 @@ import AdminLayout from "../components/AdminLayout";
 import API from "../api";
 
 import "./AdminProfile.css";
+import Swal from "sweetalert2";
+// Form validation helpers
+// Keep only digits and cut to max length (blocks letters while typing)
+const onlyDigits = (value, max) => {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  return max ? digits.slice(0, max) : digits;
+};
+// Keep only letters, spaces and . ' - (for names, city, state, etc.)
+const onlyLetters = (value) =>
+  String(value ?? "").replace(/[^A-Za-z .'-]/g, "");
+const isValidPhone = (v) => /^[6-9]\d{9}$/.test(String(v).trim());
+const isValidName = (v) => /^[A-Za-z][A-Za-z .'-]*$/.test(String(v).trim());
+// Props to spread on a phone <input> so only 10 digits can be typed
+const phoneInputProps = {
+  type: "tel",
+  inputMode: "numeric",
+  maxLength: 10,
+  pattern: "[6-9][0-9]{9}",
+  title: "Enter a valid 10-digit mobile number",
+};
 
 
 // =====================================================
@@ -104,6 +124,14 @@ const Profile = () => {
 
     const [profile, setProfile] = useState({
 
+        firstName: "HR",
+        lastName: "Manager",
+        email: adminEmail,
+        phone: "9876543210",
+        employeeId: "HR001",
+        department: "Human Resources",
+
+
         firstName: "",
         lastName: "",
 
@@ -114,6 +142,7 @@ const Profile = () => {
         employeeId: "",
 
         department: "",
+
 
         designation: "HR Manager",
 
@@ -366,10 +395,13 @@ const Profile = () => {
 
     const handleChange = (e) => {
 
-        const {
-            name,
-            value
-        } = e.target;
+        const { name } = e.target;
+        let { value } = e.target;
+        if (name === "phone") value = onlyDigits(value, 10);
+        else if (name === "firstName" || name === "lastName") value = onlyLetters(value);
+
+
+       
 
 
         setProfile((prev) => ({
@@ -385,6 +417,30 @@ const Profile = () => {
     // =====================================================
 
     const handleSave = () => {
+
+        const warn = (text) =>
+            Swal.fire({ icon: "warning", title: "Invalid Input", text, confirmButtonColor: "#1557f5" });
+
+        if (!profile.firstName.trim() || !isValidName(profile.firstName)) {
+            warn("Please enter a valid first name (letters only).");
+            return;
+        }
+
+        if (!profile.lastName.trim() || !isValidName(profile.lastName)) {
+            warn("Please enter a valid last name (letters only).");
+            return;
+        }
+
+        if (!isValidPhone(profile.phone)) {
+            warn("Phone must be a valid 10-digit mobile number.");
+            return;
+        }
+
+        if (profile.location.trim().length < 2) {
+            warn("Please enter your work location.");
+            return;
+        }
+
 
         setSavedProfile({
             ...profile,
@@ -1187,7 +1243,7 @@ const Profile = () => {
                                     </label>
 
                                     <input
-                                        type="text"
+                                        {...phoneInputProps}
                                         name="phone"
                                         value={
                                             profile.phone

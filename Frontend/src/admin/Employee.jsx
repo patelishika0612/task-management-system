@@ -19,6 +19,26 @@ import {
 } from "lucide-react";
 
 import "./Employee.css";
+// Form validation helpers
+// Keep only digits and cut to max length (blocks letters while typing)
+const onlyDigits = (value, max) => {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  return max ? digits.slice(0, max) : digits;
+};
+// Keep only letters, spaces and . ' - (for names, city, state, etc.)
+const onlyLetters = (value) =>
+  String(value ?? "").replace(/[^A-Za-z .'-]/g, "");
+const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
+const isValidPhone = (v) => /^[6-9]\d{9}$/.test(String(v).trim());
+const isValidName = (v) => /^[A-Za-z][A-Za-z .'-]*$/.test(String(v).trim());
+// Props to spread on a phone <input> so only 10 digits can be typed
+const phoneInputProps = {
+  type: "tel",
+  inputMode: "numeric",
+  maxLength: 10,
+  pattern: "[6-9][0-9]{9}",
+  title: "Enter a valid 10-digit mobile number",
+};
 
 
 const API_BASE =
@@ -117,7 +137,32 @@ const Employee = () => {
 
     const [error, setError] = useState("");
 
+
     const [success, setSuccess] = useState("");
+
+
+    // =====================================================
+    // FORM CHANGE
+    // =====================================================
+
+    const handleChange = (e) => {
+
+        const { name } = e.target;
+
+        let { value } = e.target;
+
+        if (name === "phone") value = onlyDigits(value, 10);
+        else if (name === "emp_name") value = onlyLetters(value);
+        else if (name === "employee_code") value = value.replace(/[^A-Za-z0-9_-]/g, "").toUpperCase();
+
+        setForm((prev) => ({
+            ...prev,
+            [name]: value
+        }));
+
+        setError("");
+    };
+
 
 
     // =====================================================
@@ -274,26 +319,6 @@ const Employee = () => {
 
 
     // =====================================================
-    // FORM CHANGE
-    // =====================================================
-
-    const handleChange = (e) => {
-
-        const {
-            name,
-            value
-        } = e.target;
-
-        setForm((prev) => ({
-            ...prev,
-            [name]: value
-        }));
-
-        setError("");
-    };
-
-
-    // =====================================================
     // VIEW
     // =====================================================
 
@@ -445,80 +470,19 @@ const Employee = () => {
         // VALIDATION
         // -----------------------------------------------
 
-        if (!emp_name.trim()) {
-            setError(
-                "Employee name is required."
-            );
-            return;
-        }
-
-
-        if (!email.trim()) {
-            setError(
-                "Email is required."
-            );
-            return;
-        }
-
-
-        if (!phone.trim()) {
-            setError(
-                "Phone is required."
-            );
-            return;
-        }
-
-
-        if (!department_id) {
-            setError(
-                "Department is required."
-            );
-            return;
-        }
-
-
-        if (!date_of_join) {
-            setError(
-                "Date of joining is required."
-            );
-            return;
-        }
-
-
-        if (!employee_code.trim()) {
-            setError(
-                "Employee code is required."
-            );
-            return;
-        }
-
+        if (!emp_name.trim()) { setError("Employee name is required."); return; }
+        if (emp_name.trim().length < 2 || !isValidName(emp_name)) { setError("Enter a valid employee name (letters only, min 2 characters)."); return; }
+        if (!employee_code.trim()) { setError("Employee code is required."); return; }
+        if (!email.trim()) { setError("Email is required."); return; }
+        if (!isValidEmail(email)) { setError("Enter a valid email address."); return; }
+        if (!phone.trim()) { setError("Phone is required."); return; }
+        if (!isValidPhone(phone)) { setError("Phone must be a valid 10-digit mobile number."); return; }
+        if (!date_of_join) { setError("Date of joining is required."); return; }
+        if (date_of_join > new Date().toISOString().split("T")[0]) { setError("Date of joining cannot be in the future."); return; }
+        if (!department_id) { setError("Department is required."); return; }
 
         // Password required only while creating
-        if (editId === null && !password.trim()) {
-
-            setError(
-                "Password is required."
-            );
-
-            return;
-        }
-
-
-        // -----------------------------------------------
-        // EMAIL VALIDATION
-        // -----------------------------------------------
-
-        const emailRegex =
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if (!emailRegex.test(email.trim())) {
-
-            setError(
-                "Please enter a valid email address."
-            );
-
-            return;
-        }
+        if (editId === null && !password.trim()) { setError("Password is required."); return; }
 
 
         setSaving(true);
@@ -890,7 +854,8 @@ const Employee = () => {
                         </button>
 
                     </div>
-                )}
+
+                  )}
 
 
                 {/* TABLE CARD */}
@@ -1528,7 +1493,7 @@ const Employee = () => {
                                             </label>
 
                                             <input
-                                                type="text"
+                                                {...phoneInputProps}
                                                 name="phone"
                                                 placeholder="e.g. 9876543210"
                                                 value={
@@ -1591,6 +1556,7 @@ const Employee = () => {
                                             <input
                                                 type="date"
                                                 name="date_of_join"
+                                                max={new Date().toISOString().split("T")[0]}
                                                 value={
                                                     form.date_of_join
                                                 }
