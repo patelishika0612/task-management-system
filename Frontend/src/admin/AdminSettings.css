@@ -1,0 +1,916 @@
+/* =========================================================
+   HR SETTINGS PAGE
+   ========================================================= */
+
+.hr-settings-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 30px;
+  background: #f5f7fb;
+  color: #1d2739;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.hr-settings-header {
+  margin-bottom: 26px;
+}
+
+.hr-settings-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+
+  color: #929baa;
+  font-size: 13px;
+}
+
+.hr-settings-breadcrumb button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+
+  color: #1557f5;
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.hr-settings-breadcrumb button:hover {
+  text-decoration: underline;
+}
+
+.hr-settings-header h1 {
+  margin: 0;
+  color: #172033;
+  font-size: 30px;
+  font-weight: 750;
+  letter-spacing: -0.6px;
+}
+
+.hr-settings-header p {
+  margin: 7px 0 0;
+
+  color: #7d8798;
+  font-size: 14px;
+}
+
+/* =========================================================
+   MAIN LAYOUT
+   ========================================================= */
+
+.hr-settings-layout {
+  display: grid;
+  grid-template-columns: 275px minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.hr-settings-sidebar {
+  padding: 18px;
+
+  background: #ffffff;
+  border: 1px solid #e7ebf2;
+  border-radius: 18px;
+
+  box-shadow: 0 7px 25px rgba(23, 43, 77, 0.04);
+}
+
+.hr-settings-sidebar-title {
+  padding: 4px 8px 15px;
+
+  color: #9aa3b2;
+
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.hr-settings-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hr-settings-menu-item {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  padding: 12px 10px;
+
+  border: 0;
+  border-radius: 11px;
+
+  background: transparent;
+
+  color: #697386;
+
+  text-align: left;
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.hr-settings-menu-item:hover {
+  background: #f4f7ff;
+  color: #1557f5;
+  transform: translateX(2px);
+}
+
+.hr-settings-menu-item.active {
+  background: #edf3ff;
+  color: #1557f5;
+}
+
+.hr-settings-menu-icon {
+  width: 35px;
+  height: 35px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 9px;
+
+  background: #f5f7fa;
+}
+
+.hr-settings-menu-item.active
+  .hr-settings-menu-icon {
+  background: #ffffff;
+}
+
+.hr-settings-menu-text {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hr-settings-menu-text strong {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hr-settings-menu-text small {
+  font-size: 10px;
+  color: #9aa3b2;
+}
+
+.hr-settings-menu-item.active
+  .hr-settings-menu-text small {
+  color: #6d8ee8;
+}
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+.hr-settings-logout {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-top: 18px;
+  padding: 12px;
+
+  border: 1px solid #fee2e2;
+  border-radius: 11px;
+
+  background: #fff8f8;
+
+  color: #dc3545;
+
+  font-size: 12px;
+  font-weight: 650;
+
+  cursor: pointer;
+
+  transition: all 0.2s ease;
+}
+
+.hr-settings-logout:hover {
+  background: #fff0f0;
+  border-color: #f7caca;
+}
+
+/* =========================================================
+   CONTENT CARD
+   ========================================================= */
+
+.hr-settings-content {
+  min-width: 0;
+}
+
+.hr-settings-card {
+  padding: 27px;
+
+  background: #ffffff;
+  border: 1px solid #e7ebf2;
+  border-radius: 18px;
+
+  box-shadow: 0 7px 25px rgba(23, 43, 77, 0.04);
+}
+
+.hr-settings-card-header {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  padding-bottom: 22px;
+  margin-bottom: 24px;
+
+  border-bottom: 1px solid #edf0f5;
+}
+
+.hr-settings-card-icon {
+  width: 43px;
+  height: 43px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 12px;
+
+  background: #edf3ff;
+  color: #1557f5;
+}
+
+.hr-settings-card-header h2 {
+  margin: 0;
+
+  color: #20293a;
+
+  font-size: 17px;
+  font-weight: 720;
+}
+
+.hr-settings-card-header p {
+  margin: 5px 0 0;
+
+  color: #8b94a4;
+
+  font-size: 12px;
+}
+
+/* =========================================================
+   PROFILE BOX
+   ========================================================= */
+
+.hr-settings-profile-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 16px;
+
+  margin-bottom: 25px;
+
+  border: 1px solid #e8edf5;
+  border-radius: 13px;
+
+  background: #f9fbff;
+}
+
+.hr-settings-avatar {
+  width: 55px;
+  height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #1557f5,
+      #2468f8
+    );
+
+  color: #ffffff;
+
+  font-size: 16px;
+  font-weight: 750;
+
+  box-shadow: 0 7px 18px rgba(21, 87, 245, 0.18);
+}
+
+.hr-settings-profile-box h3 {
+  margin: 0;
+
+  color: #273145;
+
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.hr-settings-profile-box span {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #8c96a6;
+
+  font-size: 11px;
+}
+
+/* =========================================================
+   FORM GRID
+   ========================================================= */
+
+.hr-settings-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.hr-settings-form-group {
+  min-width: 0;
+}
+
+.hr-settings-form-group label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  color: #30394b;
+
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.hr-settings-input {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  width: 100%;
+}
+
+.hr-settings-input > svg {
+  position: absolute;
+  left: 13px;
+
+  color: #9aa3b2;
+
+  pointer-events: none;
+}
+
+.hr-settings-input input,
+.hr-settings-input select {
+  width: 100%;
+  height: 47px;
+
+  padding: 0 13px 0 42px;
+
+  border: 1px solid #e0e5ed;
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #fbfcfe;
+
+  color: #30394b;
+
+  font-size: 12px;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.hr-settings-input input:focus,
+.hr-settings-input select:focus {
+  border-color: #1557f5;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 0 0 3px rgba(21, 87, 245, 0.08);
+}
+
+.hr-settings-input input::placeholder {
+  color: #a4acb9;
+}
+
+.hr-settings-input select {
+  cursor: pointer;
+}
+
+.hr-settings-disabled input {
+  background: #f3f5f8;
+  color: #929baa;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   CARD FOOTER
+   ========================================================= */
+
+.hr-settings-card-footer {
+  display: flex;
+  justify-content: flex-end;
+
+  margin-top: 25px;
+  padding-top: 20px;
+
+  border-top: 1px solid #edf0f5;
+}
+
+.hr-settings-save-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  min-height: 43px;
+
+  padding: 0 18px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #1557f5,
+      #2468f8
+    );
+
+  color: #ffffff;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 7px 18px rgba(21, 87, 245, 0.18);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.hr-settings-save-btn:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 10px 22px rgba(21, 87, 245, 0.24);
+}
+
+/* =========================================================
+   PASSWORD
+   ========================================================= */
+
+.hr-settings-password-form {
+  max-width: 600px;
+}
+
+.hr-settings-password-form
+  .hr-settings-form-group {
+  margin-bottom: 18px;
+}
+
+.hr-settings-password-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  margin: 5px 0 22px;
+  padding: 11px 13px;
+
+  border-radius: 10px;
+
+  background: #f5f8ff;
+
+  color: #1557f5;
+
+  font-size: 11px;
+}
+
+.hr-settings-password-note span {
+  color: #68758b;
+}
+
+/* =========================================================
+   NOTIFICATION TOGGLE
+   ========================================================= */
+
+.hr-settings-toggle-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.hr-settings-toggle-row {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  min-height: 70px;
+
+  padding: 13px 0;
+
+  border-bottom: 1px solid #edf0f5;
+
+  cursor: pointer;
+}
+
+.hr-settings-toggle-row:last-child {
+  border-bottom: 0;
+}
+
+.hr-settings-toggle-row > div {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hr-settings-toggle-row strong {
+  color: #30394b;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hr-settings-toggle-row div span {
+  color: #929baa;
+
+  font-size: 10px;
+}
+
+.hr-settings-toggle-row input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hr-settings-toggle {
+  position: relative;
+
+  width: 42px;
+  height: 23px;
+
+  flex-shrink: 0;
+
+  border-radius: 20px;
+
+  background: #dce1e9;
+
+  transition: background 0.2s ease;
+}
+
+.hr-settings-toggle::after {
+  content: "";
+
+  position: absolute;
+
+  width: 17px;
+  height: 17px;
+
+  left: 3px;
+  top: 3px;
+
+  border-radius: 50%;
+
+  background: #ffffff;
+
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.14);
+
+  transition: transform 0.2s ease;
+}
+
+.hr-settings-toggle-row
+  input:checked
+  + .hr-settings-toggle {
+  background: #1557f5;
+}
+
+.hr-settings-toggle-row
+  input:checked
+  + .hr-settings-toggle::after {
+  transform: translateX(19px);
+}
+
+/* =========================================================
+   APPEARANCE
+   ========================================================= */
+
+.hr-settings-appearance {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+
+  padding: 17px;
+
+  margin-bottom: 22px;
+
+  border: 1px solid #e7ebf2;
+  border-radius: 13px;
+
+  background: #fafbfe;
+}
+
+.hr-settings-theme-preview {
+  width: 210px;
+  height: 125px;
+
+  display: flex;
+
+  overflow: hidden;
+
+  border: 1px solid #e1e6ef;
+  border-radius: 9px;
+
+  background: #ffffff;
+}
+
+.hr-settings-preview-sidebar {
+  width: 48px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #1557f5,
+      #2468f8
+    );
+}
+
+.hr-settings-preview-main {
+  flex: 1;
+  padding: 12px;
+}
+
+.hr-settings-preview-main div {
+  height: 11px;
+
+  margin-bottom: 8px;
+
+  border-radius: 4px;
+
+  background: #edf1f6;
+}
+
+.hr-settings-preview-main div:first-child {
+  width: 60%;
+}
+
+.hr-settings-preview-main div:nth-child(2) {
+  width: 90%;
+  height: 35px;
+}
+
+.hr-settings-preview-main div:last-child {
+  width: 75%;
+}
+
+.hr-settings-theme-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hr-settings-theme-info strong {
+  color: #30394b;
+
+  font-size: 13px;
+}
+
+.hr-settings-theme-info span {
+  color: #929baa;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   SYSTEM INFO
+   ========================================================= */
+
+.hr-settings-info-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-top: 25px;
+  padding: 13px;
+
+  border-radius: 11px;
+
+  background: #f1faf5;
+
+  color: #1b9b5c;
+}
+
+.hr-settings-info-box > svg {
+  flex-shrink: 0;
+}
+
+.hr-settings-info-box div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hr-settings-info-box strong {
+  color: #28724d;
+
+  font-size: 11px;
+}
+
+.hr-settings-info-box span {
+  color: #7c9a89;
+
+  font-size: 10px;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1000px) {
+  .hr-settings-page {
+    padding: 25px;
+  }
+
+  .hr-settings-layout {
+    grid-template-columns: 225px minmax(0, 1fr);
+  }
+
+  .hr-settings-sidebar {
+    padding: 13px;
+  }
+
+  .hr-settings-menu-text small {
+    display: none;
+  }
+
+  .hr-settings-menu-item {
+    padding: 10px 8px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 750px) {
+  .hr-settings-page {
+    padding: 18px 15px;
+  }
+
+  .hr-settings-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .hr-settings-sidebar {
+    padding: 12px;
+  }
+
+  .hr-settings-sidebar-title {
+    padding-bottom: 10px;
+  }
+
+  .hr-settings-menu {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .hr-settings-menu-item {
+    min-width: 0;
+  }
+
+  .hr-settings-menu-item > svg {
+    display: none;
+  }
+
+  .hr-settings-menu-text small {
+    display: block;
+  }
+
+  .hr-settings-logout {
+    margin-top: 12px;
+  }
+
+  .hr-settings-card {
+    padding: 20px;
+  }
+
+  .hr-settings-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hr-settings-appearance {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+/* =========================================================
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 450px) {
+  .hr-settings-header h1 {
+    font-size: 25px;
+  }
+
+  .hr-settings-header p {
+    font-size: 12px;
+  }
+
+  .hr-settings-menu {
+    grid-template-columns: 1fr;
+  }
+
+  .hr-settings-card {
+    padding: 16px;
+    border-radius: 15px;
+  }
+
+  .hr-settings-card-header {
+    align-items: flex-start;
+  }
+
+  .hr-settings-card-header h2 {
+    font-size: 15px;
+  }
+
+  .hr-settings-profile-box {
+    padding: 12px;
+  }
+
+  .hr-settings-theme-preview {
+    width: 100%;
+  }
+
+  .hr-settings-card-footer {
+    justify-content: stretch;
+  }
+
+  .hr-settings-card-footer .hr-settings-save-btn {
+    width: 100%;
+  }
+}
+/* =========================================================
+   PASSWORD SHOW / HIDE
+   ========================================================= */
+
+.hr-settings-input input[name$="Password"] {
+  padding-right: 46px;
+}
+
+.hr-settings-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #9aa3b2;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.hr-settings-password-toggle:hover {
+  color: #1557f5;
+  background: #eef3ff;
+}

@@ -1,0 +1,3 @@
+/* Department page uses shared admin styles only */
+@import "./table.css";
+@import "./responsive.css";

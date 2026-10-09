@@ -1,0 +1,1329 @@
+
+// src/admin/Profile.jsx
+
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import {
+    User,
+    Mail,
+    Phone,
+    BriefcaseBusiness,
+    Building2,
+    CalendarDays,
+    MapPin,
+    ShieldCheck,
+    Pencil,
+    LockKeyhole,
+    CheckCircle2,
+    IdCard,
+    X,
+    Clock,
+    BadgeCheck,
+    RefreshCw,
+} from "lucide-react";
+
+import UserImg from "../img/user.png";
+import AdminLayout from "../components/AdminLayout";
+import API from "../api";
+
+import "./AdminProfile.css";
+import Swal from "sweetalert2";
+// Form validation helpers
+// Keep only digits and cut to max length (blocks letters while typing)
+const onlyDigits = (value, max) => {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  return max ? digits.slice(0, max) : digits;
+};
+// Keep only letters, spaces and . ' - (for names, city, state, etc.)
+const onlyLetters = (value) =>
+  String(value ?? "").replace(/[^A-Za-z .'-]/g, "");
+const isValidPhone = (v) => /^[6-9]\d{9}$/.test(String(v).trim());
+const isValidName = (v) => /^[A-Za-z][A-Za-z .'-]*$/.test(String(v).trim());
+// Props to spread on a phone <input> so only 10 digits can be typed
+const phoneInputProps = {
+  type: "tel",
+  inputMode: "numeric",
+  maxLength: 10,
+  pattern: "[6-9][0-9]{9}",
+  title: "Enter a valid 10-digit mobile number",
+};
+
+
+// =====================================================
+// BASE URL
+// =====================================================
+
+const BASE_URL =
+    API.defaults.baseURL.replace(/\/api\/?$/, "");
+
+
+// =====================================================
+// IMAGE URL
+// =====================================================
+
+const getImageUrl = (image) => {
+
+    if (!image) {
+        return UserImg;
+    }
+
+    // Full URL
+    if (/^https?:\/\//i.test(image)) {
+        return image;
+    }
+
+    // /uploads/employee-123.jpeg
+    if (image.startsWith("/uploads/")) {
+        return `${BASE_URL}${image}`;
+    }
+
+    // uploads/employee-123.jpeg
+    if (image.startsWith("uploads/")) {
+        return `${BASE_URL}/${image}`;
+    }
+
+    // employee-123.jpeg
+    return `${BASE_URL}/uploads/${image}`;
+};
+
+
+// =====================================================
+// COMPONENT
+// =====================================================
+
+const Profile = () => {
+
+    const navigate = useNavigate();
+
+    // =====================================================
+    // ADMIN EMAIL
+    // =====================================================
+
+    const adminEmail =
+        localStorage.getItem("adminEmail") || "";
+
+
+    // =====================================================
+    // STATES
+    // =====================================================
+
+    const [isEditing, setIsEditing] =
+        useState(false);
+
+    const [loading, setLoading] =
+        useState(true);
+
+    const [error, setError] =
+        useState("");
+
+
+    // =====================================================
+    // PROFILE
+    // =====================================================
+
+    const [profile, setProfile] = useState({
+
+        firstName: "HR",
+        lastName: "Manager",
+        email: adminEmail,
+        phone: "9876543210",
+        employeeId: "HR001",
+        department: "Human Resources",
+
+
+        firstName: "",
+        lastName: "",
+
+        email: "",
+
+        phone: "",
+
+        employeeId: "",
+
+        department: "",
+
+
+        designation: "HR Manager",
+
+        joiningDate: "",
+
+        location: "Ahmedabad, Gujarat",
+
+        image: "",
+
+        emailVerified: true,
+
+        accountStatus: "Active",
+
+        accountCreated: "",
+
+        lastLogin: "Today",
+
+    });
+
+    const formatDateTime = (dateValue) => {
+        if (!dateValue) {
+            return "";
+        }
+
+        const date = new Date(dateValue);
+
+        if (Number.isNaN(date.getTime())) {
+            return String(dateValue);
+        }
+
+        return date.toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+        });
+    };
+
+    // =====================================================
+    // SAVED PROFILE
+    // =====================================================
+
+    const [savedProfile, setSavedProfile] =
+        useState(profile);
+
+
+    // =====================================================
+    // FETCH PROFILE FROM DATABASE
+    // =====================================================
+
+    const fetchProfile = async () => {
+
+        try {
+
+            setLoading(true);
+
+            setError("");
+
+
+            if (!adminEmail) {
+
+                setError(
+                    "Admin email not found. Please login again."
+                );
+
+                return;
+            }
+
+
+            console.log(
+                "Fetching profile for:",
+                adminEmail
+            );
+
+
+            const response = await API.get(
+                `/employees/profile?email=${encodeURIComponent(
+                    adminEmail
+                )}`
+            );
+
+
+            console.log(
+                "Profile API response:",
+                response.data
+            );
+
+
+            if (!response.data?.success) {
+
+                throw new Error(
+                    response.data?.message ||
+                    "Unable to fetch profile."
+                );
+            }
+
+
+            const employee =
+                response.data.data;
+
+
+            // =====================================================
+            // CONVERT EMPLOYEE NAME
+            // =====================================================
+
+            const nameParts =
+                (employee.emp_name || "")
+                    .trim()
+                    .split(/\s+/);
+
+
+            const firstName =
+                nameParts[0] || "";
+
+
+            const lastName =
+                nameParts
+                    .slice(1)
+                    .join(" ");
+
+
+            // =====================================================
+            // DATE
+            // =====================================================
+
+            const joiningDate =
+                employee.date_of_join
+                    ? new Date(
+                        employee.date_of_join
+                    ).toLocaleDateString(
+                        "en-GB",
+                        {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                        }
+                    )
+                    : "";
+
+
+            // =====================================================
+            // ACCOUNT CREATED
+            // =====================================================
+
+            const accountCreated = formatDateTime(
+                employee.created_at
+            );
+
+
+            // =====================================================
+            // ACCOUNT STATUS
+            // =====================================================
+
+            const accountStatus =
+                employee.status === "active"
+                    ? "Active"
+                    : "Not Active";
+
+
+            // =====================================================
+            // PROFILE DATA
+            // =====================================================
+
+            const profileData = {
+
+                firstName,
+
+                lastName,
+
+                email:
+                    employee.email || adminEmail,
+
+                phone:
+                    employee.phone || "",
+
+                employeeId:
+                    employee.employee_code ||
+                    employee.emp_id ||
+                    "",
+
+                department:
+                    employee.department_name ||
+                    "",
+
+                // Current DB does not have designation
+                designation:
+                    "HR Manager",
+
+                joiningDate,
+
+                // Current DB does not have location
+                location:
+                    "Ahmedabad, Gujarat",
+
+                image:
+                    employee.image || "",
+
+                emailVerified: true,
+
+                accountStatus,
+
+                accountCreated,
+
+                lastLogin: "Today",
+            };
+
+
+            setProfile(profileData);
+
+            setSavedProfile(profileData);
+
+
+        } catch (err) {
+
+            console.error(
+                "Profile fetch error:",
+                err
+            );
+
+            setError(
+                err.response?.data?.message ||
+                err.message ||
+                "Unable to load profile."
+            );
+
+        } finally {
+
+            setLoading(false);
+
+        }
+    };
+
+
+    // =====================================================
+    // LOAD PROFILE
+    // =====================================================
+
+    useEffect(() => {
+
+        fetchProfile();
+
+    }, [adminEmail]);
+
+
+    // =====================================================
+    // HANDLE INPUT CHANGE
+    // =====================================================
+
+    const handleChange = (e) => {
+
+        const { name } = e.target;
+        let { value } = e.target;
+        if (name === "phone") value = onlyDigits(value, 10);
+        else if (name === "firstName" || name === "lastName") value = onlyLetters(value);
+
+
+       
+
+
+        setProfile((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+
+    };
+
+
+    // =====================================================
+    // SAVE PROFILE
+    // =====================================================
+
+    const handleSave = () => {
+
+        const warn = (text) =>
+            Swal.fire({ icon: "warning", title: "Invalid Input", text, confirmButtonColor: "#1557f5" });
+
+        if (!profile.firstName.trim() || !isValidName(profile.firstName)) {
+            warn("Please enter a valid first name (letters only).");
+            return;
+        }
+
+        if (!profile.lastName.trim() || !isValidName(profile.lastName)) {
+            warn("Please enter a valid last name (letters only).");
+            return;
+        }
+
+        if (!isValidPhone(profile.phone)) {
+            warn("Phone must be a valid 10-digit mobile number.");
+            return;
+        }
+
+        if (profile.location.trim().length < 2) {
+            warn("Please enter your work location.");
+            return;
+        }
+
+
+        setSavedProfile({
+            ...profile,
+        });
+
+        setIsEditing(false);
+
+    };
+
+
+    // =====================================================
+    // OPEN EDIT
+    // =====================================================
+
+    const handleEditOpen = () => {
+
+        setIsEditing(true);
+
+    };
+
+
+    // =====================================================
+    // CANCEL EDIT
+    // =====================================================
+
+    const handleCancel = () => {
+
+        setProfile({
+            ...savedProfile,
+        });
+
+        setIsEditing(false);
+
+    };
+
+
+    // =====================================================
+    // WORK INFORMATION
+    // =====================================================
+
+    const profItems = [
+
+        {
+            icon: <IdCard size={16} />,
+            label: "Employee ID",
+            value: profile.employeeId,
+        },
+
+        {
+            icon:
+                <BriefcaseBusiness size={16} />,
+            label: "Designation",
+            value: profile.designation,
+        },
+
+        {
+            icon:
+                <Building2 size={16} />,
+            label: "Department",
+            value: profile.department,
+        },
+
+        {
+            icon:
+                <CalendarDays size={16} />,
+            label: "Joining Date",
+            value: profile.joiningDate,
+        },
+
+    ];
+
+
+
+    // =====================================================
+    // ACCOUNT INFORMATION
+    // =====================================================
+
+    const accountItems = [
+
+        {
+            icon:
+                <CalendarDays size={18} />,
+            label: "Account Created",
+            value:
+                profile.accountCreated ||
+                "—",
+
+            color: "#6366f1",
+            bg: "#eef2ff",
+        },
+
+        {
+            icon:
+                <Clock size={18} />,
+            label: "Last Login",
+            value:
+                profile.lastLogin ||
+                "Today",
+
+            color: "#0ea5e9",
+            bg: "#e0f2fe",
+        },
+
+        {
+            icon:
+                <BadgeCheck size={18} />,
+
+            label: "Email Verification",
+
+            value:
+                profile.emailVerified
+                    ? "Verified"
+                    : "Not Verified",
+
+            badge: true,
+
+            badgeColor:
+                profile.emailVerified
+                    ? "#16a34a"
+                    : "#dc2626",
+
+            badgeBg:
+                profile.emailVerified
+                    ? "#dcfce7"
+                    : "#fee2e2",
+
+            color:
+                profile.emailVerified
+                    ? "#16a34a"
+                    : "#dc2626",
+
+            bg:
+                profile.emailVerified
+                    ? "#dcfce7"
+                    : "#fee2e2",
+        },
+
+    ];
+
+
+    // =====================================================
+    // LOADING
+    // =====================================================
+
+    if (loading) {
+
+        return (
+            <AdminLayout>
+
+                <div className="hr-profile-page">
+
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            minHeight: "300px",
+                            gap: "10px",
+                        }}
+                    >
+
+                        <RefreshCw
+                            size={22}
+                            className="admin-spinning"
+                        />
+
+                        <span>
+                            Loading profile...
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </AdminLayout>
+        );
+    }
+
+
+    return (
+
+        <AdminLayout>
+
+            <div className="hr-profile-page">
+
+                {/* =====================================================
+                    ERROR
+                ===================================================== */}
+
+                {error && (
+
+                    <div
+                        className="admin-alert admin-alert-error"
+                        style={{
+                            marginBottom: "20px",
+                        }}
+                    >
+
+                        <span>
+                            {error}
+                        </span>
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setError("")
+                            }
+                        >
+                            <X size={17} />
+                        </button>
+
+                    </div>
+
+                )}
+
+
+                {/* =====================================================
+                    TOP BAR
+                ===================================================== */}
+
+                <section className="hr-profile-top">
+
+                    <div className="hr-profile-actions">
+
+                        {/* CHANGE PASSWORD */}
+
+                        <button
+                            className="hr-profile-password-btn"
+                            type="button"
+                            onClick={() =>
+                                navigate(
+                                    "/resetpassword"
+                                )
+                            }
+                        >
+
+                            <LockKeyhole size={15} />
+
+                            Change Password
+
+                        </button>
+
+
+                        {/* EDIT PROFILE */}
+
+                        <button
+                            className="hr-profile-edit-btn"
+                            type="button"
+                            onClick={
+                                handleEditOpen
+                            }
+                        >
+
+                            <Pencil size={15} />
+
+                            Edit Profile
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+
+                {/* =====================================================
+                    MAIN GRID
+                ===================================================== */}
+
+                <section className="hr-profile-grid">
+
+
+                    {/* =================================================
+                        LEFT PROFILE CARD
+                    ================================================= */}
+
+                    <div className="hr-profile-card hr-profile-main-card">
+
+
+                        {/* COVER */}
+
+                        <div className="hr-profile-cover">
+
+                            <div className="hr-cover-pattern"></div>
+
+                        </div>
+
+
+                        {/* AVATAR */}
+
+                        <div className="hr-profile-avatar-wrapper">
+
+                            <div className="hr-profile-avatar">
+
+                                <img
+                                    src={
+                                        getImageUrl(
+                                            profile.image
+                                        )
+                                    }
+                                    alt={
+                                        profile.firstName ||
+                                        "Admin"
+                                    }
+                                    className="admin-avatar-image"
+                                    onError={(e) => {
+
+                                        e.currentTarget.src =
+                                            UserImg;
+
+                                    }}
+                                />
+
+                            </div>
+
+                        </div>
+
+
+                        {/* BASIC INFORMATION */}
+
+                        <div className="hr-profile-basic">
+
+                            <h2>
+
+                                {profile.firstName}{" "}
+
+                                {profile.lastName}
+
+                            </h2>
+
+
+                            <p className="hr-profile-designation">
+
+                                {profile.designation}
+
+                            </p>
+
+
+                            <div className="hr-profile-role">
+
+                                <ShieldCheck size={15} />
+
+                                HR / Human Resources
+
+                            </div>
+
+                        </div>
+
+
+                        {/* ACCOUNT STATUS */}
+
+                        <div className="hr-profile-status">
+
+                            <span className="hr-status-dot"></span>
+
+                            {profile.accountStatus ===
+                                "Active"
+                                ? "Active Account"
+                                : "Not Active"}
+
+                        </div>
+
+
+                        {/* =================================================
+                            QUICK INFORMATION
+                        ================================================= */}
+
+                        <div className="hr-profile-quick-info">
+
+
+                            {/* EMAIL */}
+
+                            <div className="hr-quick-item">
+
+                                <div className="hr-quick-icon">
+
+                                    <Mail size={17} />
+
+                                </div>
+
+                                <div>
+
+                                    <span>
+                                        Email
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            profile.email
+                                        }
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* PHONE */}
+
+                            <div className="hr-quick-item">
+
+                                <div className="hr-quick-icon">
+
+                                    <Phone size={17} />
+
+                                </div>
+
+                                <div>
+
+                                    <span>
+                                        Phone
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            profile.phone ||
+                                            "—"
+                                        }
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* DEPARTMENT */}
+
+                            <div className="hr-quick-item">
+
+                                <div className="hr-quick-icon">
+
+                                    <Building2 size={17} />
+
+                                </div>
+
+                                <div>
+
+                                    <span>
+                                        Department
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            profile.department ||
+                                            "—"
+                                        }
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            {/* LOCATION */}
+
+                            <div className="hr-quick-item">
+
+                                <div className="hr-quick-icon">
+
+                                    <MapPin size={17} />
+
+                                </div>
+
+                                <div>
+
+                                    <span>
+                                        Location
+                                    </span>
+
+                                    <strong>
+                                        {
+                                            profile.location
+                                        }
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    {/* =================================================
+                        RIGHT CONTENT
+                    ================================================= */}
+
+                    <div className="hr-profile-right">
+
+
+                        {/* =================================================
+                            WORK INFORMATION
+                        ================================================= */}
+
+                        <div className="hr-profile-card">
+
+                            <div className="hr-section-header">
+
+                                <div>
+
+                                    <h3>
+                                        Work Information
+                                    </h3>
+
+                                    <p>
+                                        Your HR role and employment details
+                                    </p>
+
+                                </div>
+
+
+                                <div className="hr-section-icon">
+
+                                    <BriefcaseBusiness
+                                        size={18}
+                                    />
+
+                                </div>
+
+                            </div>
+
+
+                            <div className="hr-prof-info-grid">
+
+                                {profItems.map(
+                                    (
+                                        item,
+                                        i
+                                    ) => (
+
+                                        <div
+                                            className="hr-prof-info-item"
+                                            key={i}
+                                        >
+
+                                            <div className="hr-prof-info-icon">
+
+                                                {
+                                                    item.icon
+                                                }
+
+                                            </div>
+
+                                            <div className="hr-prof-info-text">
+
+                                                <span>
+                                                    {
+                                                        item.label
+                                                    }
+                                                </span>
+
+                                                <strong>
+                                                    {
+                                                        item.value ||
+                                                        "—"
+                                                    }
+                                                </strong>
+
+                                            </div>
+
+                                        </div>
+
+                                    )
+                                )}
+
+                            </div>
+
+                        </div>
+
+
+                        {/* =================================================
+                            ACCOUNT INFORMATION
+                        ================================================= */}
+
+                        <div className="hr-profile-card">
+
+                            <div className="hr-section-header">
+
+                                <div>
+
+                                    <h3>
+                                        Account Information
+                                    </h3>
+
+                                    <p>
+                                        Your account activity and security status
+                                    </p>
+
+                                </div>
+
+
+                                <div className="hr-section-icon">
+
+                                    <ShieldCheck
+                                        size={18}
+                                    />
+
+                                </div>
+
+                            </div>
+
+
+                            <div className="hr-account-info-grid">
+
+                                {accountItems.map(
+                                    (
+                                        item,
+                                        i
+                                    ) => (
+
+                                        <div
+                                            className="hr-account-info-item"
+                                            key={i}
+                                        >
+
+                                            <div
+                                                className="hr-account-info-icon"
+                                                style={{
+                                                    background:
+                                                        item.bg,
+                                                    color:
+                                                        item.color,
+                                                }}
+                                            >
+
+                                                {
+                                                    item.icon
+                                                }
+
+                                            </div>
+
+
+                                            <div className="hr-account-info-text">
+
+                                                <span>
+                                                    {
+                                                        item.label
+                                                    }
+                                                </span>
+
+
+                                                {item.badge ? (
+
+                                                    <span
+                                                        className="hr-account-badge"
+                                                        style={{
+                                                            background:
+                                                                item.badgeBg,
+                                                            color:
+                                                                item.badgeColor,
+                                                        }}
+                                                    >
+
+                                                        <span
+                                                            className="hr-account-badge-dot"
+                                                            style={{
+                                                                background:
+                                                                    item.badgeColor,
+                                                            }}
+                                                        ></span>
+
+                                                        {
+                                                            item.value
+                                                        }
+
+                                                    </span>
+
+                                                ) : (
+
+                                                    <strong>
+                                                        {
+                                                            item.value
+                                                        }
+                                                    </strong>
+
+                                                )}
+
+                                            </div>
+
+                                        </div>
+
+                                    )
+                                )}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            {/* =========================================================
+                EDIT PROFILE MODAL
+            ========================================================= */}
+
+            {isEditing && (
+
+                <div className="hr-modal-overlay">
+
+                    <div
+                        className="hr-modal"
+                        onClick={(e) =>
+                            e.stopPropagation()
+                        }
+                    >
+
+                        {/* HEADER */}
+
+                        <div className="hr-modal-header">
+
+                            <div>
+
+                                <h3>
+                                    Edit Profile
+                                </h3>
+
+                                <p>
+                                    Update your personal and professional details
+                                </p>
+
+                            </div>
+
+
+                            <button
+                                className="hr-modal-close"
+                                type="button"
+                                onClick={
+                                    handleCancel
+                                }
+                            >
+
+                                <X size={18} />
+
+                            </button>
+
+                        </div>
+
+
+                        {/* BODY */}
+
+                        <div className="hr-modal-body">
+
+                            <div className="hr-modal-grid">
+
+
+                                {/* FIRST NAME */}
+
+                                <div className="hr-modal-field">
+
+                                    <label>
+                                        First Name
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="firstName"
+                                        value={
+                                            profile.firstName
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
+                                    />
+
+                                </div>
+
+
+                                {/* LAST NAME */}
+
+                                <div className="hr-modal-field">
+
+                                    <label>
+                                        Last Name
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="lastName"
+                                        value={
+                                            profile.lastName
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
+                                    />
+
+                                </div>
+
+
+                                {/* PHONE */}
+
+                                <div className="hr-modal-field">
+
+                                    <label>
+                                        Phone Number
+                                    </label>
+
+                                    <input
+                                        {...phoneInputProps}
+                                        name="phone"
+                                        value={
+                                            profile.phone
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
+                                    />
+
+                                </div>
+
+
+                                {/* WORK LOCATION */}
+
+                                <div className="hr-modal-field">
+
+                                    <label>
+                                        Work Location
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        name="location"
+                                        value={
+                                            profile.location
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
+                                    />
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        {/* FOOTER */}
+
+                        <div className="hr-modal-footer">
+
+                            <button
+                                className="hr-profile-cancel-btn"
+                                type="button"
+                                onClick={
+                                    handleCancel
+                                }
+                            >
+                                Cancel
+                            </button>
+
+
+                            <button
+                                className="hr-profile-save-btn"
+                                type="button"
+                                onClick={
+                                    handleSave
+                                }
+                            >
+
+                                <CheckCircle2
+                                    size={16}
+                                />
+
+                                Save Changes
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            )}
+
+        </AdminLayout>
+
+    );
+};
+
+export default Profile;

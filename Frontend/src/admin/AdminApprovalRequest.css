@@ -1,0 +1,737 @@
+/* =========================================================
+   ADMIN APPROVAL REQUEST
+   Screenshot-style design
+========================================================= */
+
+.apr-page {
+  --arv-primary: #2948e8;
+  --arv-primary-dark: #18257a;
+  --arv-primary-light: #eef2ff;
+
+  --arv-navy: #10164f;
+
+  --arv-green: #15966a;
+  --arv-green-light: #eafaf4;
+
+  --arv-red: #d9534f;
+  --arv-red-light: #fff1f0;
+
+  --arv-bg: #f5f7fb;
+  --arv-white: #ffffff;
+
+  --arv-text: #171c35;
+  --arv-muted: #70798d;
+
+  --arv-border: #e1e5ef;
+
+  --arv-shadow: 0 12px 35px rgba(16, 22, 79, 0.08);
+
+  min-height: 100vh;
+  background: var(--arv-bg);
+  color: var(--arv-text);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  padding-bottom: 60px;
+}
+* {
+    box-sizing: border-box;
+}
+
+.apr-page {
+    min-height: 100vh;
+    width: 100%;
+    background: #f5f7fb;
+    color: #14213d;
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+}
+
+.apr-body {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 24px 45px;
+}
+
+/* =========================================================
+   TOP STEP
+========================================================= */
+
+.apr-top-step {
+    width: fit-content;
+    margin: 0 auto 16px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 11px;
+    border-radius: 20px;
+    background: #eef2ff;
+    color: #3155f5;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.apr-top-step-number {
+    width: 17px;
+    height: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #3155f5;
+    color: #fff;
+    font-size: 10px;
+}
+
+/* =========================================================
+   PAGE HEADING
+========================================================= */
+
+.apr-page-heading {
+    text-align: center;
+    margin-bottom: 27px;
+}
+
+.apr-page-heading h1 {
+    margin: 0;
+    color: #14213d;
+    font-size: 27px;
+    line-height: 1.25;
+    font-weight: 750;
+    letter-spacing: -0.6px;
+}
+
+.apr-page-heading p {
+   
+    max-width: 623px;
+    margin: 10px auto 0;
+    color: #64748b;
+    font-size: 14px;
+    line-height: 1.65;
+
+}
+
+/* =========================================================
+   PROGRESS
+========================================================= */
+
+.apr-progress {
+    width: 600px;
+    max-width: 100%;
+    margin: 0 auto 27px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.apr-progress-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.apr-progress-item.active {
+    color: #3155f5;
+}
+
+.apr-progress-circle {
+     width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #edf0f5;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.apr-progress-item.active .apr-progress-circle {
+    background: #3155f5;
+    color: #fff;
+}
+
+.apr-progress-line {
+    width: 55px;
+    height: 1px;
+    margin: 0 10px;
+    background: #dce2eb;
+}
+
+/* =========================================================
+   MAIN BOX
+========================================================= */
+
+.apr-box {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #dce3ee;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow:
+        0 10px 30px rgba(26, 39, 70, 0.07),
+        0 2px 8px rgba(26, 39, 70, 0.03);
+}
+
+/* =========================================================
+   CARD HEADER
+========================================================= */
+
+.apr-box-header {
+    min-height: 76px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    border-bottom: 1px solid #e0e5ed;
+}
+
+.apr-box-header-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: #eef2ff;
+    color: #3155f5;
+}
+
+.apr-box-header h2 {
+    margin: 0 0 3px;
+    color: #17213b;
+    font-size: 16px;
+    font-weight: 750;
+}
+
+.apr-box-header p {
+    margin: 0;
+    color: #7a879b;
+    font-size: 12px;
+}
+
+/* =========================================================
+   CONTENT TWO COLUMNS
+========================================================= */
+
+.apr-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+}
+
+/* =========================================================
+   LEFT FORM
+========================================================= */
+
+.apr-form-area {
+    min-width: 0;
+    padding: 25px 25px 23px;
+}
+
+.apr-section {
+    margin-bottom: 25px;
+}
+
+.apr-section h3 {
+    margin: 0 0 15px;
+    color: #18223b;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.apr-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 15px;
+    row-gap: 16px;
+}
+
+/* =========================================================
+   FIELD
+========================================================= */
+
+.apr-field {
+    min-width: 0;
+}
+
+.apr-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: #26344f;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.apr-required {
+    color: #ef4444;
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+.apr-input {
+    width: 100%;
+    height: 37px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 11px;
+    border: 1px solid #d9e0eb;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #66758d;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.apr-input:focus-within {
+    border-color: #3155f5;
+    box-shadow: 0 0 0 3px rgba(49, 85, 245, 0.08);
+}
+
+.apr-input svg {
+    flex-shrink: 0;
+    color: #8a96aa;
+}
+
+.apr-input input,
+.apr-input select {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #273653;
+    font-family: inherit;
+    font-size: 12px;
+}
+
+.apr-input input::placeholder {
+    color: #a2adbd;
+}
+
+.apr-input select {
+    cursor: pointer;
+}
+
+.apr-input select:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+/* Chrome date input */
+
+.apr-input input[type="date"] {
+    color: #526078;
+}
+
+.apr-input input[type="date"]::-webkit-calendar-picker-indicator {
+    width: 13px;
+    height: 13px;
+    cursor: pointer;
+    opacity: 0.65;
+}
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+.apr-input-error {
+    border-color: #ef4444 !important;
+    box-shadow: none !important;
+}
+
+.apr-error {
+    display: block;
+    margin-top: 4px;
+    color: #dc2626;
+    font-size: 9px;
+    line-height: 1.35;
+}
+
+.apr-help-text {
+    display: block;
+    margin-top: 4px;
+    color: #8793a7;
+    font-size: 8.5px;
+    line-height: 1.35;
+}
+
+/* =========================================================
+   REASON
+========================================================= */
+
+.apr-reason-section {
+    margin-bottom: 4px;
+}
+
+.apr-textarea {
+    width: 100%;
+    min-height: 92px;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    padding: 10px 11px;
+    border: 1px solid #d9e0eb;
+    border-radius: 7px;
+    background: #fff;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.apr-textarea:focus-within {
+    border-color: #3155f5;
+    box-shadow: 0 0 0 3px rgba(49, 85, 245, 0.08);
+}
+
+.apr-textarea svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #8a96aa;
+}
+
+.apr-textarea textarea {
+    width: 100%;
+    min-height: 70px;
+    resize: vertical;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #273653;
+    font-family: inherit;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.apr-textarea textarea::placeholder {
+    color: #a2adbd;
+}
+
+.apr-char-count {
+    margin-top: 4px;
+    text-align: right;
+    color: #94a0b2;
+    font-size: 8.5px;
+}
+
+/* =========================================================
+   ACTIONS
+========================================================= */
+
+.apr-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 9px;
+    margin-top: 19px;
+    padding-top: 17px;
+    border-top: 1px solid #edf0f4;
+}
+
+.apr-cancel-btn,
+.apr-submit-btn {
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 15px;
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.apr-cancel-btn {
+    border: 1px solid #dce2eb;
+    background: #ffffff;
+    color: #526078;
+}
+
+.apr-cancel-btn:hover {
+    background: #f8fafc;
+}
+
+.apr-submit-btn {
+    border: 1px solid #3155f5;
+    background: #3155f5;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(49, 85, 245, 0.18);
+}
+
+.apr-submit-btn:hover {
+    background: #2647d9;
+    transform: translateY(-1px);
+}
+
+.apr-cancel-btn:disabled,
+.apr-submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* =========================================================
+   RIGHT PANEL
+========================================================= */
+
+.apr-next-panel {
+    padding: 28px 20px 24px;
+    border-left: 1px solid #e0e5ed;
+    background: #fbfcfe;
+}
+
+.apr-next-panel h3 {
+    margin: 0 0 8px;
+    color: #18223b;
+    font-size: 14px;
+    font-weight: 750;
+}
+
+.apr-next-description {
+    margin: 0 0 22px;
+    color: #748198;
+    font-size: 11px;
+    line-height: 1.65;
+}
+
+/* =========================================================
+   NEXT STEPS
+========================================================= */
+
+.apr-next-step {
+    display: grid;
+    grid-template-columns: 23px minmax(0, 1fr);
+    gap: 10px;
+    margin-bottom: 19px;
+}
+
+.apr-next-step:last-child {
+    margin-bottom: 0;
+}
+
+.apr-next-number {
+    width: 23px;
+    height: 23px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #d8e0ec;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #3155f5;
+    font-size: 9px;
+    font-weight: 750;
+}
+
+.apr-next-step h4 {
+    margin: 1px 0 4px;
+    color: #273653;
+    font-size: 12px;
+    font-weight: 750;
+}
+
+.apr-next-step p {
+    margin: 0;
+    color: #7d899c;
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+
+/* =========================================================
+   SUCCESS MESSAGE
+========================================================= */
+
+.apr-success-message {
+    margin-top: 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 15px;
+    border: 1px solid #bce5cf;
+    border-radius: 9px;
+    background: #f0fdf4;
+}
+
+.apr-success-icon {
+    width: 31px;
+    height: 31px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.apr-success-message h3 {
+    margin: 0 0 5px;
+    color: #166534;
+    font-size: 11px;
+}
+
+.apr-success-message p {
+    margin: 3px 0;
+    color: #4b6b56;
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.apr-footer-note {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border-top: 1px solid #e5e9f0;
+    background: #fafbfd;
+    color: #8a95a7;
+    font-size: 9px;
+}
+
+.apr-footer-note svg {
+    color: #3155f5;
+    flex-shrink: 0;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+    .apr-body {
+        max-width: 850px;
+        padding: 25px 18px 35px;
+    }
+
+    .apr-content {
+        grid-template-columns: 1fr;
+    }
+
+    .apr-next-panel {
+        border-left: 0;
+        border-top: 1px solid #e0e5ed;
+    }
+
+    .apr-next-step {
+        grid-template-columns: 23px minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 650px) {
+    .apr-body {
+        padding: 20px 12px 30px;
+    }
+
+    .apr-page-heading h1 {
+        font-size: 23px;
+    }
+
+    .apr-page-heading p {
+        font-size: 11px;
+    }
+
+    .apr-progress {
+        justify-content: flex-start;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+
+    .apr-progress-item {
+        font-size: 9px;
+    }
+
+    .apr-progress-line {
+        width: 25px;
+        margin: 0 6px;
+    }
+
+    .apr-progress-item span:last-child {
+        display: none;
+    }
+
+    .apr-box {
+        border-radius: 13px;
+    }
+
+    .apr-box-header {
+        padding: 17px;
+    }
+
+    .apr-form-area {
+        padding: 20px 17px;
+    }
+
+    .apr-grid {
+        grid-template-columns: 1fr;
+        row-gap: 14px;
+    }
+
+    .apr-next-panel {
+        padding: 22px 17px;
+    }
+
+    .apr-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .apr-cancel-btn,
+    .apr-submit-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 420px) {
+    .apr-top-step {
+        margin-bottom: 12px;
+    }
+
+    .apr-page-heading {
+        margin-bottom: 20px;
+    }
+
+    .apr-page-heading h1 {
+        font-size: 21px;
+    }
+
+    .apr-page-heading p {
+        font-size: 10px;
+    }
+
+    .apr-box-header {
+        align-items: flex-start;
+    }
+
+    .apr-footer-note {
+        padding: 10px 15px;
+        text-align: center;
+        line-height: 1.4;
+    }
+}
