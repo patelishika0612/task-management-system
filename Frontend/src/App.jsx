@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 import "./App.css";
 
 
-import Dashboard from "./admin/Dashboard";
+// import Dashboard from "./admin/Dashboard";
 import Sidebar from "./admin/AdminSidebar";
 import Header from "./admin/AdminHeader";
 import Adminprofile from "./admin/Profile";
@@ -133,7 +133,7 @@ useEffect(() => {
 
       <Route path="/login" element={<Login />} />
 
-      <Route path="/" element={<Dashboard />} />
+      <Route path="/" element={<AdminDashboard/>}/>
 
       <Route path="/profile" element={<Adminprofile />} />
 
@@ -214,7 +214,7 @@ useEffect(() => {
         element={<AdminReviewRequests />}
       />
 
-      <Route path="/admindashboard" element={<AdminDashboard/>}/>
+     
 
       {/* 
       <Route
