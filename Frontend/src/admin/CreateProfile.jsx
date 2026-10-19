@@ -724,26 +724,8 @@ const CreateProfile = () => {
                                     </div>
 
 
-                                    {/* DESIGNATION */}
 
-                                    <div className="cp-profile-form-group">
-
-                                        <label className="cp-profile-form-label">
-                                            Designation
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            className="cp-profile-input"
-                                            value={
-                                                employee?.designation || ""
-                                            }
-                                            disabled
-                                            readOnly
-                                        />
-
-                                    </div>
-
+                             
 
                                     {/* EMPLOYEE STATUS */}
 

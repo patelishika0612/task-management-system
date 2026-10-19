@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import AdminLayout from "../components/AdminLayout";
+import API from "../api";
 import {
   Plus, Search, Pencil, Trash2, X, Building2,
   RefreshCw, AlertCircle, CheckCircle, Eye,
@@ -7,7 +8,7 @@ import {
 } from "lucide-react";
 import "./Department.css";
 
-const API_URL = `${import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api"}/departments`;
+const DEPARTMENTS_ENDPOINT = "/departments";
 const PAGE_SIZE = 5;
 
 const Department = () => {
@@ -27,12 +28,12 @@ const Department = () => {
     try {
       setLoading(true);
       setError("");
-      const res = await fetch(API_URL);
-      const result = await res.json();
-      if (!res.ok || !result.success) throw new Error(result.message || "Unable to fetch departments");
+      const res = await API.get(DEPARTMENTS_ENDPOINT);
+      const result = res.data;
+      if (!result.success) throw new Error(result.message || "Unable to fetch departments");
       setDepartments(result.data || []);
     } catch (err) {
-      setError(err.message || "Unable to connect to the server.");
+      setError(err.response?.data?.message || err.message || "Unable to connect to the server.");
     } finally {
       setLoading(false);
     }
@@ -51,14 +52,14 @@ const Department = () => {
     setError(""); setSuccess("");
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/${dept.department_id}`);
-      const result = await res.json();
-      if (!res.ok || !result.success) throw new Error(result.message || "Unable to fetch department");
+      const res = await API.get(`${DEPARTMENTS_ENDPOINT}/${dept.department_id}`);
+      const result = res.data;
+      if (!result.success) throw new Error(result.message || "Unable to fetch department");
       setEditId(result.data.department_id);
       setDepartmentName(result.data.department_name);
       setIsModalOpen(true);
     } catch (err) {
-      setError(err.message || "Unable to open department");
+      setError(err.response?.data?.message || err.message || "Unable to open department");
     } finally {
       setLoading(false);
     }
@@ -78,20 +79,20 @@ const Department = () => {
     setSaving(true); setError(""); setSuccess("");
     try {
       const isEditing = editId !== null;
-      const res = await fetch(isEditing ? `${API_URL}/${editId}` : API_URL, {
-        method: isEditing ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ department_name: trimmedName }),
-      });
-      const result = await res.json();
-      if (!res.ok || !result.success) {
+      const payload = { department_name: trimmedName };
+      const res = isEditing
+        ? await API.put(`${DEPARTMENTS_ENDPOINT}/${editId}`, payload)
+        : await API.post(DEPARTMENTS_ENDPOINT, payload);
+      const result = res.data;
+      if (!result.success) {
         throw new Error(result.errors?.map(e => e.message).join(", ") || result.message || "Unable to save");
       }
       setSuccess(result.message || (isEditing ? "Updated successfully" : "Created successfully"));
       setIsModalOpen(false); setEditId(null); setDepartmentName("");
       await fetchDepartments();
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      const data = err.response?.data;
+      setError(data?.errors?.map((e) => e.message).join(", ") || data?.message || err.message || "Something went wrong.");
     } finally {
       setSaving(false);
     }
@@ -101,13 +102,13 @@ const Department = () => {
     if (!window.confirm(`Delete "${dept.department_name}"?`)) return;
     setError(""); setSuccess("");
     try {
-      const res = await fetch(`${API_URL}/${dept.department_id}`, { method: "DELETE" });
-      const result = await res.json();
-      if (!res.ok || !result.success) throw new Error(result.message || "Unable to delete");
+      const res = await API.delete(`${DEPARTMENTS_ENDPOINT}/${dept.department_id}`);
+      const result = res.data;
+      if (!result.success) throw new Error(result.message || "Unable to delete");
       setSuccess(result.message || "Deleted successfully");
       await fetchDepartments();
     } catch (err) {
-      setError(err.message || "Unable to delete.");
+      setError(err.response?.data?.message || err.message || "Unable to delete.");
     }
   };
 

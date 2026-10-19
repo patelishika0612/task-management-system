@@ -76,7 +76,7 @@ const Sidebar = () => {
     },
     {
       title: "Calendar",
-      path: "/#",
+      path: "/calendar",
       icon: <CalendarDays size={19} strokeWidth={2} />,
     },
     {

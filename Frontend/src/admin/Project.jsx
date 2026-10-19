@@ -1,23 +1,28 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import AdminLayout from "../components/AdminLayout";
+import API from "../api";
 import {
-  Plus, Search, Pencil, Trash2, X, FolderKanban,
-  RefreshCw, AlertCircle, CheckCircle, Eye,
-  ChevronLeft, ChevronRight, ChevronDown,
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  X,
+  FolderKanban,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle,
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import "./Project.css";
 
-const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
-
-const API_URL = `${BASE_URL}/projects`;
-const EMP_URL = `${BASE_URL}/employees`;
-const CLIENT_URL = `${BASE_URL}/clients`;
-const MEMBER_URL = `${BASE_URL}/project-members`;
 const PAGE_SIZE = 5;
 
 const PRIORITY_OPTIONS = ["low", "medium", "high", "critical"];
+
 const STATUS_OPTIONS = [
   "not started",
   "in progress",
@@ -37,10 +42,44 @@ const EMPTY_FORM = {
   created_by: [],
 };
 
+// Handles errors returned by Axios
+const getErrorMessage = (error, fallback) => {
+  const data = error.response?.data;
+
+  if (Array.isArray(data?.errors)) {
+    return (
+      data.errors
+        .map((item) => item.message)
+        .filter(Boolean)
+        .join(", ") || fallback
+    );
+  }
+
+  return data?.message || error.message || fallback;
+};
+
+// Normalizes common API response formats
+const getArrayData = (responseData) => {
+  if (Array.isArray(responseData)) return responseData;
+  if (Array.isArray(responseData?.data)) return responseData.data;
+  if (Array.isArray(responseData?.data?.data)) {
+    return responseData.data.data;
+  }
+  return [];
+};
+
+const checkApiResponse = (data, fallback) => {
+  if (data?.success === false) {
+    throw new Error(data.message || fallback);
+  }
+  return data;
+};
+
 const Project = () => {
   const [projects, setProjects] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [clients, setClients] = useState([]);
+
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -49,6 +88,7 @@ const Project = () => {
   const [viewProject, setViewProject] = useState(null);
 
   const [form, setForm] = useState(EMPTY_FORM);
+
   const [empSearch, setEmpSearch] = useState("");
   const [empDropOpen, setEmpDropOpen] = useState(false);
   const empDropRef = useRef(null);
@@ -59,68 +99,70 @@ const Project = () => {
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // =====================================================
-  // COMMON API RESPONSE HANDLER
-  // =====================================================
-  const readResponse = async (response) => {
-    const result = await response.json().catch(() => ({}));
-
-    if (!response.ok || result.success === false) {
-      throw new Error(
-        result.message || `Request failed (${response.status})`
-      );
-    }
-
-    return result;
-  };
-
-  // =====================================================
+  // =========================================
   // FETCH PROJECTS
-  // =====================================================
+  // =========================================
   const fetchProjects = async () => {
     try {
       setLoading(true);
       setError("");
 
-      const response = await fetch(API_URL);
-      const result = await readResponse(response);
+      const response = await API.get("/projects");
+      const result = checkApiResponse(
+        response.data,
+        "Unable to fetch projects."
+      );
 
-      setProjects(result.data || []);
+      setProjects(getArrayData(result));
     } catch (err) {
-      setError(err.message || "Unable to fetch projects.");
+      setError(getErrorMessage(err, "Unable to fetch projects."));
     } finally {
       setLoading(false);
     }
   };
 
-  // =====================================================
+  // =========================================
   // FETCH EMPLOYEES
-  // =====================================================
+  // =========================================
   const fetchEmployees = async () => {
     try {
-      const response = await fetch(EMP_URL);
-      const result = await readResponse(response);
+      const response = await API.get("/employees");
+      const result = checkApiResponse(
+        response.data,
+        "Unable to fetch employees."
+      );
 
-      setEmployees(result.data || []);
+      setEmployees(getArrayData(result));
     } catch (err) {
-      console.error("Employee fetch error:", err.message);
+      console.error(
+        "Employee fetch error:",
+        getErrorMessage(err, "Unable to fetch employees.")
+      );
     }
   };
 
-  // =====================================================
+  // =========================================
   // FETCH CLIENTS
-  // =====================================================
+  // =========================================
   const fetchClients = async () => {
     try {
-      const response = await fetch(CLIENT_URL);
-      const result = await readResponse(response);
+      const response = await API.get("/clients");
+      const result = checkApiResponse(
+        response.data,
+        "Unable to fetch clients."
+      );
 
-      setClients(result.data || []);
+      setClients(getArrayData(result));
     } catch (err) {
-      console.error("Client fetch error:", err.message);
+      console.error(
+        "Client fetch error:",
+        getErrorMessage(err, "Unable to fetch clients.")
+      );
     }
   };
 
@@ -134,9 +176,9 @@ const Project = () => {
     setCurrentPage(1);
   }, [search]);
 
-  // =====================================================
+  // =========================================
   // CLOSE DROPDOWNS ON OUTSIDE CLICK
-  // =====================================================
+  // =========================================
   useEffect(() => {
     const handler = (event) => {
       if (
@@ -161,9 +203,9 @@ const Project = () => {
     };
   }, []);
 
-  // =====================================================
+  // =========================================
   // FORM CHANGE
-  // =====================================================
+  // =========================================
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -175,77 +217,97 @@ const Project = () => {
     setError("");
   };
 
-  // =====================================================
+  // =========================================
   // VIEW PROJECT
-  // =====================================================
+  // =========================================
   const openViewModal = (project) => {
     setViewProject(project);
   };
 
-  // =====================================================
+  // =========================================
   // ADD PROJECT
-  // =====================================================
+  // =========================================
   const openAddModal = () => {
     setEditId(null);
     setForm({ ...EMPTY_FORM });
+
     setEmpSearch("");
     setClientSearch("");
     setEmpDropOpen(false);
     setClientDropOpen(false);
+
     setError("");
     setSuccess("");
     setIsModalOpen(true);
   };
 
-  // =====================================================
+  // =========================================
   // EDIT PROJECT
-  // Load assigned employees from project_members
-  // =====================================================
+  // =========================================
   const openEditModal = async (project) => {
     try {
       setLoading(true);
       setError("");
       setSuccess("");
 
-      // Ensure employees are loaded
       let employeeList = employees;
 
+      // Ensure employees are loaded
       if (employeeList.length === 0) {
-        const employeeResponse = await fetch(EMP_URL);
-        const employeeResult = await readResponse(employeeResponse);
+        const employeeResponse = await API.get("/employees");
+        const employeeResult = checkApiResponse(
+          employeeResponse.data,
+          "Unable to fetch employees."
+        );
 
-        employeeList = employeeResult.data || [];
+        employeeList = getArrayData(employeeResult);
         setEmployees(employeeList);
       }
 
-      // Fetch project details
-      const projectResponse = await fetch(
-        `${API_URL}/${project.project_id}`
+      // Get project details
+      const projectResponse = await API.get(
+        `/projects/${project.project_id}`
       );
 
-      const projectResult = await readResponse(projectResponse);
-      const data = projectResult.data;
+      const projectResult = checkApiResponse(
+        projectResponse.data,
+        "Unable to fetch project details."
+      );
 
-      // Fetch project member assignments
-      const membersResponse = await fetch(MEMBER_URL);
-      const membersResult = await readResponse(membersResponse);
+      const data =
+        projectResult.data?.project ||
+        projectResult.data ||
+        projectResult.project ||
+        projectResult;
 
-      const projectMembers = (membersResult.data || []).filter(
+      // Get project-member assignments
+      const membersResponse = await API.get("/project-members");
+      const membersResult = checkApiResponse(
+        membersResponse.data,
+        "Unable to fetch project assignments."
+      );
+
+      const allMembers = getArrayData(membersResult);
+
+      const projectMembers = allMembers.filter(
         (member) =>
           Number(member.project_id) === Number(data.project_id)
       );
 
-      // project_members API returns employee_code / emp_id per member
       const selectedEmployeeCodes = [
         ...new Set(
           projectMembers
             .map((member) => {
+              const memberEmployeeId =
+                member.emp_id ?? member.employee_id;
+
               const employee = employeeList.find(
                 (item) =>
                   (member.employee_code &&
-                    item.employee_code === member.employee_code) ||
-                  (member.emp_id &&
-                    Number(item.emp_id) === Number(member.emp_id))
+                    String(item.employee_code) ===
+                      String(member.employee_code)) ||
+                  (memberEmployeeId != null &&
+                    Number(item.emp_id) === Number(memberEmployeeId))
               );
 
               return employee?.employee_code || null;
@@ -254,10 +316,10 @@ const Project = () => {
         ),
       ];
 
-      // Fallback for projects which have created_by but no members
+      // Fallback for older projects without member assignments
       if (
         selectedEmployeeCodes.length === 0 &&
-        data.created_by
+        data.created_by != null
       ) {
         const creator = employeeList.find(
           (item) =>
@@ -286,33 +348,40 @@ const Project = () => {
         created_by: selectedEmployeeCodes,
       });
 
+      setEmpSearch("");
+      setClientSearch("");
+      setEmpDropOpen(false);
+      setClientDropOpen(false);
+
       setIsModalOpen(true);
     } catch (err) {
-      setError(err.message || "Unable to open project.");
+      setError(getErrorMessage(err, "Unable to open project."));
     } finally {
       setLoading(false);
     }
   };
 
-  // =====================================================
+  // =========================================
   // CLOSE FORM MODAL
-  // =====================================================
+  // =========================================
   const closeModal = () => {
     if (saving) return;
 
     setIsModalOpen(false);
     setEditId(null);
     setForm({ ...EMPTY_FORM });
+
     setEmpSearch("");
-    setEmpDropOpen(false);
     setClientSearch("");
+    setEmpDropOpen(false);
     setClientDropOpen(false);
+
     setError("");
   };
 
-  // =====================================================
-  // SAVE PROJECT AND ASSIGN PROJECT MEMBERS
-  // =====================================================
+  // =========================================
+  // SAVE PROJECT AND ASSIGN EMPLOYEES
+  // =========================================
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -320,6 +389,7 @@ const Project = () => {
       proj_name,
       client_name,
       start_date,
+      end_date,
       created_by,
     } = form;
 
@@ -328,7 +398,10 @@ const Project = () => {
       return;
     }
 
-    if (proj_name.trim().length < 3 || proj_name.trim().length > 150) {
+    if (
+      proj_name.trim().length < 3 ||
+      proj_name.trim().length > 150
+    ) {
       setError("Project name must be 3–150 characters.");
       return;
     }
@@ -348,7 +421,7 @@ const Project = () => {
       return;
     }
 
-    if (form.end_date && form.end_date < start_date) {
+    if (end_date && end_date < start_date) {
       setError("End date cannot be before start date.");
       return;
     }
@@ -358,7 +431,7 @@ const Project = () => {
       return;
     }
 
-    // Convert selected employee codes into numeric employee IDs
+    // Convert employee codes to numeric IDs
     const selectedEmployeeIds = [
       ...new Set(
         created_by
@@ -369,9 +442,7 @@ const Project = () => {
 
             return employee ? Number(employee.emp_id) : null;
           })
-          .filter(
-            (id) => Number.isInteger(id) && id > 0
-          )
+          .filter((id) => Number.isInteger(id) && id > 0)
       ),
     ];
 
@@ -387,10 +458,7 @@ const Project = () => {
     try {
       const isEditing = editId !== null;
 
-      // STEP 1: Save project information.
-      // created_by stores ONE employee ID, not the full employee array.
-      const creatorId = selectedEmployeeIds[0];
-
+      // created_by stores one employee ID in the projects table
       const projectPayload = {
         proj_name: form.proj_name.trim(),
         description: form.description,
@@ -399,99 +467,90 @@ const Project = () => {
         end_date: form.end_date || null,
         priority: form.priority,
         status: form.status,
-        created_by: creatorId,
+        created_by: selectedEmployeeIds[0],
       };
 
-      const projectResponse = await fetch(
-        isEditing ? `${API_URL}/${editId}` : API_URL,
-        {
-          method: isEditing ? "PUT" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(projectPayload),
-        }
+      // STEP 1: Create or update project
+      const projectResponse = isEditing
+        ? await API.put(`/projects/${editId}`, projectPayload)
+        : await API.post("/projects", projectPayload);
+
+      const projectResult = checkApiResponse(
+        projectResponse.data,
+        "Unable to save project."
       );
 
-      const projectResult = await readResponse(projectResponse);
-
-      // Support common response formats from the project controller
       const projectId = isEditing
         ? Number(editId)
         : Number(
             projectResult.project_id ??
-            projectResult.insertId ??
-            projectResult.data?.project_id ??
-            projectResult.data?.insertId ??
-            projectResult.project?.project_id
+              projectResult.insertId ??
+              projectResult.data?.project_id ??
+              projectResult.data?.insertId ??
+              projectResult.data?.project?.project_id ??
+              projectResult.project?.project_id
           );
 
       if (!Number.isInteger(projectId) || projectId <= 0) {
         throw new Error(
-          "Project API did not return the new project ID. " +
-          "Update the project controller to return the inserted project_id."
+          "Project ID was not returned by the API. Check the POST /projects response."
         );
       }
 
-      // STEP 2: Get existing project members
-      const membersResponse = await fetch(MEMBER_URL);
-      const membersResult = await readResponse(membersResponse);
-
-      const existingMembers = (membersResult.data || []).filter(
-        (member) =>
-          Number(member.project_id) === Number(projectId)
+      // STEP 2: Get existing project assignments
+      const membersResponse = await API.get("/project-members");
+      const membersResult = checkApiResponse(
+        membersResponse.data,
+        "Unable to fetch project assignments."
       );
 
-      // STEP 3: Remove existing assignments only when editing
+      const allMembers = getArrayData(membersResult);
+
+      const existingMembers = allMembers.filter(
+        (member) => Number(member.project_id) === projectId
+      );
+
+      // STEP 3: Remove existing assignments while editing
       if (isEditing) {
         for (const member of existingMembers) {
-          const memberId = member.id;
+          const memberId = member.id ?? member.member_id;
 
-          if (!memberId) {
+          if (memberId == null) {
             throw new Error(
-              "Project member ID is missing in the API response."
+              "Project member ID is missing. Check GET /project-members."
             );
           }
 
-          const deleteResponse = await fetch(
-            `${MEMBER_URL}/${memberId}`,
-            {
-              method: "DELETE",
-            }
+          const deleteResponse = await API.delete(
+            `/project-members/${memberId}`
           );
 
-          await readResponse(deleteResponse);
+          checkApiResponse(
+            deleteResponse.data,
+            "Unable to remove an existing employee assignment."
+          );
         }
       }
 
-      // STEP 4: Insert selected employees into project_members
+      // STEP 4: Assign selected employees
       for (const employeeId of selectedEmployeeIds) {
-        // Avoid duplicate assignments when creating a project
-        const alreadyAssigned =
-          !isEditing &&
-          existingMembers.some(
-            (member) =>
-              Number(member.emp_id) === employeeId
-          );
+        const alreadyAssigned = existingMembers.some(
+          (member) =>
+            Number(member.emp_id ?? member.employee_id) === employeeId
+        );
 
-        if (alreadyAssigned) continue;
+        if (!isEditing && alreadyAssigned) {
+          continue;
+        }
 
-        const memberResponse = await fetch(MEMBER_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            project_id: projectId,
-            employee_id: employeeId,
-          }),
+        const memberResponse = await API.post("/project-members", {
+          project_id: projectId,
+          employee_id: employeeId,
         });
 
-        const memberResult = await readResponse(memberResponse);
-
-        console.log(
-          "Project member assigned:",
-          memberResult
+        checkApiResponse(
+          memberResponse.data,
+          `Unable to assign employee ID ${employeeId}.`
         );
       }
 
@@ -505,6 +564,7 @@ const Project = () => {
       setIsModalOpen(false);
       setEditId(null);
       setForm({ ...EMPTY_FORM });
+
       setEmpSearch("");
       setClientSearch("");
       setEmpDropOpen(false);
@@ -515,55 +575,69 @@ const Project = () => {
       console.error("Project save error:", err);
 
       setError(
-        err.message || "Unable to save project or assign employees."
+        getErrorMessage(
+          err,
+          "Unable to save project or assign employees."
+        )
       );
     } finally {
       setSaving(false);
     }
   };
 
-  // =====================================================
+  // =========================================
   // DELETE PROJECT
-  // =====================================================
+  // =========================================
   const handleDelete = async (project) => {
-    if (
-      !window.confirm(`Delete "${project.proj_name}"?`)
-    ) {
+    if (!window.confirm(`Delete "${project.proj_name}"?`)) {
       return;
     }
 
     setError("");
     setSuccess("");
+    setDeletingId(project.project_id);
 
     try {
-      const response = await fetch(
-        `${API_URL}/${project.project_id}`,
-        { method: "DELETE" }
+      const response = await API.delete(
+        `/projects/${project.project_id}`
       );
 
-      const result = await readResponse(response);
+      checkApiResponse(
+        response.data,
+        "Unable to delete project."
+      );
 
       setSuccess(
-        result.message || "Project deleted successfully."
+        response.data.message || "Project deleted successfully."
       );
 
       await fetchProjects();
     } catch (err) {
-      setError(err.message || "Unable to delete project.");
+      setError(
+        getErrorMessage(err, "Unable to delete project.")
+      );
+    } finally {
+      setDeletingId(null);
     }
   };
 
-  // =====================================================
+  // =========================================
   // FILTER AND PAGINATION
-  // =====================================================
+  // =========================================
   const filtered = projects.filter((project) => {
     const query = search.toLowerCase().trim();
 
     return (
-      project.proj_name?.toLowerCase().includes(query) ||
-      project.client_name?.toLowerCase().includes(query) ||
-      project.status?.toLowerCase().includes(query) ||
-      String(project.project_id).includes(query)
+      String(project.proj_name || "")
+        .toLowerCase()
+        .includes(query) ||
+      String(project.client_name || "")
+        .toLowerCase()
+        .includes(query) ||
+      String(project.status || "")
+        .toLowerCase()
+        .includes(query) ||
+      String(project.project_id || "").includes(query)
     );
   });
 
@@ -582,18 +656,18 @@ const Project = () => {
     }
   }, [totalPages, currentPage]);
 
-  // =====================================================
-  // SAFE CLIENT FILTER
-  // =====================================================
+  // =========================================
+  // CLIENT FILTER
+  // =========================================
   const filteredClients = clients.filter((client) =>
     String(client.Client_Name || "")
       .toLowerCase()
       .includes(clientSearch.toLowerCase())
   );
 
-  // =====================================================
-  // SAFE EMPLOYEE FILTER
-  // =====================================================
+  // =========================================
+  // EMPLOYEE FILTER
+  // =========================================
   const filteredEmployees = employees.filter((employee) => {
     const name = String(employee.emp_name || "").toLowerCase();
     const code = String(employee.employee_code || "").toLowerCase();
@@ -602,6 +676,9 @@ const Project = () => {
     return name.includes(query) || code.includes(query);
   });
 
+  // =========================================
+  // RENDER
+  // =========================================
   return (
     <AdminLayout>
       <div className="admin-page">
@@ -611,6 +688,7 @@ const Project = () => {
             <div className="admin-page-heading-icon">
               <FolderKanban size={25} />
             </div>
+
             <div>
               <h1>Projects</h1>
               <p>Manage your organization's projects</p>
@@ -622,38 +700,44 @@ const Project = () => {
             className="admin-add-btn"
             onClick={openAddModal}
           >
-            <Plus size={19} /> Add Project
+            <Plus size={19} />
+            Add Project
           </button>
         </div>
 
-        {/* ALERTS */}
+        {/* SUCCESS ALERT */}
         {success && (
           <div className="admin-alert admin-alert-success">
             <CheckCircle size={18} />
             <span>{success}</span>
+
             <button
               type="button"
               onClick={() => setSuccess("")}
+              aria-label="Dismiss success message"
             >
               <X size={17} />
             </button>
           </div>
         )}
 
+        {/* ERROR ALERT */}
         {error && !isModalOpen && (
           <div className="admin-alert admin-alert-error">
             <AlertCircle size={18} />
             <span>{error}</span>
+
             <button
               type="button"
               onClick={() => setError("")}
+              aria-label="Dismiss error message"
             >
               <X size={17} />
             </button>
           </div>
         )}
 
-        {/* PROJECT TABLE */}
+        {/* PROJECT TABLE CARD */}
         <div className="admin-table-card">
           <div className="admin-table-card-header">
             <div>
@@ -666,6 +750,7 @@ const Project = () => {
           <div className="admin-toolbar">
             <div className="admin-search">
               <Search size={19} />
+
               <input
                 type="search"
                 placeholder="Search by ID, name, client or status..."
@@ -721,11 +806,13 @@ const Project = () => {
                   <tr>
                     <td colSpan="8" className="admin-table-empty">
                       <FolderKanban size={32} />
+
                       <h3>
                         {search
                           ? "No projects found"
                           : "No projects added yet"}
                       </h3>
+
                       <p>
                         {search
                           ? "Try a different search."
@@ -767,7 +854,9 @@ const Project = () => {
 
                       <td>
                         <span
-                          className={`admin-status-badge admin-status-${project.status?.replace(/\s+/g, "-")}`}
+                          className={`admin-status-badge admin-status-${String(
+                            project.status || ""
+                          ).replace(/\s+/g, "-")}`}
                         >
                           {project.status}
                         </span>
@@ -788,6 +877,7 @@ const Project = () => {
                             type="button"
                             className="admin-edit-btn"
                             onClick={() => openEditModal(project)}
+                            disabled={loading || deletingId !== null}
                           >
                             <Pencil size={16} />
                             <span>Edit</span>
@@ -797,9 +887,22 @@ const Project = () => {
                             type="button"
                             className="admin-delete-btn"
                             onClick={() => handleDelete(project)}
+                            disabled={deletingId !== null}
                           >
-                            <Trash2 size={16} />
-                            <span>Delete</span>
+                            {deletingId === project.project_id ? (
+                              <RefreshCw
+                                size={16}
+                                className="admin-spinning"
+                              />
+                            ) : (
+                              <Trash2 size={16} />
+                            )}
+
+                            <span>
+                              {deletingId === project.project_id
+                                ? "Deleting..."
+                                : "Delete"}
+                            </span>
                           </button>
                         </div>
                       </td>
@@ -825,6 +928,7 @@ const Project = () => {
                     setCurrentPage((page) => Math.max(1, page - 1))
                   }
                   disabled={currentPage === 1}
+                  aria-label="Previous page"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -854,6 +958,7 @@ const Project = () => {
                     )
                   }
                   disabled={currentPage === totalPages}
+                  aria-label="Next page"
                 >
                   <ChevronRight size={16} />
                 </button>
@@ -881,15 +986,18 @@ const Project = () => {
               role="dialog"
               aria-modal="true"
             >
+              {/* MODAL HEADER */}
               <div className="admin-modal-header">
                 <div className="admin-modal-title">
                   <div className="admin-modal-icon">
                     <FolderKanban size={23} />
                   </div>
+
                   <div>
                     <h2>
                       {editId !== null ? "Edit Project" : "Add Project"}
                     </h2>
+
                     <p>
                       {editId !== null
                         ? "Update project information."
@@ -903,6 +1011,7 @@ const Project = () => {
                   className="admin-modal-close"
                   onClick={closeModal}
                   disabled={saving}
+                  aria-label="Close modal"
                 >
                   <X size={21} />
                 </button>
@@ -918,9 +1027,11 @@ const Project = () => {
                   )}
 
                   <div className="admin-form-grid">
+                    {/* PROJECT ID */}
                     {editId !== null && (
                       <div className="admin-field admin-field-full">
                         <label>Project ID</label>
+
                         <input
                           type="text"
                           value={editId}
@@ -935,6 +1046,7 @@ const Project = () => {
                       <label>
                         Project Name <span>*</span>
                       </label>
+
                       <input
                         type="text"
                         name="proj_name"
@@ -987,6 +1099,7 @@ const Project = () => {
                           <div className="proj-emp-panel">
                             <div className="proj-emp-search">
                               <Search size={14} />
+
                               <input
                                 type="text"
                                 placeholder="Search client..."
@@ -1001,6 +1114,7 @@ const Project = () => {
                                 <button
                                   type="button"
                                   onClick={() => setClientSearch("")}
+                                  aria-label="Clear client search"
                                 >
                                   <X size={13} />
                                 </button>
@@ -1008,22 +1122,25 @@ const Project = () => {
                             </div>
 
                             <div className="proj-emp-list">
-                              <div
+                              <button
+                                type="button"
                                 className="proj-emp-option"
                                 onClick={() => {
                                   setForm((previous) => ({
                                     ...previous,
                                     client_name: "",
                                   }));
+
                                   setClientDropOpen(false);
                                   setClientSearch("");
                                 }}
                               >
                                 <span>-- None --</span>
-                              </div>
+                              </button>
 
                               {filteredClients.map((client) => (
-                                <div
+                                <button
+                                  type="button"
                                   key={client.Client_ID}
                                   className="proj-emp-option"
                                   onClick={() => {
@@ -1031,13 +1148,14 @@ const Project = () => {
                                       ...previous,
                                       client_name: client.Client_Name,
                                     }));
+
                                     setClientDropOpen(false);
                                     setClientSearch("");
                                   }}
                                 >
                                   <span>{client.Client_Name}</span>
                                   <small>{client.Company_Name}</small>
-                                </div>
+                                </button>
                               ))}
 
                               {filteredClients.length === 0 && (
@@ -1054,6 +1172,7 @@ const Project = () => {
                     {/* DESCRIPTION */}
                     <div className="admin-field">
                       <label>Description</label>
+
                       <textarea
                         name="description"
                         placeholder="Brief project description..."
@@ -1069,6 +1188,7 @@ const Project = () => {
                       <label>
                         Start Date <span>*</span>
                       </label>
+
                       <input
                         type="date"
                         name="start_date"
@@ -1081,6 +1201,7 @@ const Project = () => {
                     {/* END DATE */}
                     <div className="admin-field">
                       <label>End Date</label>
+
                       <input
                         type="date"
                         name="end_date"
@@ -1095,6 +1216,7 @@ const Project = () => {
                       <label>
                         Priority <span>*</span>
                       </label>
+
                       <select
                         name="priority"
                         value={form.priority}
@@ -1114,6 +1236,7 @@ const Project = () => {
                       <label>
                         Status <span>*</span>
                       </label>
+
                       <select
                         name="status"
                         value={form.status}
@@ -1132,6 +1255,7 @@ const Project = () => {
                     <div className="admin-field">
                       <label>
                         Assigned Employees <span>*</span>
+
                         {form.created_by.length > 0 && (
                           <em className="proj-emp-count">
                             {form.created_by.length} selected
@@ -1153,21 +1277,25 @@ const Project = () => {
                           <span>
                             {form.created_by.length === 0
                               ? "-- Select Employees --"
-                              : form.created_by.length === employees.length
-                              ? "All Employees Selected"
-                              : form.created_by.length === 1
-                              ? (() => {
-                                  const employee = employees.find(
-                                    (item) =>
-                                      item.employee_code ===
-                                      form.created_by[0]
-                                  );
+                              : employees.length > 0 &&
+                                  form.created_by.length ===
+                                    employees.filter(
+                                      (employee) => employee.employee_code
+                                    ).length
+                                ? "All Employees Selected"
+                                : form.created_by.length === 1
+                                  ? (() => {
+                                      const employee = employees.find(
+                                        (item) =>
+                                          item.employee_code ===
+                                          form.created_by[0]
+                                      );
 
-                                  return employee
-                                    ? `${employee.emp_name} (${employee.employee_code})`
-                                    : "1 selected";
-                                })()
-                              : `${form.created_by.length} employees selected`}
+                                      return employee
+                                        ? `${employee.emp_name} (${employee.employee_code})`
+                                        : "1 selected";
+                                    })()
+                                  : `${form.created_by.length} employees selected`}
                           </span>
 
                           <ChevronDown
@@ -1184,6 +1312,7 @@ const Project = () => {
                           <div className="proj-emp-panel">
                             <div className="proj-emp-search">
                               <Search size={14} />
+
                               <input
                                 type="text"
                                 placeholder="Search employee..."
@@ -1198,6 +1327,7 @@ const Project = () => {
                                 <button
                                   type="button"
                                   onClick={() => setEmpSearch("")}
+                                  aria-label="Clear employee search"
                                 >
                                   <X size={13} />
                                 </button>
@@ -1209,17 +1339,27 @@ const Project = () => {
                               <input
                                 type="checkbox"
                                 checked={
-                                  employees.length > 0 &&
-                                  employees.every((employee) =>
-                                    form.created_by.includes(
-                                      employee.employee_code
+                                  employees.filter(
+                                    (employee) => employee.employee_code
+                                  ).length > 0 &&
+                                  employees
+                                    .filter(
+                                      (employee) => employee.employee_code
                                     )
-                                  )
+                                    .every((employee) =>
+                                      form.created_by.includes(
+                                        employee.employee_code
+                                      )
+                                    )
                                 }
                                 onChange={() => {
+                                  const validEmployees = employees.filter(
+                                    (employee) => employee.employee_code
+                                  );
+
                                   const allSelected =
-                                    employees.length > 0 &&
-                                    employees.every((employee) =>
+                                    validEmployees.length > 0 &&
+                                    validEmployees.every((employee) =>
                                       form.created_by.includes(
                                         employee.employee_code
                                       )
@@ -1229,12 +1369,10 @@ const Project = () => {
                                     ...previous,
                                     created_by: allSelected
                                       ? []
-                                      : employees
-                                          .map(
-                                            (employee) =>
-                                              employee.employee_code
-                                          )
-                                          .filter(Boolean),
+                                      : validEmployees.map(
+                                          (employee) =>
+                                            employee.employee_code
+                                        ),
                                   }));
                                 }}
                               />
@@ -1257,6 +1395,8 @@ const Project = () => {
                                       const code =
                                         employee.employee_code;
 
+                                      if (!code) return;
+
                                       setForm((previous) => ({
                                         ...previous,
                                         created_by:
@@ -1273,9 +1413,7 @@ const Project = () => {
                                   />
 
                                   <span>{employee.emp_name}</span>
-                                  <small>
-                                    {employee.employee_code}
-                                  </small>
+                                  <small>{employee.employee_code}</small>
                                 </label>
                               ))}
 
@@ -1290,6 +1428,7 @@ const Project = () => {
                               <span>
                                 {form.created_by.length} selected
                               </span>
+
                               <button
                                 type="button"
                                 onClick={() => setEmpDropOpen(false)}
@@ -1310,17 +1449,24 @@ const Project = () => {
                             );
 
                             return (
-                              <span key={code} className="proj-emp-chip">
+                              <span
+                                key={code}
+                                className="proj-emp-chip"
+                              >
                                 {employee?.emp_name || code}
+
                                 <button
                                   type="button"
-                                  aria-label={`Remove ${employee?.emp_name || code}`}
+                                  aria-label={`Remove ${
+                                    employee?.emp_name || code
+                                  }`}
                                   onClick={() =>
                                     setForm((previous) => ({
                                       ...previous,
-                                      created_by: previous.created_by.filter(
-                                        (item) => item !== code
-                                      ),
+                                      created_by:
+                                        previous.created_by.filter(
+                                          (item) => item !== code
+                                        ),
                                     }))
                                   }
                                 >
@@ -1394,6 +1540,7 @@ const Project = () => {
                   <div className="admin-modal-icon">
                     <FolderKanban size={23} />
                   </div>
+
                   <div>
                     <h2>View Project</h2>
                     <p>Project details (read-only)</p>
@@ -1404,6 +1551,7 @@ const Project = () => {
                   type="button"
                   className="admin-modal-close"
                   onClick={() => setViewProject(null)}
+                  aria-label="Close project details"
                 >
                   <X size={21} />
                 </button>
@@ -1473,6 +1621,7 @@ const Project = () => {
                 ].map(({ label, value }) => (
                   <div className="admin-field" key={label}>
                     <label>{label}</label>
+
                     <input
                       type="text"
                       value={value ?? "—"}

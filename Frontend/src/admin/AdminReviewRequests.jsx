@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import {
   ShieldCheck,
@@ -17,16 +18,11 @@ import {
   BadgeCheck,
   CircleAlert,
 } from "lucide-react";
+
 import "./AdminReviewRequests.css";
+import API from "../api";
 
-const API_BASE_URL = "http://localhost:5000/api";
-
-// ==================================================
-// APPROVAL TIMEOUT
-// 1 = 1 hour
-// 24 = 24 hours
-// ==================================================
-
+// Approval timeout in hours
 const APPROVAL_TIMEOUT_HOURS = 1;
 
 const AdminReviewRequests = () => {
@@ -34,17 +30,17 @@ const AdminReviewRequests = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ==================================================
-  // LIVE COUNTDOWN
-  // ==================================================
-
   const [currentTime, setCurrentTime] = useState(new Date());
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [requestExpired, setRequestExpired] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  // ==================================================
+  // Prevent repeated automatic expiry requests for the same request.
+  const autoRejectedIds = useRef(new Set());
+
+  // --------------------------------------------------
   // HELPER FUNCTIONS
-  // ==================================================
+  // --------------------------------------------------
 
   const getValue = (obj, ...keys) => {
     if (!obj) return "";
@@ -68,7 +64,7 @@ const AdminReviewRequests = () => {
     const parsedDate = new Date(date);
 
     if (Number.isNaN(parsedDate.getTime())) {
-      return date;
+      return String(date);
     }
 
     return parsedDate.toLocaleDateString("en-IN", {
@@ -84,7 +80,7 @@ const AdminReviewRequests = () => {
     const parsedDate = new Date(date);
 
     if (Number.isNaN(parsedDate.getTime())) {
-      return date;
+      return String(date);
     }
 
     return parsedDate.toLocaleString("en-IN", {
@@ -128,7 +124,7 @@ const AdminReviewRequests = () => {
       "Name"
     );
 
-    if (fullName) return fullName;
+    if (fullName) return String(fullName);
 
     const firstName = getValue(
       request,
@@ -149,10 +145,6 @@ const AdminReviewRequests = () => {
     return `${firstName} ${lastName}`.trim() || "Unknown Employee";
   };
 
-  // ==================================================
-  // GET REQUEST CREATED DATE
-  // ==================================================
-
   const getCreatedDate = (request) => {
     return getValue(
       request,
@@ -166,10 +158,6 @@ const AdminReviewRequests = () => {
       "request_date"
     );
   };
-
-  // ==================================================
-  // GET EXPIRY TIME
-  // ==================================================
 
   const getExpiryDate = (request) => {
     const backendExpiry = getValue(
@@ -190,9 +178,7 @@ const AdminReviewRequests = () => {
 
     const createdDate = getCreatedDate(request);
 
-    if (!createdDate) {
-      return null;
-    }
+    if (!createdDate) return null;
 
     const parsedCreatedDate = new Date(createdDate);
 
@@ -206,23 +192,14 @@ const AdminReviewRequests = () => {
     );
   };
 
-  // ==================================================
-  // FORMAT COUNTDOWN
-  // ==================================================
-
   const formatCountdown = (milliseconds) => {
-    if (!milliseconds || milliseconds <= 0) {
+    if (milliseconds === null || milliseconds <= 0) {
       return "00:00:00";
     }
 
     const totalSeconds = Math.floor(milliseconds / 1000);
-
     const hours = Math.floor(totalSeconds / 3600);
-
-    const minutes = Math.floor(
-      (totalSeconds % 3600) / 60
-    );
-
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
 
     return [
@@ -232,86 +209,98 @@ const AdminReviewRequests = () => {
     ].join(":");
   };
 
-  // ==================================================
-  // FETCH REQUESTS
-  // ==================================================
+  const getErrorMessage = (error, fallback) => {
+    return (
+      error.response?.data?.message ||
+      error.message ||
+      fallback
+    );
+  };
 
-  const fetchRequests = async () => {
+  // --------------------------------------------------
+  // FETCH REQUESTS
+  // --------------------------------------------------
+
+  const fetchRequests = useCallback(async () => {
     try {
       setLoading(true);
 
-      const response = await fetch(
-        `${API_BASE_URL}/admin-access-requests`
-      );
+      const response = await API.get("/admin-access-requests");
+      const data = response.data;
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
+      if (data?.success === false) {
         throw new Error(
-          data.message ||
-            "Failed to fetch approval requests."
+          data.message || "Failed to fetch approval requests."
         );
       }
 
-      const requestData = data.data || [];
+      // Supports either { data: [...] } or a direct array response.
+      const requestData = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+          ? data.data
+          : Array.isArray(data?.requests)
+            ? data.requests
+            : [];
 
       setRequests(requestData);
 
-      // First pending request
-      const pendingRequest = requestData.find(
-        (request) =>
-          getStatus(request) === "pending"
-      );
+      setSelectedRequest((previous) => {
+        if (previous) {
+          const previousId = String(getRequestId(previous));
 
-      setSelectedRequest(
-        pendingRequest ||
+          const updatedSelected = requestData.find(
+            (item) => String(getRequestId(item)) === previousId
+          );
+
+          if (updatedSelected) return updatedSelected;
+        }
+
+        return (
+          requestData.find(
+            (item) => getStatus(item) === "pending"
+          ) ||
           requestData[0] ||
           null
-      );
+        );
+      });
     } catch (error) {
-      console.error(
-        "Fetch approval requests error:",
-        error
-      );
+      console.error("Fetch approval requests error:", error);
 
       Swal.fire({
         icon: "error",
         title: "Unable to Load Requests",
-        text:
-          error.message ||
-          "Something went wrong while loading approval requests.",
+        text: getErrorMessage(
+          error,
+          "Something went wrong while loading approval requests."
+        ),
         confirmButtonColor: "#2948e8",
       });
     } finally {
       setLoading(false);
     }
-  };
-
-  // ==================================================
-  // FETCH REQUESTS ON PAGE LOAD
-  // ==================================================
-
-  useEffect(() => {
-    fetchRequests();
   }, []);
 
-  // ==================================================
+  // Fetch on page load.
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  // --------------------------------------------------
   // LIVE CLOCK
-  // ==================================================
+  // --------------------------------------------------
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
 
-    return () => {
-      clearInterval(timer);
-    };
+    return () => clearInterval(timer);
   }, []);
 
-  // ==================================================
-  // CALCULATE REQUEST COUNTDOWN
-  // ==================================================
+  // --------------------------------------------------
+  // CALCULATE COUNTDOWN
+  // --------------------------------------------------
 
   useEffect(() => {
     if (!selectedRequest) {
@@ -320,16 +309,13 @@ const AdminReviewRequests = () => {
       return;
     }
 
-    const status = getStatus(selectedRequest);
-
-    if (status !== "pending") {
+    if (getStatus(selectedRequest) !== "pending") {
       setTimeRemaining(null);
       setRequestExpired(false);
       return;
     }
 
-    const expiryDate =
-      getExpiryDate(selectedRequest);
+    const expiryDate = getExpiryDate(selectedRequest);
 
     if (!expiryDate) {
       setTimeRemaining(null);
@@ -337,9 +323,7 @@ const AdminReviewRequests = () => {
       return;
     }
 
-    const difference =
-      expiryDate.getTime() -
-      currentTime.getTime();
+    const difference = expiryDate.getTime() - currentTime.getTime();
 
     if (difference <= 0) {
       setTimeRemaining(0);
@@ -350,91 +334,73 @@ const AdminReviewRequests = () => {
     }
   }, [selectedRequest, currentTime]);
 
-  // ==================================================
+  // --------------------------------------------------
   // AUTOMATIC EXPIRY
-  // ==================================================
+  // --------------------------------------------------
 
   useEffect(() => {
-    if (
-      !selectedRequest ||
-      !requestExpired
-    ) {
-      return;
-    }
+    if (!selectedRequest || !requestExpired) return;
+    if (getStatus(selectedRequest) !== "pending") return;
 
-    const status = getStatus(selectedRequest);
+    const requestId = getRequestId(selectedRequest);
 
-    if (status !== "pending") {
-      return;
-    }
+    if (!requestId) return;
 
-    const requestId =
-      getRequestId(selectedRequest);
+    const requestKey = String(requestId);
 
-    if (!requestId) {
-      return;
-    }
+    if (autoRejectedIds.current.has(requestKey)) return;
+
+    // Guard against repeated calls while this request is being processed.
+    autoRejectedIds.current.add(requestKey);
+
+    let cancelled = false;
 
     const autoRejectRequest = async () => {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/admin-approval-requests/reject-request/${requestId}`,
+        const response = await API.post(
+          `/admin-approval-requests/reject-request/${requestId}`,
           {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              rejectionReason:
-                "Request automatically rejected because the approval time limit expired.",
-              autoRejected: true,
-            }),
+            rejectionReason:
+              "Request automatically rejected because the approval time limit expired.",
+            autoRejected: true,
           }
         );
 
-        const data = await response.json();
+        const data = response.data;
 
-        if (!response.ok || !data.success) {
-          console.error(
-            "Automatic expiry update failed:",
-            data.message
+        if (data?.success === false) {
+          throw new Error(
+            data.message || "Automatic expiry update failed."
           );
-
-          return;
         }
 
-        setSelectedRequest((previous) => {
-          if (!previous) return previous;
-
-          return {
-            ...previous,
-            Request_Status: "rejected",
-            request_status: "rejected",
-            status: "rejected",
-          };
-        });
-
-        await fetchRequests();
+        if (!cancelled) {
+          await fetchRequests();
+        }
       } catch (error) {
-        console.error(
-          "Automatic request expiry error:",
-          error
-        );
+        console.error("Automatic request expiry error:", error);
+
+        // Allow a retry if the request failed.
+        autoRejectedIds.current.delete(requestKey);
       }
     };
 
     autoRejectRequest();
-  }, [requestExpired]);
 
-  // ==================================================
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedRequest, requestExpired, fetchRequests]);
+
+  // --------------------------------------------------
   // APPROVE REQUEST
-  // ==================================================
+  // --------------------------------------------------
 
   const handleApprove = async () => {
-    if (!selectedRequest) return;
+    if (!selectedRequest || actionLoading) return;
 
     if (requestExpired) {
-      Swal.fire({
+      await Swal.fire({
         icon: "warning",
         title: "Request Expired",
         text:
@@ -445,33 +411,25 @@ const AdminReviewRequests = () => {
       return;
     }
 
-    const requestId =
-      getRequestId(selectedRequest);
-
-    const fullName =
-      getFullName(selectedRequest);
+    const requestId = getRequestId(selectedRequest);
+    const fullName = getFullName(selectedRequest);
 
     if (!requestId) {
-      Swal.fire({
+      await Swal.fire({
         icon: "error",
         title: "Request ID Missing",
-        text:
-          "Unable to identify this approval request.",
+        text: "Unable to identify this approval request.",
         confirmButtonColor: "#2948e8",
       });
 
       return;
     }
 
+    // Use text instead of interpolating a database value into HTML.
     const result = await Swal.fire({
       icon: "question",
       title: "Approve Admin Access?",
-      html: `
-        <div style="font-size:14px;line-height:1.6;color:#70798d;">
-          You are about to approve administrator access for
-          <strong style="color:#171c35;">${fullName}</strong>.
-        </div>
-      `,
+      text: `You are about to approve administrator access for ${fullName}.`,
       showCancelButton: true,
       confirmButtonText: "Yes, Approve",
       cancelButtonText: "Cancel",
@@ -482,33 +440,26 @@ const AdminReviewRequests = () => {
 
     if (!result.isConfirmed) return;
 
+    setActionLoading(true);
+
     try {
       Swal.fire({
         title: "Approving Request...",
         text: "Please wait.",
         allowOutsideClick: false,
         allowEscapeKey: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
+        didOpen: () => Swal.showLoading(),
       });
 
-      const response = await fetch(
-        `${API_BASE_URL}/admin-approval-requests/approve-request/${requestId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+      const response = await API.post(
+        `/admin-approval-requests/approve-request/${requestId}`
       );
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok || !data.success) {
+      if (data?.success === false) {
         throw new Error(
-          data.message ||
-            "Failed to approve request."
+          data.message || "Failed to approve request."
         );
       }
 
@@ -521,53 +472,48 @@ const AdminReviewRequests = () => {
 
       await fetchRequests();
     } catch (error) {
-      console.error(
-        "Approve request error:",
-        error
-      );
+      console.error("Approve request error:", error);
 
-      Swal.fire({
+      await Swal.fire({
         icon: "error",
         title: "Approval Failed",
-        text:
-          error.message ||
-          "Something went wrong while approving the request.",
+        text: getErrorMessage(
+          error,
+          "Something went wrong while approving the request."
+        ),
         confirmButtonColor: "#2948e8",
       });
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  // ==================================================
+  // --------------------------------------------------
   // REJECT REQUEST
-  // ==================================================
+  // --------------------------------------------------
 
   const handleReject = async () => {
-    if (!selectedRequest) return;
+    if (!selectedRequest || actionLoading) return;
 
     if (requestExpired) {
-      Swal.fire({
+      await Swal.fire({
         icon: "warning",
         title: "Request Already Expired",
-        text:
-          "This request has already passed its approval time.",
+        text: "This request has already passed its approval time.",
         confirmButtonColor: "#2948e8",
       });
 
       return;
     }
 
-    const requestId =
-      getRequestId(selectedRequest);
-
-    const fullName =
-      getFullName(selectedRequest);
+    const requestId = getRequestId(selectedRequest);
+    const fullName = getFullName(selectedRequest);
 
     if (!requestId) {
-      Swal.fire({
+      await Swal.fire({
         icon: "error",
         title: "Request ID Missing",
-        text:
-          "Unable to identify this approval request.",
+        text: "Unable to identify this approval request.",
         confirmButtonColor: "#2948e8",
       });
 
@@ -577,15 +523,9 @@ const AdminReviewRequests = () => {
     const result = await Swal.fire({
       icon: "warning",
       title: "Reject Admin Access?",
-      html: `
-        <div style="font-size:14px;line-height:1.6;color:#70798d;margin-bottom:12px;">
-          Please provide a reason for rejecting
-          <strong style="color:#171c35;">${fullName}</strong>'s request.
-        </div>
-      `,
+      text: `Please provide a reason for rejecting ${fullName}'s request.`,
       input: "textarea",
-      inputPlaceholder:
-        "Enter rejection reason...",
+      inputPlaceholder: "Enter rejection reason...",
       inputAttributes: {
         "aria-label": "Rejection reason",
       },
@@ -606,37 +546,29 @@ const AdminReviewRequests = () => {
 
     if (!result.isConfirmed) return;
 
+    setActionLoading(true);
+
     try {
       Swal.fire({
         title: "Rejecting Request...",
         text: "Please wait.",
         allowOutsideClick: false,
         allowEscapeKey: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
+        didOpen: () => Swal.showLoading(),
       });
 
-      const response = await fetch(
-        `${API_BASE_URL}/admin-approval-requests/reject-request/${requestId}`,
+      const response = await API.post(
+        `/admin-approval-requests/reject-request/${requestId}`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            rejectionReason:
-              result.value.trim(),
-          }),
+          rejectionReason: result.value.trim(),
         }
       );
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok || !data.success) {
+      if (data?.success === false) {
         throw new Error(
-          data.message ||
-            "Failed to reject request."
+          data.message || "Failed to reject request."
         );
       }
 
@@ -649,25 +581,25 @@ const AdminReviewRequests = () => {
 
       await fetchRequests();
     } catch (error) {
-      console.error(
-        "Reject request error:",
-        error
-      );
+      console.error("Reject request error:", error);
 
-      Swal.fire({
+      await Swal.fire({
         icon: "error",
         title: "Rejection Failed",
-        text:
-          error.message ||
-          "Something went wrong while rejecting the request.",
+        text: getErrorMessage(
+          error,
+          "Something went wrong while rejecting the request."
+        ),
         confirmButtonColor: "#2948e8",
       });
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  // ==================================================
+  // --------------------------------------------------
   // LOADING
-  // ==================================================
+  // --------------------------------------------------
 
   if (loading) {
     return (
@@ -680,15 +612,14 @@ const AdminReviewRequests = () => {
     );
   }
 
-  // ==================================================
+  // --------------------------------------------------
   // NO REQUEST
-  // ==================================================
+  // --------------------------------------------------
 
   if (!selectedRequest) {
     return (
       <div className="arv-page">
         <div className="arv-empty">
-
           <div className="arv-empty-icon">
             <CircleAlert size={30} />
           </div>
@@ -696,31 +627,29 @@ const AdminReviewRequests = () => {
           <h2>No Approval Request Found</h2>
 
           <p>
-            There are currently no administrator
-            access requests available for review.
+            There are currently no administrator access requests
+            available for review.
           </p>
 
           <button
             type="button"
             className="arv-refresh-btn"
             onClick={fetchRequests}
+            disabled={loading}
           >
             Refresh Requests
           </button>
-
         </div>
       </div>
     );
   }
 
-  // ==================================================
+  // --------------------------------------------------
   // REQUEST DATA
-  // ==================================================
+  // --------------------------------------------------
 
   const status = getStatus(selectedRequest);
-
-  const fullName =
-    getFullName(selectedRequest);
+  const fullName = getFullName(selectedRequest);
 
   const email = getValue(
     selectedRequest,
@@ -740,7 +669,6 @@ const AdminReviewRequests = () => {
     "mobile"
   );
 
-  // FIXED EMPLOYEE ID
   const employeeId = getValue(
     selectedRequest,
     "Employee_ID",
@@ -761,7 +689,6 @@ const AdminReviewRequests = () => {
     "DepartmentName"
   );
 
-  // NEW - DATE OF BIRTH
   const dateOfBirth = getValue(
     selectedRequest,
     "DOB",
@@ -772,7 +699,6 @@ const AdminReviewRequests = () => {
     "dateOfBirth"
   );
 
-  // NEW - JOINING DATE
   const joiningDate = getValue(
     selectedRequest,
     "Joining_Date",
@@ -791,7 +717,6 @@ const AdminReviewRequests = () => {
     "access_reason"
   );
 
-  // REQUESTED ON
   const requestedDate = getValue(
     selectedRequest,
     "Created_At",
@@ -808,34 +733,21 @@ const AdminReviewRequests = () => {
     "requestedOn"
   );
 
-  // ==================================================
-  // EXPIRY DATE
-  // ==================================================
+  const expiryDate = getExpiryDate(selectedRequest);
 
-  const expiryDate =
-    getExpiryDate(selectedRequest);
-
-  // ==================================================
+  // --------------------------------------------------
   // RENDER
-  // ==================================================
+  // --------------------------------------------------
 
   return (
     <div className="arv-page">
-
-      {/* ============================================
-          TOP HEADER
-      ============================================ */}
-
       <header className="arv-top-header">
-
         <div className="arv-brand">
-
           <div className="arv-brand-icon">
             <ShieldCheck size={22} />
           </div>
 
           <div>
-
             <div className="arv-brand-title">
               Admin Access Approval
             </div>
@@ -843,53 +755,32 @@ const AdminReviewRequests = () => {
             <div className="arv-brand-subtitle">
               Secure approval request
             </div>
-
           </div>
-
         </div>
 
         <div className="arv-secure-label">
           <LockKeyhole size={15} />
           Secure Review
         </div>
-
       </header>
 
-      {/* ============================================
-          MAIN PAGE
-      ============================================ */}
-
       <main className="arv-container">
-
-        {/* INTRO */}
-
         <section className="arv-intro">
-
           <div className="arv-intro-badge">
             <ShieldCheck size={15} />
             Admin Access Approval
           </div>
 
-          <h1>
-            Your request is ready for review
-          </h1>
+          <h1>Your request is ready for review</h1>
 
           <p>
-            Review the employee information and
-            access requirements before making
-            your decision.
+            Review the employee information and access requirements
+            before making your decision.
           </p>
-
         </section>
 
-        {/* ============================================
-            PROCESS STEPS
-        ============================================ */}
-
         <div className="arv-process">
-
           <div className="arv-process-step arv-completed">
-
             <div className="arv-step-number">
               <CheckCircle2 size={17} />
             </div>
@@ -898,13 +789,11 @@ const AdminReviewRequests = () => {
               <span>01</span>
               <strong>Request Submitted</strong>
             </div>
-
           </div>
 
           <div className="arv-process-line active"></div>
 
           <div className="arv-process-step arv-active">
-
             <div className="arv-step-number">
               <FileText size={17} />
             </div>
@@ -913,13 +802,11 @@ const AdminReviewRequests = () => {
               <span>02</span>
               <strong>Review Request</strong>
             </div>
-
           </div>
 
           <div className="arv-process-line"></div>
 
           <div className="arv-process-step">
-
             <div className="arv-step-number">
               <KeyRound size={17} />
             </div>
@@ -928,13 +815,11 @@ const AdminReviewRequests = () => {
               <span>03</span>
               <strong>Create Password</strong>
             </div>
-
           </div>
 
           <div className="arv-process-line"></div>
 
           <div className="arv-process-step">
-
             <div className="arv-step-number">
               <BadgeCheck size={17} />
             </div>
@@ -943,35 +828,18 @@ const AdminReviewRequests = () => {
               <span>04</span>
               <strong>Complete Profile</strong>
             </div>
-
           </div>
-
         </div>
 
-        {/* ============================================
-            MAIN LAYOUT
-        ============================================ */}
-
         <div className="arv-layout">
-
-          {/* ==========================================
-              LEFT REQUEST DETAILS
-          ========================================== */}
-
           <section className="arv-request-card">
-
-            {/* REQUEST HEADER */}
-
             <div className="arv-request-header">
-
               <div className="arv-user-info">
-
                 <div className="arv-user-avatar">
                   <User size={26} />
                 </div>
 
                 <div>
-
                   <div className="arv-request-label">
                     Administrator Access Request
                   </div>
@@ -983,18 +851,14 @@ const AdminReviewRequests = () => {
                       ? `Employee ID: ${employeeId}`
                       : "Employee details"}
                   </p>
-
                 </div>
-
               </div>
 
-              <div
-                className={`arv-status arv-status-${status}`}
-              >
-
+              <div className={`arv-status arv-status-${status}`}>
                 {status === "approved" ? (
                   <CheckCircle2 size={15} />
-                ) : status === "rejected" ? (
+                ) : status === "rejected" ||
+                  status === "expired" ? (
                   <XCircle size={15} />
                 ) : (
                   <Clock3 size={15} />
@@ -1003,500 +867,311 @@ const AdminReviewRequests = () => {
                 {status === "approved"
                   ? "Approved"
                   : status === "rejected"
-                  ? "Rejected"
-                  : "Pending"}
-
+                    ? "Rejected"
+                    : status === "expired"
+                      ? "Expired"
+                      : "Pending"}
               </div>
-
             </div>
 
-            {/* EMPLOYEE INFORMATION */}
-
             <div className="arv-section">
-
               <div className="arv-section-heading">
-
                 <User size={18} />
 
                 <div>
-
-                  <h3>
-                    Employee Information
-                  </h3>
-
-                  <p>
-                    Basic information of the
-                    requesting employee.
-                  </p>
-
+                  <h3>Employee Information</h3>
+                  <p>Basic information of the requesting employee.</p>
                 </div>
-
               </div>
 
               <div className="arv-info-grid">
-
-                {/* FULL NAME */}
-
                 <div className="arv-info-item">
-
                   <div className="arv-info-icon">
                     <User size={17} />
                   </div>
 
                   <div>
                     <span>Full Name</span>
-
-                    <strong>
-                      {fullName ||
-                        "Not provided"}
-                    </strong>
+                    <strong>{fullName || "Not provided"}</strong>
                   </div>
-
                 </div>
 
-                {/* EMAIL */}
-
                 <div className="arv-info-item">
-
                   <div className="arv-info-icon">
                     <Mail size={17} />
                   </div>
 
                   <div>
                     <span>Email Address</span>
-
-                    <strong>
-                      {email ||
-                        "Not provided"}
-                    </strong>
+                    <strong>{email || "Not provided"}</strong>
                   </div>
-
                 </div>
 
-                {/* PHONE */}
-
                 <div className="arv-info-item">
-
                   <div className="arv-info-icon">
                     <Phone size={17} />
                   </div>
 
                   <div>
                     <span>Phone Number</span>
-
-                    <strong>
-                      {phone ||
-                        "Not provided"}
-                    </strong>
+                    <strong>{phone || "Not provided"}</strong>
                   </div>
-
                 </div>
 
-                {/* DATE OF BIRTH */}
-
                 <div className="arv-info-item">
-
                   <div className="arv-info-icon">
                     <CalendarDays size={17} />
                   </div>
 
                   <div>
                     <span>Date of Birth</span>
-
                     <strong>
                       {dateOfBirth
-                        ? formatDate(
-                            dateOfBirth
-                          )
+                        ? formatDate(dateOfBirth)
                         : "Not provided"}
                     </strong>
                   </div>
-
                 </div>
 
-                {/* EMPLOYEE ID */}
-
                 <div className="arv-info-item">
-
                   <div className="arv-info-icon">
-                    <BriefcaseBusiness
-                      size={17}
-                    />
+                    <BriefcaseBusiness size={17} />
                   </div>
 
                   <div>
                     <span>Employee ID</span>
-
-                    <strong>
-                      {employeeId ||
-                        "Not provided"}
-                    </strong>
+                    <strong>{employeeId || "Not provided"}</strong>
                   </div>
-
                 </div>
 
-                {/* DEPARTMENT */}
-
                 <div className="arv-info-item">
-
                   <div className="arv-info-icon">
                     <Building2 size={17} />
                   </div>
 
                   <div>
                     <span>Department</span>
-
-                    <strong>
-                      {department ||
-                        "Not provided"}
-                    </strong>
+                    <strong>{department || "Not provided"}</strong>
                   </div>
-
                 </div>
 
-                {/* JOINING DATE */}
-
                 <div className="arv-info-item">
-
                   <div className="arv-info-icon">
                     <CalendarDays size={17} />
                   </div>
 
                   <div>
                     <span>Joining Date</span>
-
                     <strong>
                       {joiningDate
-                        ? formatDate(
-                            joiningDate
-                          )
+                        ? formatDate(joiningDate)
                         : "Not provided"}
                     </strong>
                   </div>
-
                 </div>
 
-                {/* REQUESTED ON */}
-
                 <div className="arv-info-item">
-
                   <div className="arv-info-icon">
                     <Clock3 size={17} />
                   </div>
 
                   <div>
                     <span>Requested On</span>
-
                     <strong>
                       {requestedDate
-                        ? formatDateTime(
-                            requestedDate
-                          )
+                        ? formatDateTime(requestedDate)
                         : "Not provided"}
                     </strong>
                   </div>
-
                 </div>
-
               </div>
-
             </div>
 
-            {/* REASON */}
-
             <div className="arv-section arv-last-section">
-
               <div className="arv-section-heading">
-
                 <FileText size={18} />
 
                 <div>
-
-                  <h3>
-                    Reason for Admin Access
-                  </h3>
-
-                  <p>
-                    Explanation provided with
-                    this request.
-                  </p>
-
+                  <h3>Reason for Admin Access</h3>
+                  <p>Explanation provided with this request.</p>
                 </div>
-
               </div>
 
               <div className="arv-reason-box">
-
                 <p>
                   {reason ||
                     "No specific reason was provided with this request."}
                 </p>
-
               </div>
-
             </div>
-
           </section>
 
-          {/* ==========================================
-              RIGHT SIDEBAR
-          ========================================== */}
-
           <aside className="arv-side-column">
-
-            {/* SECURITY CARD */}
-
             <div className="arv-side-card arv-security-card">
-
               <div className="arv-security-icon">
                 <ShieldCheck size={22} />
               </div>
 
               <div>
-
-                <h3>
-                  Safe to review
-                </h3>
+                <h3>Safe to review</h3>
 
                 <p>
-                  This request is protected
-                  and can be reviewed securely
-                  by an authorized administrator.
+                  This request should be reviewed only by an
+                  authorized administrator.
                 </p>
-
               </div>
-
             </div>
 
-            {/* ========================================
-                DECISION CARD
-            ======================================== */}
-
-            {status === "pending" &&
-              !requestExpired && (
-                <div className="arv-decision-card">
-
-                  <div className="arv-decision-icon">
-                    <ShieldCheck size={23} />
-                  </div>
-
-                  <div className="arv-decision-content">
-
-                    <span className="arv-decision-label">
-                      ADMIN ACCESS
-                    </span>
-
-                    <h3>
-                      Ready to decide?
-                    </h3>
-
-                    <p>
-                      Approve the request if all
-                      employee information is correct.
-                      Otherwise, reject the request
-                      with a reason.
-                    </p>
-
-                  </div>
-
-                  <div className="arv-decision-actions">
-
-                    <button
-                      type="button"
-                      className="arv-approve-btn"
-                      onClick={
-                        handleApprove
-                      }
-                    >
-                      <CheckCircle2 size={18} />
-                      Approve Access
-                    </button>
-
-                    <button
-                      type="button"
-                      className="arv-reject-btn"
-                      onClick={
-                        handleReject
-                      }
-                    >
-                      <XCircle size={18} />
-                      Reject Request
-                    </button>
-
-                  </div>
-
-                  <div className="arv-decision-note">
-
-                    <LockKeyhole size={14} />
-
-                    Please verify all employee
-                    details before approving access.
-
-                  </div>
-
+            {status === "pending" && !requestExpired && (
+              <div className="arv-decision-card">
+                <div className="arv-decision-icon">
+                  <ShieldCheck size={23} />
                 </div>
-              )}
 
-            {/* ========================================
-                EXPIRED STATUS
-            ======================================== */}
-
-            {status === "pending" &&
-              requestExpired && (
-                <div className="arv-status-card arv-rejected-card">
-
-                  <div className="arv-status-card-icon">
-                    <Clock3 size={25} />
-                  </div>
-
-                  <span>
-                    REQUEST EXPIRED
+                <div className="arv-decision-content">
+                  <span className="arv-decision-label">
+                    ADMIN ACCESS
                   </span>
 
-                  <h3>
-                    Approval time expired
-                  </h3>
+                  <h3>Ready to decide?</h3>
 
                   <p>
-                    This request was not approved
-                    within the allowed time and has
-                    been automatically rejected.
+                    Approve the request if all employee information
+                    is correct. Otherwise, reject the request with
+                    a reason.
                   </p>
-
                 </div>
-              )}
 
-            {/* ========================================
-                APPROVED STATUS
-            ======================================== */}
+                <div className="arv-decision-actions">
+                  <button
+                    type="button"
+                    className="arv-approve-btn"
+                    onClick={handleApprove}
+                    disabled={actionLoading}
+                  >
+                    <CheckCircle2 size={18} />
+                    {actionLoading ? "Please wait..." : "Approve Access"}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="arv-reject-btn"
+                    onClick={handleReject}
+                    disabled={actionLoading}
+                  >
+                    <XCircle size={18} />
+                    Reject Request
+                  </button>
+                </div>
+
+                <div className="arv-decision-note">
+                  <LockKeyhole size={14} />
+                  Please verify all employee details before approving
+                  access.
+                </div>
+              </div>
+            )}
+
+            {status === "pending" && requestExpired && (
+              <div className="arv-status-card arv-rejected-card">
+                <div className="arv-status-card-icon">
+                  <Clock3 size={25} />
+                </div>
+
+                <span>REQUEST EXPIRED</span>
+                <h3>Approval time expired</h3>
+
+                <p>
+                  The allowed review time has passed. The server must
+                  verify and enforce the final request status.
+                </p>
+              </div>
+            )}
 
             {status === "approved" && (
               <div className="arv-status-card arv-approved-card">
-
                 <div className="arv-status-card-icon">
                   <CheckCircle2 size={25} />
                 </div>
 
-                <span>
-                  ACCESS APPROVED
-                </span>
-
-                <h3>
-                  Administrator access approved
-                </h3>
+                <span>ACCESS APPROVED</span>
+                <h3>Administrator access approved</h3>
 
                 <p>
-                  This request has already been
-                  approved. No further action
-                  is required.
+                  This request has already been approved. No further
+                  action is required.
                 </p>
-
               </div>
             )}
 
-            {/* ========================================
-                REJECTED STATUS
-            ======================================== */}
-
-            {status === "rejected" &&
-              !requestExpired && (
-                <div className="arv-status-card arv-rejected-card">
-
-                  <div className="arv-status-card-icon">
-                    <XCircle size={25} />
-                  </div>
-
-                  <span>
-                    ACCESS REJECTED
-                  </span>
-
-                  <h3>
-                    Administrator access rejected
-                  </h3>
-
-                  <p>
-                    This request has already been
-                    rejected. No further action
-                    is required.
-                  </p>
-
+            {(status === "rejected" || status === "expired") && (
+              <div className="arv-status-card arv-rejected-card">
+                <div className="arv-status-card-icon">
+                  <XCircle size={25} />
                 </div>
-              )}
 
-            {/* ========================================
-                REQUEST TIMEOUT CARD
-            ======================================== */}
+                <span>
+                  {status === "expired"
+                    ? "REQUEST EXPIRED"
+                    : "ACCESS REJECTED"}
+                </span>
+
+                <h3>
+                  {status === "expired"
+                    ? "Approval time expired"
+                    : "Administrator access rejected"}
+                </h3>
+
+                <p>
+                  This request is no longer pending. No further action
+                  is available.
+                </p>
+              </div>
+            )}
 
             {status === "pending" && (
               <div
                 className={`arv-side-card arv-timeout-card ${
-                  requestExpired
-                    ? "arv-timeout-expired"
-                    : ""
+                  requestExpired ? "arv-timeout-expired" : ""
                 }`}
               >
-
                 <div className="arv-timeout-icon">
                   <Clock3 size={23} />
                 </div>
 
                 <div className="arv-timeout-label">
-                  {requestExpired
-                    ? "REQUEST EXPIRED"
-                    : "TIME REMAINING"}
+                  {requestExpired ? "REQUEST EXPIRED" : "TIME REMAINING"}
                 </div>
 
                 <div className="arv-timeout-time">
-
                   {requestExpired
                     ? "00:00:00"
-                    : formatCountdown(
-                        timeRemaining
-                      )}
-
+                    : formatCountdown(timeRemaining)}
                 </div>
 
                 <div className="arv-timeout-text">
-
                   {requestExpired
                     ? "Approval time has expired"
-                    : `This request must be reviewed within ${APPROVAL_TIMEOUT_HOURS} hour${
-                        APPROVAL_TIMEOUT_HOURS > 1
-                          ? "s"
-                          : ""
-                      }.`}
-
+                    : `This request must be reviewed within ${APPROVAL_TIMEOUT_HOURS} hour.`}
                 </div>
 
-                {expiryDate &&
-                  !requestExpired && (
-                    <div className="arv-timeout-deadline">
-
-                      <CalendarDays size={14} />
-
-                      Expires at{" "}
-                      {expiryDate.toLocaleTimeString(
-                        "en-IN",
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                          hour12: true,
-                        }
-                      )}
-
-                    </div>
-                  )}
-
+                {expiryDate && !requestExpired && (
+                  <div className="arv-timeout-deadline">
+                    <CalendarDays size={14} />
+                    Expires at{" "}
+                    {expiryDate.toLocaleTimeString("en-IN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                      hour12: true,
+                    })}
+                  </div>
+                )}
               </div>
             )}
-
           </aside>
-
         </div>
-
       </main>
-
     </div>
   );
 };

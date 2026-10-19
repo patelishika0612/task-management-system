@@ -195,63 +195,37 @@ const createDepartment = [
 // GET /api/departments
 // =====================================================
 
-const getAllDepartments = async (req, res) => {
+const getAllDepartments = (req, res) => {
+    console.log("GET /api/departments requested");
 
-    try {
+    const sql = `
+        SELECT department_id, department_name
+        FROM departments
+        ORDER BY department_id DESC
+    `;
 
-        const sql = `
-            SELECT
-                department_id,
-                department_name
-            FROM departments
-            ORDER BY department_id DESC
-        `;
+    db.query({ sql, timeout: 10000 }, (error, results) => {
+        if (error) {
+            console.error("Get departments database error:", {
+                code: error.code,
+                message: error.message,
+            });
 
+            return res.status(500).json({
+                success: false,
+                message: "Unable to fetch departments",
+            });
+        }
 
-        db.query(
-            sql,
-            (error, results) => {
+        console.log("Departments fetched:", results.length);
 
-                if (error) {
-
-                    console.error(
-                        "Get departments error:",
-                        error
-                    );
-
-                    return res.status(500).json({
-                        success: false,
-                        message:
-                            "Unable to fetch departments"
-                    });
-                }
-
-
-                return res.status(200).json({
-
-                    success: true,
-
-                    count: results.length,
-
-                    data: results
-                });
-            }
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Get departments unexpected error:",
-            error
-        );
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
+        return res.status(200).json({
+            success: true,
+            count: results.length,
+            data: results,
         });
-    }
+    });
 };
-
 
 // =====================================================
 // GET DEPARTMENT BY ID

@@ -243,6 +243,10 @@ const deleteProject = async (req, res) => {
             [id]
         );
 
+
+
+
+        
         const [result] = await db.query(
             "DELETE FROM projects WHERE project_id = ?",
             [id]
