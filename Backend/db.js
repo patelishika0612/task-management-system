@@ -1,3 +1,4 @@
+
 import mysql from "mysql2";
 import dotenv from "dotenv";
 
@@ -13,6 +14,7 @@ const connection = mysql.createPool({
   connectTimeout: 10000,
 });
 
+// Test database connection
 connection.getConnection((error, conn) => {
   if (error) {
     console.error("MySQL connection failed:", {
@@ -23,7 +25,16 @@ connection.getConnection((error, conn) => {
   }
 
   console.log("MySQL connection successful");
-  conn.release();
+
+  conn.query("SELECT 1 AS test", (queryError, results) => {
+    if (queryError) {
+      console.error("Database query failed:", queryError.message);
+    } else {
+      console.log("Database test successful:", results);
+    }
+
+    conn.release();
+  });
 });
 
 export default connection;

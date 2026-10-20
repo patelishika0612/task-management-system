@@ -1,9 +1,10 @@
+
 import React, { useEffect, useRef } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import "./App.css";
 
-// import Dashboard from "./admin/Dashboard";
+// Admin pages
 import Adminprofile from "./admin/Profile";
 import Login from "./admin/Login";
 import Settings from "./admin/Settings";
@@ -25,9 +26,15 @@ import AdminApprovalRequest from "./admin/AdminApprovalRequest";
 import AdminReviewRequests from "./admin/AdminReviewRequests";
 import AdminDashboard from "./admin/AdminDashboard";
 
+// Use production backend URL in production.
+// Set VITE_API_BASE_URL or VITE_API_URL in your frontend environment.
+const SOCKET_URL = (
+    import.meta.env.VITE_API_BASE_URL ||
+    import.meta.env.VITE_API_URL ||
+    "http://localhost:5000"
+).replace(/\/api\/?$/, "").replace(/\/+$/, "");
+
 // Protected route: admin login required
-
-
 const ProtectedRoute = ({ children }) => {
     const token = localStorage.getItem("adminToken");
     const storedAdminData = localStorage.getItem("adminData");
@@ -39,22 +46,15 @@ const ProtectedRoute = ({ children }) => {
             ? JSON.parse(storedAdminData)
             : null;
     } catch (error) {
-        console.error("adminData is not valid JSON:", error);
+        console.error("Invalid adminData in localStorage:", error);
     }
 
-    console.log("Current path:", window.location.pathname);
-    console.log("Token exists:", Boolean(token));
-    console.log("Admin data:", adminData);
-
     if (!token || !adminData?.adminId) {
-        console.warn("ProtectedRoute failed. Redirecting to admin login.");
         return <Navigate to="/admin-login" replace />;
     }
 
     return children;
 };
-
-
 
 function App() {
     const socketRef = useRef(null);
@@ -62,17 +62,37 @@ function App() {
     useEffect(() => {
         const startAdminSocket = () => {
             const token = localStorage.getItem("adminToken");
-            const adminData = JSON.parse(
-                localStorage.getItem("adminData") || "null"
-            );
+            const storedAdminData = localStorage.getItem("adminData");
 
-            if (!token || !adminData?.adminId) return;
-            if (socketRef.current) return;
+            let adminData = null;
 
-            const socket = io("http://localhost:5000");
+            try {
+                adminData = storedAdminData
+                    ? JSON.parse(storedAdminData)
+                    : null;
+            } catch (error) {
+                console.error("Invalid adminData:", error);
+            }
+
+            // Do not start socket without an admin session.
+            if (!token || !adminData?.adminId) {
+                return;
+            }
+
+            // Avoid duplicate socket connections.
+            if (socketRef.current) {
+                return;
+            }
+
+            const socket = io(SOCKET_URL, {
+                transports: ["websocket", "polling"],
+            });
+
             socketRef.current = socket;
 
             socket.on("connect", () => {
+                console.log("Admin socket connected:", socket.id);
+
                 socket.emit(
                     "admin-authenticated",
                     adminData.adminId
@@ -80,6 +100,8 @@ function App() {
             });
 
             socket.on("adminDeleted", () => {
+                console.warn("Admin deleted. Clearing session.");
+
                 localStorage.removeItem("adminToken");
                 localStorage.removeItem("adminData");
                 localStorage.removeItem("adminEmail");
@@ -88,44 +110,74 @@ function App() {
                 socketRef.current = null;
 
                 window.location.replace("/admin-login");
-                 console.log("adminDeleted event received");
             });
 
             socket.on("connect_error", (error) => {
-                console.error("Socket connection error:", error.message);
+                console.error(
+                    "Socket connection error:",
+                    error.message
+                );
             });
         };
 
+        // Start socket if an admin is already logged in.
         startAdminSocket();
 
-        // Start socket after admin logs in without reloading App
+        // Start socket after login without reloading the app.
         window.addEventListener("admin-login", startAdminSocket);
 
         return () => {
-            window.removeEventListener("admin-login", startAdminSocket);
-            socketRef.current?.disconnect();
-            socketRef.current = null;
+            window.removeEventListener(
+                "admin-login",
+                startAdminSocket
+            );
+
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+            }
         };
     }, []);
 
     return (
         <Routes>
             {/* Public routes */}
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/" element={<Login />} />
-            <Route path="/set-password" element={<SetPassword />} />
-            <Route path="/forgotpassword" element={<ForgotPassword />} />
-            <Route path="/otp" element={<OTP />} />
-            <Route path="/resetpassword" element={<ResetPassword />} />
+            <Route
+                path="/admin-login"
+                element={<AdminLogin />}
+            />
 
-            {/* Approval link can be opened from email */}
+            <Route
+                path="/"
+                element={<Login />}
+            />
+
+            <Route
+                path="/set-password"
+                element={<SetPassword />}
+            />
+
+            <Route
+                path="/forgotpassword"
+                element={<ForgotPassword />}
+            />
+
+            <Route
+                path="/otp"
+                element={<OTP />}
+            />
+
+            <Route
+                path="/resetpassword"
+                element={<ResetPassword />}
+            />
+
             <Route
                 path="/admin/approval/:token"
                 element={<AdminReviewRequests />}
             />
 
-            
-
+            {/* Profile */}
             <Route
                 path="/profile"
                 element={
@@ -135,6 +187,7 @@ function App() {
                 }
             />
 
+            {/* Settings */}
             <Route
                 path="/settings"
                 element={
@@ -144,15 +197,13 @@ function App() {
                 }
             />
 
+            {/* Create profile */}
             <Route
                 path="/create-profile"
-                element={
-                    
-                        <CreateProfile />
-                 
-                }
+                element={<CreateProfile />}
             />
 
+            {/* Departments */}
             <Route
                 path="/departments"
                 element={
@@ -162,6 +213,7 @@ function App() {
                 }
             />
 
+            {/* Employees */}
             <Route
                 path="/employees"
                 element={
@@ -171,6 +223,7 @@ function App() {
                 }
             />
 
+            {/* Projects */}
             <Route
                 path="/projects"
                 element={
@@ -180,6 +233,7 @@ function App() {
                 }
             />
 
+            {/* Tasks */}
             <Route
                 path="/tasks"
                 element={
@@ -189,6 +243,7 @@ function App() {
                 }
             />
 
+            {/* Calendar */}
             <Route
                 path="/calendar"
                 element={
@@ -198,6 +253,7 @@ function App() {
                 }
             />
 
+            {/* Clients */}
             <Route
                 path="/clients"
                 element={
@@ -207,15 +263,13 @@ function App() {
                 }
             />
 
+            {/* Approval requests */}
             <Route
                 path="/approvalrequests"
-                element={
-                   
-                        <AdminApprovalRequest />
-                  
-                }
+                element={<AdminApprovalRequest />}
             />
 
+            {/* Review requests */}
             <Route
                 path="/review-requests"
                 element={
@@ -225,6 +279,7 @@ function App() {
                 }
             />
 
+            {/* Admin dashboard */}
             <Route
                 path="/admindashboard"
                 element={
@@ -234,8 +289,11 @@ function App() {
                 }
             />
 
-            {/* Every unknown URL redirects to admin login */}
-            <Route path="*" element={<Navigate to="/admin-login" replace />} />
+            {/* Unknown URLs */}
+            <Route
+                path="*"
+                element={<Navigate to="/admin-login" replace />}
+            />
         </Routes>
     );
 }

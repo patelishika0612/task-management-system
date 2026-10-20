@@ -61,10 +61,10 @@ const AdminDashboard = () => {
     const today = new Date();
 
     const formattedDate = today.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-});
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+    });
 
     useEffect(() => {
         const fetchAll = async () => {
@@ -375,17 +375,17 @@ const AdminDashboard = () => {
                         </p>
                     </div>
 
-                <div className="dashboard-actions">
-    <div className="dashboard-date">
-        <CalendarDays size={18} />
-        <span>{formattedDate}</span>
-    </div>
+                    <div className="dashboard-actions">
+                        <div className="dashboard-date">
+                            <CalendarDays size={18} />
+                            <span>{formattedDate}</span>
+                        </div>
 
-    <button className="create-task-btn">
-        <Plus size={18} />
-        Create Task
-    </button>
-</div>
+                        <button className="create-task-btn">
+                            <Plus size={18} />
+                            Create Task
+                        </button>
+                    </div>
                 </section>
 
                 {/* KPI CARDS */}

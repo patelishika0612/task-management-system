@@ -651,193 +651,140 @@ const deleteEmployee = async (req, res) => {
 // GET /api/employees/profile?email=example@gmail.com
 // =====================================================
 
+// =====================================================
+// GET EMPLOYEE PROFILE BY EMAIL
+// =====================================================
+
+// Get employee profile using email
 const getEmployeeProfile = async (req, res) => {
-    try {
-        const { email } = req.query;
+  try {
+    const email = String(req.query.email || "").trim();
 
-        if (!email) {
-            return res.status(400).json({
-                success: false,
-                message: "Email is required"
-            });
-        }
-
-        const [rows] = await db.query(
-            `
-            SELECT
-                e.emp_id,
-                e.employee_code,
-                e.emp_name,
-                e.email,
-                e.phone,
-                e.department_id,
-                d.department_name,
-                e.date_of_join,
-                e.image,
-                e.status,
-                e.created_at,
-                e.updated_at
-            FROM employe e
-            LEFT JOIN departments d
-                ON e.department_id = d.department_id
-            WHERE LOWER(e.email) = LOWER(?)
-            LIMIT 1
-            `,
-            [email.trim()]
-        );
-
-        if (rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Employee profile not found"
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            data: rows[0]
-        });
-
-    } catch (error) {
-        console.error(
-            "Get employee profile error:",
-            error
-        );
-
-        return res.status(500).json({
-            success: false,
-            message: "Failed to fetch employee profile"
-        });
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee email is required.",
+      });
     }
+
+    const [rows] = await db.query(
+      `SELECT
+        e.emp_id,
+        e.emp_name,
+        e.email,
+        e.phone,
+        e.department_id,
+        d.department_name,
+        e.date_of_join,
+        e.employee_code,
+        e.image,
+        e.status
+       FROM employe e
+       LEFT JOIN departments d
+         ON e.department_id = d.department_id
+       WHERE e.email = ?
+       LIMIT 1`,
+      [email]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee profile not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: rows[0],
+    });
+  } catch (error) {
+    console.error("Get employee profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch employee profile.",
+    });
+  }
 };
 
-// =====================================================
-// CREATE / UPDATE EMPLOYEE PROFILE
-// =====================================================
-// Password removed.
-// Status removed.
-// Only profile image is updated here.
-//
-// PUT /api/employees/create-profile/:empId
-// Content-Type: multipart/form-data
-// Field: image
-// =====================================================
 
+// Upload employee profile image
 const createEmployeeProfile = async (req, res) => {
-    try {
+  try {
+    const empId = Number(req.params.empId);
 
-        const { empId } = req.params;
-
-        const image = req.file;
-
-        // ---------------------------------------------
-        // VALIDATE EMPLOYEE ID
-        // ---------------------------------------------
-
-        if (!empId) {
-            return res.status(400).json({
-                success: false,
-                message: "Employee ID is required"
-            });
-        }
-
-        const employeeId = Number(empId);
-
-        if (
-            !Number.isInteger(employeeId) ||
-            employeeId <= 0
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid employee ID"
-            });
-        }
-
-        // ---------------------------------------------
-        // IMAGE REQUIRED
-        // ---------------------------------------------
-
-        if (!image) {
-            return res.status(400).json({
-                success: false,
-                message: "Profile image is required"
-            });
-        }
-
-        // ---------------------------------------------
-        // CHECK EMPLOYEE
-        // ---------------------------------------------
-
-        const [employees] = await db.query(
-            `
-            SELECT
-                emp_id
-            FROM employe
-            WHERE emp_id = ?
-            LIMIT 1
-            `,
-            [employeeId]
-        );
-
-        if (employees.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Employee not found"
-            });
-        }
-
-        // ---------------------------------------------
-        // IMAGE PATH
-        // ---------------------------------------------
-
-        const imagePath =
-            `/uploads/${image.filename}`;
-
-        // ---------------------------------------------
-        // UPDATE DATABASE
-        // ---------------------------------------------
-
-        await db.query(
-            `
-            UPDATE employe
-            SET
-                image = ?,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE emp_id = ?
-            `,
-            [
-                imagePath,
-                employeeId
-            ]
-        );
-
-        // ---------------------------------------------
-        // SUCCESS
-        // ---------------------------------------------
-
-        return res.status(200).json({
-            success: true,
-            message: "Profile created successfully",
-            data: {
-                emp_id: employeeId,
-                image: imagePath
-            }
-        });
-
-    } catch (error) {
-
-        console.error(
-            "Create employee profile error:",
-            error
-        );
-
-        return res.status(500).json({
-            success: false,
-            message: "Failed to create employee profile",
-            error: error.message
-        });
+    if (!Number.isInteger(empId) || empId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid employee ID.",
+      });
     }
+
+    // Multer should receive the file under field name "image"
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Profile image was not received. Please select an image and try again.",
+      });
+    }
+
+    const [employees] = await db.query(
+      `SELECT emp_id, email, image
+       FROM employe
+       WHERE emp_id = ?
+       LIMIT 1`,
+      [empId]
+    );
+
+    if (employees.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found.",
+      });
+    }
+
+   const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+
+    const [result] = await db.query(
+      `UPDATE employe
+       SET image = ?
+       WHERE emp_id = ?`,
+      [imageUrl, empId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(500).json({
+        success: false,
+        message: "Unable to save profile image.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile image uploaded successfully.",
+      data: {
+        emp_id: empId,
+        email: employees[0].email,
+        image: imageUrl,
+      },
+    });
+  } catch (error) {
+    console.error("Create employee profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to upload profile image.",
+    });
+  }
 };
+
+
+// =====================================================
+// COMPLETE EMPLOYEE PROFILE
+// =====================================================
+
 
 
 // =====================================================

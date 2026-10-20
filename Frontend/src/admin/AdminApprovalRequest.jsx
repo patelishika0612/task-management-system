@@ -491,23 +491,42 @@ const AdminApprovalRequest = () => {
                 top: 0,
                 behavior: "smooth",
             });
+
         } catch (error) {
             console.error(
-                "Submit admin access request error:",
-                error
+                "Submit admin access request failed:",
+                {
+                    status: error.response?.status,
+                    response: error.response?.data,
+                    message: error.message,
+                }
             );
+
+            const status = error.response?.status;
+            const serverMessage =
+                error.response?.data?.message ||
+                error.response?.data?.error;
+
+            let message =
+                serverMessage ||
+                "Something went wrong while submitting the request.";
+
+            if (status === 409) {
+                message =
+                    serverMessage ||
+                    "A conflicting or duplicate request already exists. Please check your existing request before submitting again.";
+            }
 
             Swal.fire({
                 icon: "error",
                 title: "Submission Failed",
-                text:
-                    error.message ||
-                    "Something went wrong while submitting the request.",
+                text: message,
                 confirmButtonColor: "#dc2626",
             });
         } finally {
             setSubmitting(false);
         }
+
     };
 
     // =====================================================

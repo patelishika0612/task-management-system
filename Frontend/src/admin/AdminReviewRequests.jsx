@@ -471,21 +471,29 @@ const AdminReviewRequests = () => {
       });
 
       await fetchRequests();
-    } catch (error) {
-      console.error("Approve request error:", error);
+   } catch (error) {
+  console.error("Approve request error:", {
+    status: error.response?.status,
+    response: error.response?.data,
+    message: error.message,
+    requestId: getRequestId(selectedRequest),
+  });
 
-      await Swal.fire({
-        icon: "error",
-        title: "Approval Failed",
-        text: getErrorMessage(
-          error,
-          "Something went wrong while approving the request."
-        ),
-        confirmButtonColor: "#2948e8",
-      });
-    } finally {
-      setActionLoading(false);
-    }
+  const errorMessage =
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    error.message ||
+    "Something went wrong while approving the request.";
+
+  await Swal.fire({
+    icon: "error",
+    title: "Approval Failed",
+    text: errorMessage,
+    confirmButtonColor: "#2948e8",
+  });
+} finally {
+  setActionLoading(false);
+}
   };
 
   // --------------------------------------------------
