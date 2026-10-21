@@ -26,6 +26,9 @@ import AdminApprovalRequest from "./admin/AdminApprovalRequest";
 import AdminReviewRequests from "./admin/AdminReviewRequests";
 import AdminDashboard from "./admin/AdminDashboard";
 
+import EmployeeDashboard from "./employee/EmployeeDashboard";
+import EmployeeProject from "./employee/EmployeeProject";
+
 // Use production backend URL in production.
 // Set VITE_API_BASE_URL or VITE_API_URL in your frontend environment.
 const SOCKET_URL = (
@@ -294,6 +297,29 @@ function App() {
                 path="*"
                 element={<Navigate to="/admin-login" replace />}
             />
+
+
+
+            {/* Employee dashboard */}
+
+            <Route
+                path="/employeedashboard"
+                element={
+                    <ProtectedRoute>
+                        <EmployeeDashboard />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/employee-projects"
+                element={
+                    <ProtectedRoute>
+                        <EmployeeProject />
+                    </ProtectedRoute>
+                }
+            />
+
         </Routes>
     );
 }

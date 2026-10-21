@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -7,14 +8,13 @@ import {
   EyeOff,
   LogIn,
   ShieldCheck,
-  Users,
-  ClipboardCheck,
-  CheckCircle2,
 } from "lucide-react";
 import Swal from "sweetalert2";
+import API from "../api";
 import "./AdminLogin.css";
-// Form validation helpers
-const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
+
+const isValidEmail = (value) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim());
 
 const Login = () => {
   const navigate = useNavigate();
@@ -25,7 +25,6 @@ const Login = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -41,22 +40,20 @@ const Login = () => {
     e.preventDefault();
 
     const email = formData.email.trim();
-    const password = formData.password.trim();
+    const password = formData.password;
 
-    // ================================
-    // BASIC VALIDATION
-    // ================================
-    if (!email || !password) {
+    // Validate required fields
+    if (!email || !password.trim()) {
       Swal.fire({
         icon: "warning",
         title: "Required Fields",
         text: "Please enter your email and password.",
         confirmButtonColor: "#1557f5",
       });
-
       return;
     }
 
+    // Validate email
     if (!isValidEmail(email)) {
       Swal.fire({
         icon: "warning",
@@ -64,79 +61,83 @@ const Login = () => {
         text: "Please enter a valid email address.",
         confirmButtonColor: "#1557f5",
       });
-
       return;
     }
 
     try {
       setLoading(true);
 
-      // ==================================================
-      // DEMO LOGIN
-      // ==================================================
-      // Replace this section with your backend API call
-      // when your login API is ready.
-      //
-      // Example:
-      //
-      // const response = await axios.post(
-      //   "YOUR_API_URL/api/admin/login",
-      //   {
-      //     email,
-      //     password,
-      //   }
-      // );
-      //
-      // const { token, admin } = response.data;
-      // localStorage.setItem("token", token);
-      // localStorage.setItem("adminEmail", admin.email);
+      // Call employee login API
+      const response = await API.post("/employees/login", {
+        email,
+        password,
+      });
 
-      // Demo delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const result = response.data;
 
-      /*
-       * DEMO CREDENTIALS
-       *
-       * Email:
-       * admin@gmail.com
-       *
-       * Password:
-       * admin123
-       *
-       * Remove this condition when connecting your backend API.
-       */
-
-      if (email !== "admin@gmail.com" || password !== "admin123") {
-        Swal.fire({
-          icon: "error",
-          title: "Login Failed",
-          text: "Invalid email or password.",
-          confirmButtonColor: "#1557f5",
-        });
-
-        setLoading(false);
-        return;
+      // Check backend response
+      if (!result?.success) {
+        throw new Error(result?.message || "Invalid email or password.");
       }
 
-      // ==================================================
-      // SAVE LOGIN INFORMATION
-      // ==================================================
+      const employee =
+        result?.data?.employee ||
+        result?.employee ||
+        result?.data?.data?.employee ||
+        result?.data;
 
-      localStorage.setItem("adminEmail", email);
+      const employeeId =
+        employee?.emp_id ??
+        employee?.employee_id ??
+        employee?.id;
 
-      if (rememberMe) {
-        localStorage.setItem("keepLogged", "true");
-      } else {
-        localStorage.removeItem("keepLogged");
+      if (
+        employeeId === undefined ||
+        employeeId === null ||
+        String(employeeId).trim() === ""
+      ) {
+        console.error("Unexpected login response:", result);
+
+        throw new Error(
+          "Employee ID not found in login response."
+        );
+      }
+      if (!employee || !employee.emp_id) {
+        throw new Error("Invalid response received from the server.");
       }
 
-      // Demo token
-      localStorage.setItem("token", "demo-admin-token");
+      // Save token only if the backend returns one
+      const token = result.token || result.data?.token;
 
-      // ==================================================
-      // SUCCESS
-      // ==================================================
+      if (token) {
+        localStorage.setItem("token", token);
+      }
 
+      // Save employee information
+      localStorage.setItem("employeeId", String(employeeId));
+
+      localStorage.setItem(
+        "employeeEmail",
+        employee?.email || email
+      );
+
+      localStorage.setItem(
+        "employeeName",
+        employee?.emp_name || ""
+      );
+
+      localStorage.setItem(
+        "employeeImage",
+        employee?.image || ""
+      );
+
+      console.log("Logged-in employee:", {
+        employeeId,
+        email: employee?.email || email,
+        name: employee?.emp_name || "",
+      });
+
+      // Show success message
       await Swal.fire({
         icon: "success",
         title: "Welcome Back!",
@@ -145,14 +146,23 @@ const Login = () => {
         timer: 1200,
       });
 
-      navigate("/dashboard");
+      // Navigate to employee dashboard
+      navigate("/employeedashboard");
     } catch (error) {
-      console.error("LOGIN ERROR:", error);
+      console.error(
+        "LOGIN ERROR:",
+        error.response?.data || error.message
+      );
+
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Unable to login. Please try again.";
 
       Swal.fire({
         icon: "error",
-        title: "Something Went Wrong",
-        text: "Unable to login. Please try again.",
+        title: "Login Failed",
+        text: message,
         confirmButtonColor: "#1557f5",
       });
     } finally {
@@ -162,61 +172,43 @@ const Login = () => {
 
   return (
     <div className="admin-login-page">
-      {/* ==================================================
-          LEFT SIDE
-      ================================================== */}
       <div className="admin-login-left">
-
-
-        {/* Decorative Shapes */}
-        <div className="admin-login-decoration admin-login-decoration-one"></div>
-        <div className="admin-login-decoration admin-login-decoration-two"></div>
-        <div className="admin-login-decoration admin-login-decoration-three"></div>
+        <div className="admin-login-decoration admin-login-decoration-one" />
+        <div className="admin-login-decoration admin-login-decoration-two" />
+        <div className="admin-login-decoration admin-login-decoration-three" />
       </div>
 
-      {/* ==================================================
-          RIGHT SIDE
-      ================================================== */}
       <div className="admin-login-right">
-
         <div className="admin-login-card">
+          <div className="admin-login-mobile-brand">
+            <div className="admin-login-mobile-icon">
+              <ShieldCheck size={26} />
+            </div>
 
-          {/* Mobile Logo */}
-     <div className="admin-login-mobile-brand">
-  <div className="admin-login-mobile-icon">
-    <ShieldCheck size={26} />
-  </div>
-
-  <div>
-    <h3>Employee Management</h3>
-    <span>Employee Portal</span>
-  </div>
-</div>
-
-          {/* Heading */}
-          <div className="admin-login-heading">
-         <div className="admin-login-welcome">
-  Welcome Employee
-</div>
-
-<h1>Sign in to your account</h1>
-
-<p>
-  Enter your credentials to access your employee dashboard.
-</p>
+            <div>
+              <h3>Employee Management</h3>
+              <span>Employee Portal</span>
+            </div>
           </div>
 
-          {/* Login Form */}
+          <div className="admin-login-heading">
+            <div className="admin-login-welcome">
+              Welcome Employee
+            </div>
+
+            <h1>Sign in to your account</h1>
+
+            <p>
+              Enter your credentials to access your employee dashboard.
+            </p>
+          </div>
+
           <form
             className="admin-login-form"
             onSubmit={handleLogin}
           >
-
-            {/* Email */}
             <div className="admin-login-form-group">
-              <label htmlFor="email">
-                Email Address
-              </label>
+              <label htmlFor="email">Email Address</label>
 
               <div className="admin-login-input-wrapper">
                 <Mail
@@ -231,16 +223,14 @@ const Login = () => {
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={handleChange}
-                  autoComplete="email"
+                  autoComplete="username"
+                  required
                 />
               </div>
             </div>
 
-            {/* Password */}
             <div className="admin-login-form-group">
-              <label htmlFor="password">
-                Password
-              </label>
+              <label htmlFor="password">Password</label>
 
               <div className="admin-login-input-wrapper">
                 <Lock
@@ -256,6 +246,7 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange}
                   autoComplete="current-password"
+                  required
                 />
 
                 <button
@@ -265,9 +256,7 @@ const Login = () => {
                     setShowPassword((prev) => !prev)
                   }
                   aria-label={
-                    showPassword
-                      ? "Hide password"
-                      : "Show password"
+                    showPassword ? "Hide password" : "Show password"
                   }
                 >
                   {showPassword ? (
@@ -279,25 +268,7 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Remember Me */}
             <div className="admin-login-options">
-
-              {/* <label className="admin-login-checkbox">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) =>
-                    setRememberMe(e.target.checked)
-                  }
-                />
-
-                <span className="admin-login-custom-checkbox">
-                  <CheckCircle2 size={13} />
-                </span>
-
-                <span>Remember me</span>
-              </label> */}
-
               <button
                 type="button"
                 className="admin-login-forgot"
@@ -305,10 +276,8 @@ const Login = () => {
               >
                 Forgot Password?
               </button>
-
             </div>
 
-            {/* Login Button */}
             <button
               type="submit"
               className="admin-login-submit"
@@ -316,7 +285,7 @@ const Login = () => {
             >
               {loading ? (
                 <>
-                  <span className="admin-login-spinner"></span>
+                  <span className="admin-login-spinner" />
                   Signing in...
                 </>
               ) : (
@@ -327,17 +296,15 @@ const Login = () => {
               )}
             </button>
 
-       <button
-  type="button"
-  className="hr-login"
-  onClick={() => navigate("/adminLogin")}
->
-  HR Login
-</button>
-
+            <button
+              type="button"
+              className="hr-login"
+              onClick={() => navigate("/adminLogin")}
+            >
+              HR Login
+            </button>
           </form>
 
-          {/* Security Information */}
           <div className="admin-login-security">
             <ShieldCheck size={18} />
 
@@ -348,14 +315,6 @@ const Login = () => {
               </span>
             </div>
           </div>
-
-          {/* Footer */}
-          {/* <div className="admin-login-card-footer">
-            <span>© 2026 HR Management System</span>
-            <span className="admin-login-footer-dot">•</span>
-            <span>Admin Portal</span>
-          </div> */}
-
         </div>
       </div>
     </div>

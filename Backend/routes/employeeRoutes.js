@@ -75,6 +75,8 @@ router.get(
     employeeController.getAllEmployees
 );
 
+router.post("/login", employeeController.employeeLogin);
+
 
 // =====================================================
 // GET EMPLOYEE BY ID
@@ -99,6 +101,9 @@ router.post(
     upload.single("image"),
     employeeController.createEmployee
 );
+
+
+
 
 router.put(
     "/create-profile/:empId",

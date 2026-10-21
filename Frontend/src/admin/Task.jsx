@@ -20,7 +20,7 @@ const STATUS_OPTIONS = ["pending", "on hold", "completed"];
 const EMPTY_FORM = {
   task_name: "",
   project_id: "",
-  employee_code: "",
+  employee_codes: [],
   priority: "low",
   status: "pending",
   start_date: "",
@@ -35,6 +35,9 @@ const ALLOWED_EXTENSIONS = [
   ".pdf", ".doc", ".docx", ".xls", ".xlsx",
   ".jpg", ".jpeg", ".png", ".zip",
 ];
+
+
+
 
 // =====================================================
 // HELPERS
@@ -59,22 +62,22 @@ const capitalize = (text = "") =>
   text.charAt(0).toUpperCase() + text.slice(1);
 
 const getInitials = (name) => {
-    if (!name || typeof name !== "string") {
-        return "NA";
-    }
+  if (!name || typeof name !== "string") {
+    return "NA";
+  }
 
-    const cleanName = name.trim();
+  const cleanName = name.trim();
 
-    if (!cleanName) {
-        return "NA";
-    }
+  if (!cleanName) {
+    return "NA";
+  }
 
-    return cleanName
-        .split(/\s+/)
-        .map((word) => word.charAt(0))
-        .join("")
-        .slice(0, 2)
-        .toUpperCase();
+  return cleanName
+    .split(/\s+/)
+    .map((word) => word.charAt(0))
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 };
 
 // Show task_id exactly as stored in the database
@@ -220,7 +223,7 @@ const Task = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
+  const [projectMembers, setProjectMembers] = useState([]);
   // =====================================================
   // FETCH TASKS
   // =====================================================
@@ -269,6 +272,7 @@ const Task = () => {
     fetchTasks();
     fetchProjects();
     fetchEmployees();
+    fetchProjectMembers();
   }, []);
 
   useEffect(() => {
@@ -314,6 +318,26 @@ const Task = () => {
     }));
 
     setError("");
+  };
+
+  const fetchProjectMembers = async () => {
+    try {
+      const response = await API.get("/project-members");
+
+      const members = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray(response.data?.data)
+          ? response.data.data
+          : Array.isArray(response.data?.data?.data)
+            ? response.data.data.data
+            : [];
+
+      setProjectMembers(members);
+
+      console.log("Project Members:", members);
+    } catch (err) {
+      console.error("Project members fetch error:", err);
+    }
   };
 
   // =====================================================
@@ -395,12 +419,31 @@ const Task = () => {
       const response = await API.get(`/tasks/${task.task_id}`);
       const data = response.data.data;
 
+      let employeeCodes = [];
+
+      if (Array.isArray(data.employee_codes)) {
+        employeeCodes = data.employee_codes;
+      } else if (typeof data.employee_codes === "string") {
+        try {
+          const parsed = JSON.parse(data.employee_codes);
+          employeeCodes = Array.isArray(parsed) ? parsed : [];
+        } catch {
+          employeeCodes = data.employee_codes
+            ? [data.employee_codes]
+            : [];
+        }
+      } else if (data.employee_code) {
+        employeeCodes = [data.employee_code];
+      }
+
       setEditId(data.task_id);
 
       setForm({
         task_name: data.task_name || "",
-        project_id: data.project_id ? String(data.project_id) : "",
-        employee_code: data.employee_code || "",
+        project_id: data.project_id
+          ? String(data.project_id)
+          : "",
+        employee_codes: employeeCodes.slice(0, 2),
         priority: data.priority || "low",
         status: data.status || "pending",
         start_date: toDateInput(data.start_date),
@@ -511,9 +554,9 @@ const Task = () => {
 
       setSuccess(
         response.data.message ||
-          (isEditing
-            ? "Task updated successfully."
-            : "Task created successfully.")
+        (isEditing
+          ? "Task updated successfully."
+          : "Task created successfully.")
       );
 
       setIsModalOpen(false);
@@ -659,15 +702,35 @@ const Task = () => {
       .toLowerCase()
       .includes(projectSearch.toLowerCase())
   );
-
   const filteredEmployees = employees.filter((employee) => {
-    const name = String(employee.emp_name || "").toLowerCase();
-    const code = String(employee.employee_code || "").toLowerCase();
-    const query = empSearch.toLowerCase();
+    const query = empSearch.toLowerCase().trim();
+    const selectedProjectId = Number(form.project_id);
 
-    return name.includes(query) || code.includes(query);
+    const isAssignedToProject = projectMembers.some((member) => {
+      const projectId = member.project_id ?? member.projectId;
+
+      const employeeId =
+        member.employee_id ??
+        member.emp_id ??
+        member.employee?.emp_id ??
+        member.employee?.employee_id;
+
+      return (
+        Number(projectId) === selectedProjectId &&
+        Number(employeeId) === Number(employee.emp_id)
+      );
+    });
+
+    const matchesSearch =
+      String(employee.emp_name || "").toLowerCase().includes(query) ||
+      String(employee.employee_code || "").toLowerCase().includes(query);
+
+    return (
+      Boolean(form.project_id) &&
+      isAssignedToProject &&
+      matchesSearch
+    );
   });
-
   const selectedProject = projects.find(
     (project) => String(project.project_id) === form.project_id
   );
@@ -938,11 +1001,10 @@ const Task = () => {
 
                         <td>
                           <span
-                            className={`task-badge task-status-${
-                              overdue
-                                ? "overdue"
-                                : task.status?.replace(/\s+/g, "-")
-                            }`}
+                            className={`task-badge task-status-${overdue
+                              ? "overdue"
+                              : task.status?.replace(/\s+/g, "-")
+                              }`}
                           >
                             {overdue ? "overdue" : task.status}
                           </span>
@@ -1055,9 +1117,8 @@ const Task = () => {
                   <button
                     type="button"
                     key={page}
-                    className={`admin-page-btn ${
-                      currentPage === page ? "admin-page-active" : ""
-                    }`}
+                    className={`admin-page-btn ${currentPage === page ? "admin-page-active" : ""
+                      }`}
                     onClick={() => setCurrentPage(page)}
                   >
                     {page}
@@ -1180,9 +1241,8 @@ const Task = () => {
 
                           <ChevronDown
                             size={16}
-                            className={`task-drop-chevron${
-                              projectDropOpen ? " task-drop-chevron-open" : ""
-                            }`}
+                            className={`task-drop-chevron${projectDropOpen ? " task-drop-chevron-open" : ""
+                              }`}
                           />
                         </button>
 
@@ -1213,17 +1273,20 @@ const Task = () => {
                               {filteredProjects.map((project) => (
                                 <div
                                   key={project.project_id}
-                                  className={`task-drop-option${
-                                    String(project.project_id) ===
+                                  className={`task-drop-option${String(project.project_id) ===
                                     form.project_id
-                                      ? " task-drop-option-active"
-                                      : ""
-                                  }`}
+                                    ? " task-drop-option-active"
+                                    : ""
+                                    }`}
                                   onClick={() => {
                                     setForm((previous) => ({
                                       ...previous,
                                       project_id: String(project.project_id),
+                                      employee_codes: [],
                                     }));
+
+                                    setEmpSearch("");
+                                    setEmpDropOpen(false);
                                     setProjectDropOpen(false);
                                     setProjectSearch("");
                                     setError("");
@@ -1245,7 +1308,7 @@ const Task = () => {
                       </div>
                     </div>
 
-                    {/* EMPLOYEE DROPDOWN */}
+                    {/* EMPLOYEE MULTI-SELECT DROPDOWN */}
                     <div className="admin-field">
                       <label>
                         Assigned To <span>*</span>
@@ -1255,23 +1318,29 @@ const Task = () => {
                         <button
                           type="button"
                           className="task-drop-trigger"
-                          onClick={() => setEmpDropOpen((open) => !open)}
+                          onClick={() => {
+                            if (!form.project_id) {
+                              setError("Please select a project first.");
+                              return;
+                            }
+
+                            setEmpDropOpen((open) => !open);
+                          }}
                         >
                           <span
                             className={
-                              selectedEmployee ? "" : "task-drop-placeholder"
+                              form.employee_codes.length ? "" : "task-drop-placeholder"
                             }
                           >
-                            {selectedEmployee
-                              ? `${selectedEmployee.emp_name} (${selectedEmployee.employee_code})`
-                              : "-- Select Employee --"}
+                            {form.employee_codes.length > 0
+                              ? `${form.employee_codes.length} employee(s) selected`
+                              : "-- Select Employees --"}
                           </span>
 
                           <ChevronDown
                             size={16}
-                            className={`task-drop-chevron${
-                              empDropOpen ? " task-drop-chevron-open" : ""
-                            }`}
+                            className={`task-drop-chevron${empDropOpen ? " task-drop-chevron-open" : ""
+                              }`}
                           />
                         </button>
 
@@ -1279,15 +1348,15 @@ const Task = () => {
                           <div className="task-drop-panel">
                             <div className="task-drop-search">
                               <Search size={14} />
+
                               <input
                                 type="text"
                                 placeholder="Search employee..."
                                 value={empSearch}
-                                onChange={(event) =>
-                                  setEmpSearch(event.target.value)
-                                }
+                                onChange={(event) => setEmpSearch(event.target.value)}
                                 autoFocus
                               />
+
                               {empSearch && (
                                 <button
                                   type="button"
@@ -1299,39 +1368,110 @@ const Task = () => {
                             </div>
 
                             <div className="task-drop-list">
-                              {filteredEmployees.map((employee) => (
-                                <div
-                                  key={employee.emp_id}
-                                  className={`task-drop-option${
-                                    employee.employee_code ===
-                                    form.employee_code
-                                      ? " task-drop-option-active"
-                                      : ""
-                                  }`}
-                                  onClick={() => {
-                                    setForm((previous) => ({
-                                      ...previous,
-                                      employee_code: employee.employee_code,
-                                    }));
-                                    setEmpDropOpen(false);
-                                    setEmpSearch("");
-                                    setError("");
-                                  }}
-                                >
-                                  <span>{employee.emp_name}</span>
-                                  <small>{employee.employee_code}</small>
-                                </div>
-                              ))}
+                              {filteredEmployees.map((employee) => {
+                                const isSelected = form.employee_codes.includes(
+                                  employee.employee_code
+                                );
+
+                                return (
+                                  <div
+                                    key={employee.emp_id}
+                                    className={`task-drop-option${isSelected ? " task-drop-option-active" : ""
+                                      }`}
+                                    onClick={() => {
+                                      setForm((previous) => ({
+                                        ...previous,
+                                        employee_codes: isSelected
+                                          ? previous.employee_codes.filter(
+                                            (code) => code !== employee.employee_code
+                                          )
+                                          : [
+                                            ...previous.employee_codes,
+                                            employee.employee_code,
+                                          ],
+                                      }));
+
+                                      setError("");
+                                    }}
+                                  >
+                                    <span>
+                                      <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        readOnly
+                                        style={{ marginRight: 8 }}
+                                      />
+                                      {employee.emp_name}
+                                    </span>
+
+                                    <small>{employee.employee_code}</small>
+                                  </div>
+                                );
+                              })}
 
                               {filteredEmployees.length === 0 && (
                                 <p className="task-drop-empty">
-                                  No employees found
+                                  No employees assigned to this project
                                 </p>
                               )}
+                            </div>
+
+                            <div style={{ padding: "10px", borderTop: "1px solid #eee" }}>
+                              <button
+                                type="button"
+                                className="admin-save-btn"
+                                onClick={() => {
+                                  setEmpDropOpen(false);
+                                  setEmpSearch("");
+                                }}
+                              >
+                                Done ({form.employee_codes.length} selected)
+                              </button>
                             </div>
                           </div>
                         )}
                       </div>
+
+                      {form.employee_codes.length > 0 && (
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                          {form.employee_codes.map((code) => {
+                            const employee = employees.find(
+                              (item) => item.employee_code === code
+                            );
+
+                            return (
+                              <span
+                                key={code}
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  padding: "5px 9px",
+                                  borderRadius: 6,
+                                  background: "#eef2ff",
+                                }}
+                              >
+                                {employee?.emp_name || code}
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setForm((previous) => ({
+                                      ...previous,
+                                      employee_codes: previous.employee_codes.filter(
+                                        (item) => item !== code
+                                      ),
+                                    }))
+                                  }
+                                  aria-label={`Remove ${employee?.emp_name || code}`}
+                                >
+                                  <X size={13} />
+                                </button>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     {/* PRIORITY */}
@@ -1629,11 +1769,10 @@ const Task = () => {
                         <div>
                           <label>Status</label>
                           <span
-                            className={`task-badge task-status-${
-                              overdue
-                                ? "overdue"
-                                : viewTask.status?.replace(/\s+/g, "-")
-                            }`}
+                            className={`task-badge task-status-${overdue
+                              ? "overdue"
+                              : viewTask.status?.replace(/\s+/g, "-")
+                              }`}
                           >
                             {overdue ? "overdue" : viewTask.status}
                           </span>
