@@ -79,7 +79,6 @@ const getClientById = async (req, res) => {
                 c.Website,
                 c.Assigned_Employee_ID,
                 e.emp_name AS Assigned_Employee_Name,
-                c.Status,
                 c.Notes,
                 c.Created_Date,
                 c.Updated_Date

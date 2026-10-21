@@ -4,9 +4,10 @@ import {
   ShieldCheck,
   LogIn,
   CheckCircle2,
-} from "lucide-react";
+} from "lucide-react";  
 import Swal from "sweetalert2";
 import "./AdminLogin.css";
+
 
 const OTP = () => {
   const navigate = useNavigate();

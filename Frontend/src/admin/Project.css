@@ -1,6 +1,106 @@
 @import "./table.css";
 @import "./responsive.css";
 
+/* Project status summary cards */
+.project-stats {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.project-stat-card {
+  min-width: 0;
+  padding: 18px 20px;
+  background: #fff;
+  border: 1px solid #e8edf5;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.025);
+}
+
+.project-stat-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  border-radius: 10px;
+}
+
+.project-stat-card h2 {
+  margin: 0 0 4px;
+  color: #0f172a;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.project-stat-card p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.project-tone-blue {
+  background: #eef3ff;
+  color: #1557f5;
+}
+
+.project-tone-orange {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.project-tone-purple {
+  background: #f3f0ff;
+  color: #6d28d9;
+}
+
+.project-tone-green {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.project-tone-red {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+@media (max-width: 1280px) {
+  .project-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .project-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .project-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .project-stat-icon {
+    flex-shrink: 0;
+    margin-bottom: 0;
+  }
+
+  .project-stat-card h2 {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  .project-stat-card p {
+    font-size: 12px;
+  }
+}
+
 /* ── Employee searchable dropdown ── */
 .proj-emp-drop {
   position: relative;
@@ -228,3 +328,19 @@
   color: #dc2626;
   background: #fee2e2;
 }
+
+/* ── Priority & status badges (match Task page) ── */
+.admin-status-badge {
+  white-space: nowrap;
+}
+
+.admin-priority-low      { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.admin-priority-medium   { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.admin-priority-high     { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+.admin-priority-critical { background: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+.admin-status-not-started { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+.admin-status-in-progress { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.admin-status-on-hold     { background: #f3f0ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+.admin-status-completed   { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.admin-status-cancelled   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }

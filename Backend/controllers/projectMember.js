@@ -15,27 +15,27 @@ const getAllProjectMembers = async (req, res) => {
     try {
         const [rows] = await promiseDb.query(`
             SELECT
-                pm.id AS id,
-                pm.project_id AS project_id,
+                pm.Project_Member_ID AS id,
+                pm.Project_ID AS project_id,
                 p.proj_name,
 
-                pm.employee_id,
+                pm.emp_ID AS employee_id,
                 e.emp_id,
                 e.employee_code,
                 e.emp_name,
                 e.email,
 
-                pm.assigned_at AS assigned_at
+                pm.Assigned_Date AS assigned_at
 
             FROM project_members pm
 
             LEFT JOIN projects p
-                ON pm.project_id = p.project_id
+                ON pm.Project_ID = p.project_id
 
             LEFT JOIN employe e
-                ON pm.employee_id = e.emp_id
+                ON pm.emp_ID = e.emp_id
 
-            ORDER BY pm.id DESC
+            ORDER BY pm.Project_Member_ID DESC
         `);
 
         return res.status(200).json({
@@ -67,21 +67,21 @@ const getProjectMemberById = async (req, res) => {
         const [rows] = await promiseDb.query(
             `
             SELECT
-                pm.id AS id,
-                pm.project_id AS project_id,
+                pm.Project_Member_ID AS id,
+                pm.Project_ID AS project_id,
                 p.proj_name,
-                pm.employee_id,
+                pm.emp_ID AS employee_id,
                 e.emp_id,
                 e.employee_code,
                 e.emp_name,
                 e.email,
-                pm.assigned_at AS assigned_at
+                pm.Assigned_Date AS assigned_at
             FROM project_members pm
             LEFT JOIN projects p
-                ON pm.project_id = p.project_id
+                ON pm.Project_ID = p.project_id
             LEFT JOIN employe e
-                ON pm.employee_id = e.emp_id
-            WHERE pm.id = ?
+                ON pm.emp_ID = e.emp_id
+            WHERE pm.Project_Member_ID = ?
             `,
             [id]
         );
@@ -197,10 +197,10 @@ const createProjectMember = async (req, res) => {
 
         const [existing] = await promiseDb.query(
             `
-            SELECT id
+            SELECT Project_Member_ID AS id
             FROM project_members
-            WHERE project_id = ?
-              AND employee_id = ?
+            WHERE Project_ID = ?
+              AND emp_ID = ?
             LIMIT 1
             `,
             [projectId, employeeId]
@@ -221,13 +221,14 @@ const createProjectMember = async (req, res) => {
             `
             INSERT INTO project_members
             (
-                project_id,
-                employee_id,
-                assigned_at
+                Project_ID,
+                emp_ID,
+                employee_code,
+                Assigned_Date
             )
-            VALUES (?, ?, CURRENT_TIMESTAMP)
+            VALUES (?, ?, ?, CURDATE())
             `,
-            [projectId, employeeId]
+            [projectId, employeeId, employees[0].employee_code]
         );
 
         return res.status(201).json({
@@ -295,7 +296,7 @@ const updateProjectMember = async (req, res) => {
 
         // Check project
         const [projects] = await promiseDb.query(
-            `
+            `                  
             SELECT project_id
             FROM projects
             WHERE project_id = ?
@@ -336,11 +337,11 @@ const updateProjectMember = async (req, res) => {
         // Check duplicate assignment
         const [existing] = await promiseDb.query(
             `
-            SELECT id
+            SELECT Project_Member_ID AS id
             FROM project_members
-            WHERE project_id = ?
-              AND employee_id = ?
-              AND id != ?
+            WHERE Project_ID = ?
+              AND emp_ID = ?
+              AND Project_Member_ID != ?
             LIMIT 1
             `,
             [projectId, employeeId, memberId]
@@ -358,11 +359,12 @@ const updateProjectMember = async (req, res) => {
             `
             UPDATE project_members
             SET
-                project_id = ?,
-                employee_id = ?
-            WHERE id = ?
+                Project_ID = ?,
+                emp_ID = ?,
+                employee_code = ?
+            WHERE Project_Member_ID = ?
             `,
-            [projectId, employeeId, memberId]
+            [projectId, employeeId, employees[0].employee_code, memberId]
         );
 
         if (result.affectedRows === 0) {
@@ -415,7 +417,7 @@ const deleteProjectMember = async (req, res) => {
         const [result] = await promiseDb.query(
             `
             DELETE FROM project_members
-            WHERE id = ?
+            WHERE Project_Member_ID = ?
             `,
             [id]
         );
@@ -425,7 +427,7 @@ const deleteProjectMember = async (req, res) => {
                 success: false,
                 message: "Project member not found"
             });
-        }
+        }                                                                                                                                                                                             
 
         return res.status(200).json({
             success: true,

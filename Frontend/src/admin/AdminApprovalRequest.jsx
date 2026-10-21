@@ -114,7 +114,7 @@ const AdminApprovalRequest = () => {
             if (!response.ok || !data.success) {
                 throw new Error(
                     data.message ||
-                        "Failed to fetch departments"
+                    "Failed to fetch departments"
                 );
             }
 
@@ -417,7 +417,7 @@ const AdminApprovalRequest = () => {
             if (!response.ok || !data.success) {
                 throw new Error(
                     data.message ||
-                        "Failed to submit admin access request."
+                    "Failed to submit admin access request."
                 );
             }
 
@@ -468,7 +468,7 @@ const AdminApprovalRequest = () => {
             ) {
                 throw new Error(
                     approvalData.message ||
-                        "Request was created, but approval process could not be started."
+                    "Request was created, but approval process could not be started."
                 );
             }
 
@@ -580,8 +580,7 @@ const AdminApprovalRequest = () => {
     // =====================================================
 
     const inputClass = (field) =>
-        `apr-input ${
-            errors[field] ? "apr-input-error" : ""
+        `apr-input ${errors[field] ? "apr-input-error" : ""
         }`;
 
     // =====================================================
@@ -637,7 +636,6 @@ const AdminApprovalRequest = () => {
                                 Request Submitted
                             </strong>
                         </div>
-
                     </div>
 
                     <div className="arv-process-line active"></div>
@@ -1116,11 +1114,10 @@ const AdminApprovalRequest = () => {
                                     >
 
                                         <div
-                                            className={`apr-textarea ${
-                                                errors.reason
+                                            className={`apr-textarea ${errors.reason
                                                     ? "apr-input-error"
                                                     : ""
-                                            }`}
+                                                }`}
                                         >
 
                                             <FileText size={15} />

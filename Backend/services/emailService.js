@@ -189,7 +189,7 @@ export const sendApprovalSuccessEmail = async ({
 
                 <a
                     href="${adminLoginLink}"
-                    style="
+                    style="                                  
                         display:inline-block;
                         padding:12px 22px;
                         background:#2563eb;
@@ -220,7 +220,7 @@ export const sendApprovalSuccessEmail = async ({
         `
     };
 
-    return await transporter.sendMail(mailOptions);
+    return await transporter.sendMail(mailOptions); 
 };
 
 // =====================================================
@@ -301,7 +301,7 @@ export const sendRejectionEmail = async ({
                 <p>
                     Regards,<br />
                     <strong>Task Management System</strong>
-                </p>
+                </p>   
 
             </div>
         `

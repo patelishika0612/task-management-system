@@ -51,7 +51,7 @@ const DEPT_URL = `${API_BASE}/departments`;
 
 const PAGE_SIZE = 5;
 
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024;                             
 
 
 // =====================================================
@@ -95,7 +95,6 @@ const EMPTY_FORM = {
     email: "",
     phone: "",
     department_id: "",
-    password: "",
     date_of_join: "",
     employee_code: "",
     image: "",
@@ -388,7 +387,6 @@ const Employee = () => {
                 phone: d.phone || "",
                 department_id:
                     d.department_id || "",
-                password: "",
                 date_of_join:
                     d.date_of_join
                         ? String(d.date_of_join).split("T")[0]
@@ -459,7 +457,6 @@ const Employee = () => {
             email,
             phone,
             department_id,
-            password,
             date_of_join,
             employee_code,
             status
@@ -480,9 +477,6 @@ const Employee = () => {
         if (!date_of_join) { setError("Date of joining is required."); return; }
         if (date_of_join > new Date().toISOString().split("T")[0]) { setError("Date of joining cannot be in the future."); return; }
         if (!department_id) { setError("Department is required."); return; }
-
-        // Password required only while creating
-        if (editId === null && !password.trim()) { setError("Password is required."); return; }
 
 
         setSaving(true);
@@ -536,15 +530,6 @@ const Employee = () => {
                 "status",
                 status
             );
-
-
-            if (password.trim()) {
-
-                formData.append(
-                    "password",
-                    password
-                );
-            }
 
 
             if (imageFile) {
@@ -611,7 +596,7 @@ const Employee = () => {
                     result.data?.Employee_ID;
 
                 setSuccess(
-                    `Employee created successfully. Employee ID: ${newEmployeeId}`
+                    `Employee created successfully.`
                 );
             }
 
@@ -1503,42 +1488,6 @@ const Employee = () => {
                                                     handleChange
                                                 }
                                                 required
-                                            />
-
-                                        </div>
-
-
-                                        {/* PASSWORD */}
-
-                                        <div className="admin-field">
-
-                                            <label>
-
-                                                Password{" "}
-
-                                                {editId === null && (
-                                                    <span>*</span>
-                                                )}
-
-                                            </label>
-
-                                            <input
-                                                type="password"
-                                                name="password"
-                                                placeholder={
-                                                    editId !== null
-                                                        ? "Leave blank to keep current password"
-                                                        : "Enter password"
-                                                }
-                                                value={
-                                                    form.password
-                                                }
-                                                onChange={
-                                                    handleChange
-                                                }
-                                                required={
-                                                    editId === null
-                                                }
                                             />
 
                                         </div>

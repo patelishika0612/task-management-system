@@ -159,13 +159,6 @@ const createEmployee = async (req, res) => {
             });
         }
 
-        if (!password || !password.trim()) {
-            return res.status(400).json({
-                success: false,
-                message: "Password is required"
-            });
-        }
-
         if (!date_of_join) {
             return res.status(400).json({
                 success: false,
@@ -267,7 +260,11 @@ const createEmployee = async (req, res) => {
         // PASSWORD HASH
         // ---------------------------------------------
 
-        const passwordHash = await bcrypt.hash(password, 10);
+        // Optional: employee sets their own password later
+        // (column is NOT NULL, so store empty string when not provided)
+        const passwordHash = password && password.trim()
+            ? await bcrypt.hash(password, 10)
+            : "";
 
         // ---------------------------------------------
         // IMAGE

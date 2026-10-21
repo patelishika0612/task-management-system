@@ -89,20 +89,9 @@ const ResetPassword = () => {
     try {
       setLoading(true);
 
-      // ==================================================
-      // RESET PASSWORD API
-      // ==================================================
-      // Replace this section with your backend API call.
-      //
-      // Example:
-      //
-      // const response = await axios.post(
-      //   "YOUR_API_URL/api/admin/reset-password",
-      //   {
-      //     password: newPassword,
-      //     confirmPassword,
-      //   }
-      // );
+   
+      
+      
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
 

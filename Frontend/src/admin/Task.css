@@ -196,20 +196,6 @@
   max-width: 90px;
 }
 
-/* Keep action buttons in one row at every screen size */
-.task-table .admin-actions {
-  flex-direction: row;
-  flex-wrap: nowrap;
-  align-items: center;
-  gap: 6px;
-}
-
-.task-table .admin-view-btn,
-.task-table .admin-edit-btn,
-.task-table .admin-delete-btn {
-  width: auto;
-  white-space: nowrap;
-}
 
 /* ── Table cells ── */
 .task-cell-main {
@@ -261,6 +247,25 @@
 
 .task-due-late {
   color: #dc2626 !important;
+}
+
+.task-due-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.task-due-overdue {
+  font-size: 12px;
+  font-weight: 500;
+  color: #dc2626;
+}
+
+.task-due-cell strong {
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
 }
 
 /* ── Badges ── */
@@ -614,23 +619,12 @@
 
 /* ── Responsive ── */
 
-/* Laptop: icon-only action buttons (text kept for screen readers) */
+/* Action buttons show icon + text (View / Edit / Delete), same as other pages */
+.task-table .admin-actions span {
+  white-space: nowrap;
+}
+
 @media (max-width: 1440px) {
-  .task-table .admin-actions span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-  }
-
-  .task-table .admin-view-btn,
-  .task-table .admin-edit-btn,
-  .task-table .admin-delete-btn {
-    padding: 7px;
-  }
-
   .task-table .task-cell-main strong {
     max-width: 140px;
   }

@@ -52,7 +52,7 @@ const ensureTaskColumns = async () => {
             await db.query("ALTER TABLE task ADD COLUMN comments TEXT NULL AFTER description");
             console.log("✅ Added `comments` column to task table");
         }
-
+     
         if (!existing.includes("attachments")) {
             await db.query("ALTER TABLE task ADD COLUMN attachments LONGTEXT NULL AFTER comments");
             console.log("✅ Added `attachments` column to task table");
@@ -145,7 +145,7 @@ const validateTask = (body) => {
         return "Comments cannot exceed 2000 characters";
     }
 
-    return null;
+    return null;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
 };
 
 const employeeExists = async (employeeCode) => {
@@ -290,7 +290,7 @@ const createTask = async (req, res) => {
         ]);
 
         res.status(201).json({
-            success: true,
+            success: true,                              
             message: "Task created successfully",
             task_id: result.insertId
         });

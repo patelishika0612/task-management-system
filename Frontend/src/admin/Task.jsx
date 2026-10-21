@@ -58,8 +58,9 @@ const toDateInput = (value) => {
 const capitalize = (text = "") =>
   text.charAt(0).toUpperCase() + text.slice(1);
 
-const getInitials = (name = "") =>
-  name
+// emp_name is null when the assigned employee no longer exists
+const getInitials = (name) =>
+  String(name || "")
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
@@ -927,22 +928,20 @@ const Task = () => {
 
                         <td>
                           <span
-                            className={`task-badge task-status-${
-                              overdue
-                                ? "overdue"
-                                : task.status?.replace(/\s+/g, "-")
-                            }`}
+                            className={`task-badge task-status-${task.status?.replace(/\s+/g, "-")}`}
                           >
-                            {overdue ? "overdue" : task.status}
+                            {task.status}
                           </span>
                         </td>
 
                         <td>
-                          <div className="task-cell-main">
+                          <div className="task-due-cell">
                             <strong className={overdue ? "task-due-late" : ""}>
                               {formatDate(task.due_date)}
                             </strong>
-                            <small>{getDueText(task)}</small>
+                            {overdue && (
+                              <span className="task-due-overdue">Overdue</span>
+                            )}
                           </div>
                         </td>
 
@@ -985,6 +984,7 @@ const Task = () => {
                             <button
                               type="button"
                               className="admin-view-btn"
+                              title="View"
                               onClick={() => setViewTask(task)}
                             >
                               <Eye size={16} />
@@ -994,6 +994,7 @@ const Task = () => {
                             <button
                               type="button"
                               className="admin-edit-btn"
+                              title="Edit"
                               onClick={() => openEditModal(task)}
                             >
                               <Pencil size={16} />
@@ -1003,6 +1004,7 @@ const Task = () => {
                             <button
                               type="button"
                               className="admin-delete-btn"
+                              title="Delete"
                               onClick={() => handleDelete(task)}
                             >
                               <Trash2 size={16} />
@@ -1572,8 +1574,8 @@ const Task = () => {
                         {viewTask.description || "No description provided."}
                       </p>
                     </section>
-
-                    {/* <section className="task-view-card">
+{/* 
+                    {/* {/* <section className="task-view-card">
                       <h3>Task Progress</h3>
                       <div className="task-view-progress-head">
                         <span>Time Elapsed</span>
@@ -1589,8 +1591,8 @@ const Task = () => {
                       </div>
                       <small className="task-view-progress-note">
                         {getDueText(viewTask) || "No deadline set"}
-                      </small>
-                    </section> */}
+                      </small> */}
+                    {/* </section> */} 
 
                     <section className="task-view-card">
                       <h3>Comments</h3>
@@ -1618,13 +1620,9 @@ const Task = () => {
                         <div>
                           <label>Status</label>
                           <span
-                            className={`task-badge task-status-${
-                              overdue
-                                ? "overdue"
-                                : viewTask.status?.replace(/\s+/g, "-")
-                            }`}
+                            className={`task-badge task-status-${viewTask.status?.replace(/\s+/g, "-")}`}
                           >
-                            {overdue ? "overdue" : viewTask.status}
+                            {viewTask.status}
                           </span>
                         </div>
                         <div>
