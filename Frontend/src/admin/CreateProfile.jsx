@@ -11,6 +11,7 @@ import {
 import API from "../api";
 import Logo from "../img/nirvanza-logo.png";
 import "./CompleteProfile.css";
+import Swal from "sweetalert2";
 
 const CreateProfile = () => {
     const [searchParams] = useSearchParams();
@@ -55,7 +56,7 @@ const CreateProfile = () => {
                 } else {
                     setError(
                         response.data.message ||
-                            "Employee profile not found."
+                        "Employee profile not found."
                     );
                 }
             } catch (err) {
@@ -66,7 +67,7 @@ const CreateProfile = () => {
 
                 setError(
                     err.response?.data?.message ||
-                        "Failed to load employee profile."
+                    "Failed to load employee profile."
                 );
             } finally {
                 setLoading(false);
@@ -117,23 +118,28 @@ const CreateProfile = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        setError("");
-
-        if (!employee) {
-            setError("Employee information not found.");
+        if (!employee?.emp_id) {
+            Swal.fire("Error", "Employee ID not found.", "error");
             return;
         }
 
         if (!image) {
-            setError("Please select a profile image.");
+            Swal.fire("Required", "Please select a profile image.", "warning");
+            return;
+        }
+
+        if (!image.type.startsWith("image/")) {
+            Swal.fire("Invalid file", "Please select a valid image.", "error");
+            return;
+        }
+
+        if (image.size > 5 * 1024 * 1024) {
+            Swal.fire("File too large", "Image size must be under 5 MB.", "error");
             return;
         }
 
         try {
-            setSubmitting(true);
-
             const formData = new FormData();
-
             formData.append("image", image);
 
             const response = await API.put(
@@ -141,34 +147,39 @@ const CreateProfile = () => {
                 formData
             );
 
-            if (response.data.success) {
-                setSuccess(true);
+            if (response.data?.success) {
+                await Swal.fire({
+                    icon: "success",
+                    title: "Profile Completed",
+                    text: response.data.message || "Profile image uploaded successfully.",
+                });
 
-                setTimeout(() => {
-                    navigate(
-                        `/admin-login?email=${encodeURIComponent(
-                            employee.email
-                        )}`
-                    );
-                }, 1200);
+                navigate(
+                    `/admin-login?email=${encodeURIComponent(employee.email)}`
+                );
             } else {
-                setError(
-                    response.data.message ||
-                        "Failed to create profile."
+                throw new Error(
+                    response.data?.message || "Unable to upload profile image."
                 );
             }
-        } catch (err) {
-            console.error(
-                "Create profile error:",
-                err
-            );
+        } catch (error) {
+            const errorData = error.response?.data;
 
-            setError(
-                err.response?.data?.message ||
-                    "Failed to create profile."
-            );
-        } finally {
-            setSubmitting(false);
+            console.error("Create profile error:", {
+                status: error.response?.status,
+                response: errorData,
+                message: error.message,
+                employeeId: employee?.emp_id,
+            });
+
+            Swal.fire({
+                icon: "error",
+                title: "Profile Upload Failed",
+                text:
+                    errorData?.message ||
+                    errorData?.error ||
+                    "Server rejected the image upload. Check the backend error message.",
+            });
         }
     };
 
@@ -647,9 +658,9 @@ const CreateProfile = () => {
                                             value={
                                                 employee?.date_of_join
                                                     ? employee.date_of_join.substring(
-                                                          0,
-                                                          10
-                                                      )
+                                                        0,
+                                                        10
+                                                    )
                                                     : ""
                                             }
                                             disabled
@@ -724,25 +735,7 @@ const CreateProfile = () => {
                                     </div>
 
 
-                                    {/* DESIGNATION */}
 
-                                    <div className="cp-profile-form-group">
-
-                                        <label className="cp-profile-form-label">
-                                            Designation
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            className="cp-profile-input"
-                                            value={
-                                                employee?.designation || ""
-                                            }
-                                            disabled
-                                            readOnly
-                                        />
-
-                                    </div>
 
 
                                     {/* EMPLOYEE STATUS */}

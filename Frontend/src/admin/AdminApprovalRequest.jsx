@@ -23,7 +23,7 @@ import Swal from "sweetalert2";
 
 import "./AdminApprovalRequest.css";
 
-const API_BASE_URL = "http://localhost:5000/api";
+import API from "../api";
 
 // =====================================================
 // FIELD COMPONENT
@@ -105,16 +105,15 @@ const AdminApprovalRequest = () => {
         try {
             setLoadingDepartments(true);
 
-            const response = await fetch(
-                `${API_BASE_URL}/admin-access-requests/departments`
+            const response = await API.get(
+                "/admin-access-requests/departments"
             );
 
-            const data = await response.json();
+            const data = response.data;
 
-            if (!response.ok || !data.success) {
+            if (!data.success) {
                 throw new Error(
-                    data.message ||
-                    "Failed to fetch departments"
+
                 );
             }
 
@@ -122,13 +121,14 @@ const AdminApprovalRequest = () => {
         } catch (error) {
             console.error(
                 "Fetch departments error:",
-                error
+                error.response?.data || error.message
             );
 
             Swal.fire({
                 icon: "error",
                 title: "Unable to Load Departments",
                 text:
+                    error.response?.data?.message ||
                     error.message ||
                     "Something went wrong while loading departments.",
                 confirmButtonColor: "#3155f5",
@@ -250,17 +250,7 @@ const AdminApprovalRequest = () => {
                 "Please select a department.";
         }
 
-        // DESIGNATION
-        if (!designation.trim()) {
-            newErrors.designation =
-                "Designation is required.";
-        }
 
-        // LOCATION
-        if (!location.trim()) {
-            newErrors.location =
-                "Location is required.";
-        }
 
         // REASON
         if (!reason.trim()) {
@@ -398,26 +388,16 @@ const AdminApprovalRequest = () => {
             // CREATE ACCESS REQUEST
             // =================================================
 
-            const response = await fetch(
-                `${API_BASE_URL}/admin-access-requests`,
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-                    },
-
-                    body: JSON.stringify(payload),
-                }
+            const response = await API.post(
+                "/admin-access-requests",
+                payload
             );
 
-            const data = await response.json();
+            const data = response.data;
 
-            if (!response.ok || !data.success) {
+            if (!data.success) {
                 throw new Error(
-                    data.message ||
-                    "Failed to submit admin access request."
+
                 );
             }
 
@@ -443,29 +423,16 @@ const AdminApprovalRequest = () => {
             // CREATE APPROVAL REQUEST
             // =================================================
 
-            const approvalResponse = await fetch(
-                `${API_BASE_URL}/admin-approval-requests`,
+            const approvalResponse = await API.post(
+                "/admin-approval-requests",
                 {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json",
-                    },
-
-                    body: JSON.stringify({
-                        Request_ID: requestId,
-                    }),
+                    Request_ID: requestId,
                 }
             );
 
-            const approvalData =
-                await approvalResponse.json();
+            const approvalData = approvalResponse.data;
 
-            if (
-                !approvalResponse.ok ||
-                !approvalData.success
-            ) {
+            if (!approvalData.success) {
                 throw new Error(
                     approvalData.message ||
                     "Request was created, but approval process could not be started."
@@ -524,23 +491,42 @@ const AdminApprovalRequest = () => {
                 top: 0,
                 behavior: "smooth",
             });
+
         } catch (error) {
             console.error(
-                "Submit admin access request error:",
-                error
+                "Submit admin access request failed:",
+                {
+                    status: error.response?.status,
+                    response: error.response?.data,
+                    message: error.message,
+                }
             );
+
+            const status = error.response?.status;
+            const serverMessage =
+                error.response?.data?.message ||
+                error.response?.data?.error;
+
+            let message =
+                serverMessage ||
+                "Something went wrong while submitting the request.";
+
+            if (status === 409) {
+                message =
+                    serverMessage ||
+                    "A conflicting or duplicate request already exists. Please check your existing request before submitting again.";
+            }
 
             Swal.fire({
                 icon: "error",
                 title: "Submission Failed",
-                text:
-                    error.message ||
-                    "Something went wrong while submitting the request.",
+                text: message,
                 confirmButtonColor: "#dc2626",
             });
         } finally {
             setSubmitting(false);
         }
+
     };
 
     // =====================================================
@@ -986,77 +972,6 @@ const AdminApprovalRequest = () => {
 
                                         </Field>
 
-                                        {/* DESIGNATION */}
-
-                                        <Field
-                                            id="designation"
-                                            label="Designation"
-                                            required
-                                            error={
-                                                errors.designation
-                                            }
-                                        >
-
-                                            <div
-                                                className={inputClass(
-                                                    "designation"
-                                                )}
-                                            >
-                                                <BriefcaseBusiness
-                                                    size={15}
-                                                />
-
-                                                <input
-                                                    id="designation"
-                                                    type="text"
-                                                    name="designation"
-                                                    value={
-                                                        formData.designation
-                                                    }
-                                                    onChange={
-                                                        handleChange
-                                                    }
-                                                    placeholder="e.g. HR Manager"
-                                                    maxLength={100}
-                                                />
-                                            </div>
-
-                                        </Field>
-
-                                        {/* LOCATION */}
-
-                                        <Field
-                                            id="location"
-                                            label="Location"
-                                            required
-                                            error={
-                                                errors.location
-                                            }
-                                        >
-
-                                            <div
-                                                className={inputClass(
-                                                    "location"
-                                                )}
-                                            >
-                                                <MapPin size={15} />
-
-                                                <input
-                                                    id="location"
-                                                    type="text"
-                                                    name="location"
-                                                    value={
-                                                        formData.location
-                                                    }
-                                                    onChange={
-                                                        handleChange
-                                                    }
-                                                    placeholder="e.g. Ahmedabad"
-                                                    maxLength={150}
-                                                />
-                                            </div>
-
-                                        </Field>
 
                                         {/* JOINING DATE */}
 
@@ -1115,8 +1030,7 @@ const AdminApprovalRequest = () => {
 
                                         <div
                                             className={`apr-textarea ${errors.reason
-                                                    ? "apr-input-error"
-                                                    : ""
+
                                                 }`}
                                         >
 

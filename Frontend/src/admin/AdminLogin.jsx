@@ -81,14 +81,33 @@ const AdminLogin = () => {
       // CHECK RESPONSE
       // =================================================
 
-      if (!result.success) {
-        setError(
-          result.message ||
-            "Invalid email or password."
-        );
+    
+if (!result.success) {
+    setError(result.message || "Invalid email or password.");
+    return;
+}
 
-        return;
-      }
+if (!result.data?.token || !result.data?.adminId) {
+    setError("Login response is missing admin credentials.");
+    return;
+}
+
+localStorage.setItem("adminToken", result.data.token);
+
+localStorage.setItem(
+    "adminData",
+    JSON.stringify({
+        adminId: result.data.adminId,
+        email: result.data.email,
+    })
+);
+
+localStorage.setItem("adminEmail", result.data.email || email);
+
+window.dispatchEvent(new Event("admin-login"));
+
+navigate("/admindashboard", { replace: true });
+
 
       // =================================================
       // SAVE JWT TOKEN
@@ -115,17 +134,13 @@ const AdminLogin = () => {
       // SUCCESS
       // =================================================
 
+
       setSuccess("Login successful!");
 
-      // =================================================
-      // REDIRECT
-      // =================================================
+      window.dispatchEvent(new Event("admin-login"));
 
-      setTimeout(() => {
-        navigate(
-          `/?email=${encodeURIComponent(email)}`
-        );
-      }, 500);
+      navigate("/admindashboard", { replace: true });
+
     } catch (error) {
       console.error(
         "Admin login error:",
@@ -134,7 +149,7 @@ const AdminLogin = () => {
 
       setError(
         error.response?.data?.message ||
-          "Unable to connect to server."
+        "Unable to connect to server."
       );
     } finally {
       setLoading(false);
@@ -356,6 +371,7 @@ const AdminLogin = () => {
                 LOGIN BUTTON
             ================================================== */}
 
+
             <button
               type="submit"
               className="admin-login-submit"
@@ -385,7 +401,19 @@ const AdminLogin = () => {
                 navigate("/")
               }
             >
-              Employee Login
+              Back to Login
+            </button>
+
+
+
+            <button
+              type="button"
+              className="hr-login"
+              onClick={() =>
+                navigate("/approvalrequests")
+              }
+            >
+              Create Admin
             </button>
 
           </form>

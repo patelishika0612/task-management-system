@@ -1,20 +1,36 @@
-import React, { useMemo, useState } from "react";
+
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Plus,
+  X,
   Clock3,
   CheckCircle2,
   AlertCircle,
-  CircleDot,
-  X,
   ClipboardList,
   User,
-  Flag,
-  ListFilter,
 } from "lucide-react";
-import "./AdminCalendar.css";
+
 import AdminLayout from "../components/AdminLayout";
+import API from "../api";
+import "./AdminCalendar.css";
+
+const EMPTY_FORM = {
+  Event_Title: "",
+  Event_Type: "Project Deadline",
+  Project_ID: "",
+  Created_By: "",
+  Employee_ID: "",
+  Assigned_Date: "",
+  Event_Date: "",
+  Deadline: "",
+  Start_Time: "",
+  End_Time: "",
+  Description: "",
+  Status: "Scheduled",
+};
 
 const Calendar = () => {
   const today = new Date();
@@ -22,12 +38,13 @@ const Calendar = () => {
   const [currentDate, setCurrentDate] = useState(
     new Date(today.getFullYear(), today.getMonth(), 1)
   );
-
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
-
-  // =========================================================
-  // FILTER STATE
-  // =========================================================
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
 
   const [filters, setFilters] = useState({
     employee: "All Employees",
@@ -37,315 +54,131 @@ const Calendar = () => {
     status: "all",
   });
 
-  // =========================================================
-  // TASK DATA
-  // =========================================================
-
-  const tasks = [
-    {
-      id: 1,
-      title: "Complete Employee Dashboard",
-      description:
-        "Finish the employee dashboard UI and connect the required API data.",
-      startDate: "2026-10-01",
-      endDate: "2026-10-03",
-      status: "In Progress",
-      priority: "High",
-      employee: "Foram Patel",
-      department: "Web Development",
-      project: "ABC Website",
-      eventType: "Task",
-    },
-
-    {
-      id: 2,
-      title: "Backend API Integration",
-      description:
-        "Integrate employee task APIs with the frontend dashboard.",
-      startDate: "2026-10-02",
-      endDate: "2026-10-05",
-      status: "In Progress",
-      priority: "High",
-      employee: "Ishika Patel",
-      department: "Software Development",
-      project: "Mobile Application",
-      eventType: "Task",
-    },
-
-    {
-      id: 3,
-      title: "Admin Panel Testing",
-      description:
-        "Test all admin panel pages and report UI and functional issues.",
-      startDate: "2026-10-04",
-      endDate: "2026-10-07",
-      status: "Pending",
-
-
-
-      priority: "Medium",
-      employee: "Gopika",
-      department: "Software Development",
-      project: "ABC Website",
-      eventType: "Task",
-    },
-
-    {
-      id: 4,
-      title: "Employee Profile Page",
-      description:
-        "Complete employee profile page with edit and view functionality.",
-      startDate: "2026-10-06",
-      endDate: "2026-10-10",
-      status: "Pending",
-      priority: "Medium",
-      employee: "Nandini",
-      department: "Web Development",
-      project: "Company Redesign",
-      eventType: "Task",
-    },
-
-    {
-      id: 5,
-      title: "Calendar Module",
-      description:
-        "Create calendar module with upcoming deadlines and overdue tasks.",
-      startDate: "2026-09-25",
-      endDate: "2026-09-30",
-      status: "Completed",
-      priority: "Low",
-      employee: "Dhruvi",
-      department: "Software Development",
-      project: "Mobile Application",
-      eventType: "Project Deadline",
-    },
-
-    {
-      id: 6,
-      title: "Project Documentation",
-      description:
-        "Prepare documentation for the employee task management system.",
-      startDate: "2026-10-11",
-      endDate: "2026-10-15",
-      status: "Pending",
-      priority: "Low",
-      employee: "Foram Patel",
-      department: "Web Development",
-      project: "ABC Website",
-      eventType: "Task",
-    },
-
-    {
-      id: 7,
-      title: "Final Project Testing",
-      description:
-        "Perform final testing before project deployment.",
-      startDate: "2026-10-18",
-      endDate: "2026-10-20",
-      status: "Pending",
-      priority: "High",
-      employee: "Gopika",
-      department: "Graphics Design",
-      project: "Company Redesign",
-      eventType: "Project Deadline",
-    },
-
-    {
-      id: 8,
-      title: "Client Discussion",
-      description:
-        "Discuss project progress and upcoming requirements with the client.",
-      startDate: "2026-10-08",
-      endDate: "2026-10-08",
-      status: "Pending",
-      priority: "Medium",
-      employee: "Ishika Patel",
-      department: "Software Development",
-      project: "Mobile Application",
-      eventType: "Meeting",
-    },
-
-    {
-      id: 9,
-      title: "Graphics Review Meeting",
-      description:
-        "Review the latest graphics and design changes.",
-      startDate: "2026-10-13",
-      endDate: "2026-10-13",
-      status: "Pending",
-      priority: "Medium",
-      employee: "Nandini",
-      department: "Graphics Design",
-      project: "Company Redesign",
-      eventType: "Meeting",
-    },
-  ];
-
-  // =========================================================
-  // MONTH / DAY NAMES
-  // =========================================================
-
   const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
   ];
-
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-  // =========================================================
-  // DATE FORMAT
-  // =========================================================
 
   const formatDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
   };
 
-  // =========================================================
-  // TODAY CHECK
-  // =========================================================
+  const dateKey = (value) => {
+    if (!value) return "";
+    const match = String(value).match(/^\d{4}-\d{2}-\d{2}/);
+    if (match) return match[0];
 
-  const isToday = (date) => {
-    return formatDate(date) === formatDate(today);
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? "" : formatDate(parsed);
   };
 
-  // =========================================================
-  // TASK DATE RANGE
-  // =========================================================
+  const normalizeTask = (item) => ({
+    id: item.Event_ID,
+    title: item.Event_Title || "Untitled event",
+    description: item.Description || "",
+    startDate: item.Assigned_Date || item.Event_Date,
+    endDate: item.Deadline || item.Event_Date,
+    status:
+      item.Current_Status === "Overdue"
+        ? "Overdue"
+        : item.Status === "Scheduled"
+          ? "Pending"
+          : item.Status || "Pending",
+    rawStatus: item.Status || "Scheduled",
+    priority: item.Priority || "Medium",
+    employee: item.Employee_Name || "Unassigned",
+    employeeId: item.Employee_ID || "",
+    department:
+      item.Department_Name || item.department_name || "—",
+    project:
+      item.Project_Name ||
+      (item.Project_ID ? `Project #${item.Project_ID}` : "—"),
+    projectId: item.Project_ID || "",
+    eventType: item.Event_Type || "Task",
+  });
 
-  const isDateInTaskRange = (date, task) => {
-    const current = new Date(formatDate(date));
-    const start = new Date(task.startDate);
-    const end = new Date(task.endDate);
+  const fetchCalendarEvents = useCallback(async () => {
+    setLoading(true);
+    setApiError("");
 
-    return current >= start && current <= end;
-  };
+    try {
+      const response = await API.get("/calendar", {
+        params: {
+          month: currentDate.getMonth() + 1,
+          year: currentDate.getFullYear(),
+        },
+      });
 
-  // =========================================================
-  // FILTER TASKS
-  // =========================================================
+      const result = response.data;
+      if (result.success === false) {
+        throw new Error(result.message || "Unable to load calendar");
+      }
 
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
-      const employeeMatch =
-        filters.employee === "All Employees" ||
-        task.employee === filters.employee;
-
-      const departmentMatch =
-        filters.department === "All Departments" ||
-        task.department === filters.department;
-
-      const projectMatch =
-        filters.project === "All Projects" ||
-        task.project === filters.project;
-
-      const eventTypeMatch =
-        filters.eventType === "All Events" ||
-        task.eventType === filters.eventType;
-
-      const statusMatch =
-        filters.status === "all" ||
-        task.status === filters.status;
-
-      return (
-        employeeMatch &&
-        departmentMatch &&
-        projectMatch &&
-        eventTypeMatch &&
-        statusMatch
+      const records = Array.isArray(result.data) ? result.data : [];
+      setTasks(records.map(normalizeTask));
+    } catch (error) {
+      console.error("Calendar API error:", error.response?.data || error);
+      setApiError(
+        error.response?.data?.message ||
+        error.message ||
+        "Unable to load calendar events"
       );
-    });
-  }, [filters]);
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentDate]);
 
-  // =========================================================
-  // GET TASKS FOR DATE
-  // =========================================================
+  useEffect(() => {
+    fetchCalendarEvents();
+  }, [fetchCalendarEvents]);
 
-  const getTasksForDate = (date) => {
-    return filteredTasks.filter((task) =>
-      isDateInTaskRange(date, task)
-    );
-  };
+  const filteredTasks = useMemo(() => tasks.filter((task) => {
+    const employeeMatch =
+      filters.employee === "All Employees" ||
+      task.employee === filters.employee;
+    const departmentMatch =
+      filters.department === "All Departments" ||
+      task.department === filters.department;
+    const projectMatch =
+      filters.project === "All Projects" ||
+      task.project === filters.project;
+    const typeMatch =
+      filters.eventType === "All Events" ||
+      task.eventType === filters.eventType;
+    const statusMatch =
+      filters.status === "all" ||
+      task.status === filters.status;
 
-  // =========================================================
-  // FILTER CHANGE
-  // =========================================================
-
-  const handleFilterChange = (field, value) => {
-    setFilters((previous) => ({
-      ...previous,
-      [field]: value,
-    }));
-  };
-
-  // =========================================================
-  // CLEAR FILTERS
-  // =========================================================
-
-  const clearFilters = () => {
-    setFilters({
-      employee: "All Employees",
-      department: "All Departments",
-      project: "All Projects",
-      eventType: "All Events",
-      status: "all",
-    });
-  };
-
-  // =========================================================
-  // CALENDAR DAYS
-  // =========================================================
+    return employeeMatch && departmentMatch &&
+      projectMatch && typeMatch && statusMatch;
+  }), [tasks, filters]);
 
   const calendarDays = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
-
-    const previousMonthLastDay = new Date(year, month, 0);
-
     const days = [];
 
-    // Previous month days
     for (let i = firstDay.getDay() - 1; i >= 0; i--) {
       days.push({
-        date: new Date(
-          year,
-          month - 1,
-          previousMonthLastDay.getDate() - i
-        ),
+        date: new Date(year, month - 1, firstDay.getDate() - i - 1),
         currentMonth: false,
       });
     }
 
-    // Current month days
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-      days.push({
-        date: new Date(year, month, i),
-        currentMonth: true,
-      });
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+      days.push({ date: new Date(year, month, day), currentMonth: true });
     }
 
-    // Next month days
-    const remainingDays = 42 - days.length;
-
-    for (let i = 1; i <= remainingDays; i++) {
+    let nextDay = 1;
+    while (days.length < 42) {
       days.push({
-        date: new Date(year, month + 1, i),
+        date: new Date(year, month + 1, nextDay++),
         currentMonth: false,
       });
     }
@@ -353,864 +186,388 @@ const Calendar = () => {
     return days;
   }, [currentDate]);
 
-  // =========================================================
-  // MONTH NAVIGATION
-  // =========================================================
+  const getTasksForDate = (date) => {
+    const current = formatDate(date);
 
-  const goToPreviousMonth = () => {
-    setCurrentDate(
-      new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() - 1,
-        1
-      )
-    );
+    return filteredTasks.filter((task) => {
+      const start = dateKey(task.startDate);
+      const end = dateKey(task.endDate);
+      return start && end && current >= start && current <= end;
+    });
   };
 
-  const goToNextMonth = () => {
-    setCurrentDate(
-      new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() + 1,
-        1
-      )
-    );
+  const updateFilter = (field, value) => {
+    setFilters((previous) => ({ ...previous, [field]: value }));
+  };
+
+  const clearFilters = () => setFilters({
+    employee: "All Employees",
+    department: "All Departments",
+    project: "All Projects",
+    eventType: "All Events",
+    status: "all",
+  });
+
+  const goToMonth = (offset) => {
+    setCurrentDate(new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + offset,
+      1
+    ));
   };
 
   const goToToday = () => {
-    setCurrentDate(
-      new Date(today.getFullYear(), today.getMonth(), 1)
-    );
+    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
   };
 
-  // =========================================================
-  // STATUS CLASS
-  // =========================================================
+  const uniqueOptions = (field) => [
+    ...new Set(tasks.map((task) => task[field]).filter(
+      (value) => value && value !== "—" && value !== "Unassigned"
+    )),
+  ];
 
-  const getStatusClass = (status) => {
-    switch (status) {
-      case "Completed":
-        return "calendar-status-completed";
-
-      case "In Progress":
-        return "calendar-status-progress";
-
-      case "Pending":
-        return "calendar-status-pending";
-
-      default:
-        return "";
-    }
-  };
-
-  // =========================================================
-  // PRIORITY CLASS
-  // =========================================================
-
-  const getPriorityClass = (priority) => {
-    switch (priority) {
-      case "High":
-        return "calendar-priority-high";
-
-      case "Medium":
-        return "calendar-priority-medium";
-
-      case "Low":
-        return "calendar-priority-low";
-
-      default:
-        return "";
-    }
-  };
-
-  // =========================================================
-  // UPCOMING TASKS
-  // =========================================================
-
-  const upcomingTasks = filteredTasks
-    .filter((task) => {
-      const endDate = new Date(task.endDate);
-      const todayDate = new Date(formatDate(today));
-
-      return (
-        endDate >= todayDate &&
-        task.status !== "Completed"
-      );
-    })
-    .sort(
-      (a, b) =>
-        new Date(a.endDate) - new Date(b.endDate)
-    )
-    .slice(0, 6);
-
-  // =========================================================
-  // OVERDUE TASKS
-  // =========================================================
+  const upcomingTasks = filteredTasks.filter((task) => {
+    const end = dateKey(task.endDate);
+    return end >= formatDate(today) && task.status !== "Completed";
+  }).sort((a, b) => dateKey(a.endDate).localeCompare(dateKey(b.endDate)));
 
   const overdueTasks = filteredTasks.filter((task) => {
-    const endDate = new Date(task.endDate);
-    const todayDate = new Date(formatDate(today));
-
-    return (
-      endDate < todayDate &&
-      task.status !== "Completed"
-    );
+    const end = dateKey(task.endDate);
+    return end && end < formatDate(today) && task.status !== "Completed";
   });
-
-  // =========================================================
-  // COMPLETED TASKS
-  // =========================================================
 
   const completedTasks = filteredTasks.filter(
     (task) => task.status === "Completed"
   );
 
+  const handleCreate = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setApiError("");
+
+    try {
+      const payload = {
+        ...form,
+        Project_ID: form.Project_ID || null,
+        Employee_ID: form.Employee_ID || null,
+        Assigned_Date: form.Assigned_Date || null,
+        Deadline: form.Deadline || null,
+        Start_Time: form.Start_Time || null,
+        End_Time: form.End_Time || null,
+      };
+
+      const response = await API.post("/calendar", payload);
+
+      if (response.data.success === false) {
+        throw new Error(response.data.message || "Unable to create event");
+      }
+
+      setShowForm(false);
+      setForm(EMPTY_FORM);
+      await fetchCalendarEvents();
+    } catch (error) {
+      setApiError(
+        error.response?.data?.message ||
+        error.message ||
+        "Unable to create calendar event"
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteTask = async (task) => {
+    if (!window.confirm(`Delete "${task.title}"?`)) return;
+
+    try {
+      await API.delete(`/calendar/${task.id}`);
+      setSelectedTask(null);
+      await fetchCalendarEvents();
+    } catch (error) {
+      setApiError(
+        error.response?.data?.message || "Unable to delete event"
+      );
+    }
+  };
+
   return (
-    <>
-      <AdminLayout>
-        <div className="admin-calendar-page">
-
-          {/* =====================================================
-          PAGE HEADER
-      ===================================================== */}
-
-          <div className="admin-calendar-header">
-
-            <div className="admin-calendar-header-left">
-
-              <div className="admin-calendar-title-icon">
-                <CalendarDays size={24} />
-              </div>
-
-              <div>
-                <h1>Calendar</h1>
-
-                <p>
-                  Track tasks, deadlines and project activities
-                </p>
-              </div>
-
-            </div>
-
-            <button
-              className="admin-calendar-today-btn"
-              onClick={goToToday}
-            >
-              <CalendarDays size={17} />
-              Today
+    <AdminLayout>
+      <div className="admin-calendar-page">
+        <header className="admin-calendar-header">
+          <div>
+            <h1><CalendarDays size={24} /> Calendar</h1>
+            <p>Track tasks, deadlines and project activities</p>
+          </div>
+          <div className="calendar-actions">
+            <button type="button" onClick={goToToday}>Today</button>
+            <button type="button" onClick={() => setShowForm(true)}>
+              <Plus size={16} /> Add Event
             </button>
-
           </div>
+        </header>
 
-          {/* =====================================================
-          FILTERS
-      ===================================================== */}
-
-          <div className="admin-calendar-filter-card">
-
-            <div className="admin-calendar-filter-header">
-
-              <div className="admin-calendar-filter-title">
-                <ListFilter size={19} />
-                <span>Filter Calendar</span>
-              </div>
-
-              <button
-                type="button"
-                className="admin-calendar-clear-btn"
-                onClick={clearFilters}
-              >
-                Clear Filters
-              </button>
-
-            </div>
-
-            <div className="admin-calendar-filters">
-
-              {/* Employee */}
-
-              <div className="admin-calendar-filter-group">
-
-                <label>Employee</label>
-
-                <select
-                  value={filters.employee}
-                  onChange={(e) =>
-                    handleFilterChange(
-                      "employee",
-                      e.target.value
-                    )
-                  }
-                >
-                  <option>All Employees</option>
-                  <option>Foram Patel</option>
-                  <option>Ishika Patel</option>
-                  <option>Nandini</option>
-                  <option>Dhruvi</option>
-                  <option>Gopika</option>
-                </select>
-
-              </div>
-
-              {/* Department */}
-
-              <div className="admin-calendar-filter-group">
-
-                <label>Department</label>
-
-                <select
-                  value={filters.department}
-                  onChange={(e) =>
-                    handleFilterChange(
-                      "department",
-                      e.target.value
-                    )
-                  }
-                >
-                  <option>All Departments</option>
-                  <option>Web Development</option>
-                  <option>Software Development</option>
-                  <option>Graphics Design</option>
-                </select>
-
-              </div>
-
-              {/* Project */}
-
-              <div className="admin-calendar-filter-group">
-
-                <label>Project</label>
-
-                <select
-                  value={filters.project}
-                  onChange={(e) =>
-                    handleFilterChange(
-                      "project",
-                      e.target.value
-                    )
-                  }
-                >
-                  <option>All Projects</option>
-                  <option>ABC Website</option>
-                  <option>Mobile Application</option>
-                  <option>Company Redesign</option>
-                </select>
-
-              </div>
-
-              {/* Event Type */}
-
-              <div className="admin-calendar-filter-group">
-
-                <label>Event Type</label>
-
-                <select
-                  value={filters.eventType}
-                  onChange={(e) =>
-                    handleFilterChange(
-                      "eventType",
-                      e.target.value
-                    )
-                  }
-                >
-                  <option>All Events</option>
-                  <option>Task</option>
-                  <option>Project Deadline</option>
-                  <option>Meeting</option>
-                </select>
-
-              </div>
-
-              {/* Status */}
-
-              <div className="admin-calendar-filter-group">
-
-                <label>Status</label>
-
-                <select
-                  value={filters.status}
-                  onChange={(e) =>
-                    handleFilterChange(
-                      "status",
-                      e.target.value
-                    )
-                  }
-                >
-                  <option value="all">All Status</option>
-                  <option value="Pending">Pending</option>
-                  <option value="In Progress">
-                    In Progress
-                  </option>
-                  <option value="Completed">
-                    Completed
-                  </option>
-                </select>
-
-              </div>
-
-            </div>
-
+        {apiError && (
+          <div className="calendar-empty-state" role="alert">
+            {apiError}
+            <button type="button" onClick={fetchCalendarEvents}>Retry</button>
           </div>
+        )}
+        {loading && <p>Loading calendar events...</p>}
 
-          {/* =====================================================
-          STAT CARDS
-      ===================================================== */}
-
-          <div className="admin-calendar-stats">
-
-            <div className="admin-calendar-stat-card">
-
-              <div className="calendar-stat-icon blue">
-                <ClipboardList size={21} />
-              </div>
-
-              <div>
-                <span>Total Tasks</span>
-                <strong>{filteredTasks.length}</strong>
-              </div>
-
-            </div>
-
-            <div className="admin-calendar-stat-card">
-
-              <div className="calendar-stat-icon orange">
-                <Clock3 size={21} />
-              </div>
-
-              <div>
-                <span>Upcoming</span>
-                <strong>{upcomingTasks.length}</strong>
-              </div>
-
-            </div>
-
-            <div className="admin-calendar-stat-card">
-
-              <div className="calendar-stat-icon red">
-                <AlertCircle size={21} />
-              </div>
-
-              <div>
-                <span>Overdue</span>
-                <strong>{overdueTasks.length}</strong>
-              </div>
-
-            </div>
-
-            <div className="admin-calendar-stat-card">
-
-              <div className="calendar-stat-icon green">
-                <CheckCircle2 size={21} />
-              </div>
-
-              <div>
-                <span>Completed</span>
-                <strong>{completedTasks.length}</strong>
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* =====================================================
-          MAIN CONTENT
-      ===================================================== */}
-
-          <div className="admin-calendar-layout">
-
-            {/* ===================================================
-            CALENDAR
-        =================================================== */}
-
-            <div className="admin-calendar-main">
-
-              {/* CALENDAR TOP */}
-
-              <div className="admin-calendar-toolbar">
-
-                <div className="admin-calendar-month">
-
-                  <button
-                    onClick={goToPreviousMonth}
-                    className="calendar-navigation-btn"
-                  >
-                    <ChevronLeft size={20} />
-                  </button>
-
-                  <h2>
-                    {monthNames[currentDate.getMonth()]}{" "}
-                    {currentDate.getFullYear()}
-                  </h2>
-
-                  <button
-                    onClick={goToNextMonth}
-                    className="calendar-navigation-btn"
-                  >
-                    <ChevronRight size={20} />
-                  </button>
-
-                </div>
-
-                <div className="calendar-legend">
-
-                  <span>
-                    <i className="legend-dot blue-dot"></i>
-                    In Progress
-                  </span>
-
-                  <span>
-                    <i className="legend-dot orange-dot"></i>
-                    Pending
-                  </span>
-
-                  <span>
-                    <i className="legend-dot green-dot"></i>
-                    Completed
-                  </span>
-
-                </div>
-
-              </div>
-
-              {/* WEEK DAYS */}
-
-              <div className="calendar-weekdays">
-
-                {dayNames.map((day) => (
-                  <div key={day}>
-                    {day}
-                  </div>
-                ))}
-
-              </div>
-
-              {/* CALENDAR GRID */}
-
-              <div className="calendar-grid">
-
-                {calendarDays.map(
-                  ({ date, currentMonth }, index) => {
-
-                    const dayTasks =
-                      getTasksForDate(date);
-
-                    return (
-                      <div
-                        key={index}
-                        className={`calendar-day ${!currentMonth
-                            ? "calendar-day-other-month"
-                            : ""
-                          } ${isToday(date)
-                            ? "calendar-day-today"
-                            : ""
-                          }`}
-                      >
-
-                        <div className="calendar-day-number">
-                          {date.getDate()}
-                        </div>
-
-                        <div className="calendar-day-tasks">
-
-                          {dayTasks
-                            .slice(0, 3)
-                            .map((task) => (
-                              <button
-                                key={task.id}
-                                className={`calendar-task ${getStatusClass(
-                                  task.status
-                                )}`}
-                                onClick={() =>
-                                  setSelectedTask(task)
-                                }
-                                title={task.title}
-                              >
-                                <span></span>
-                                {task.title}
-                              </button>
-                            ))}
-
-                          {dayTasks.length > 3 && (
-                            <div className="calendar-more-tasks">
-                              +{dayTasks.length - 3} more
-                            </div>
-                          )}
-
-                        </div>
-
-                      </div>
-                    );
-                  }
+        <section className="admin-calendar-filter-card">
+          <div className="admin-calendar-filters">
+            <label>
+              Employee
+              <select value={filters.employee}
+                onChange={(e) => updateFilter("employee", e.target.value)}>
+                <option>All Employees</option>
+                {uniqueOptions("employee").map((value) =>
+                  <option key={value}>{value}</option>
                 )}
+              </select>
+            </label>
 
-              </div>
+            <label>
+              Department
+              <select value={filters.department}
+                onChange={(e) => updateFilter("department", e.target.value)}>
+                <option>All Departments</option>
+                {uniqueOptions("department").map((value) =>
+                  <option key={value}>{value}</option>
+                )}
+              </select>
+            </label>
 
+            <label>
+              Project
+              <select value={filters.project}
+                onChange={(e) => updateFilter("project", e.target.value)}>
+                <option>All Projects</option>
+                {uniqueOptions("project").map((value) =>
+                  <option key={value}>{value}</option>
+                )}
+              </select>
+            </label>
+
+            <label>
+              Event Type
+              <select value={filters.eventType}
+                onChange={(e) => updateFilter("eventType", e.target.value)}>
+                <option>All Events</option>
+                {uniqueOptions("eventType").map((value) =>
+                  <option key={value}>{value}</option>
+                )}
+              </select>
+            </label>
+
+            <label>
+              Status
+              <select value={filters.status}
+                onChange={(e) => updateFilter("status", e.target.value)}>
+                <option value="all">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="Overdue">Overdue</option>
+              </select>
+            </label>
+
+            <button type="button" onClick={clearFilters}>Clear Filters</button>
+          </div>
+        </section>
+
+        <section className="admin-calendar-stats">
+          <div className="admin-calendar-stat-card">
+            <ClipboardList /> <span>Total Events</span>
+            <strong>{filteredTasks.length}</strong>
+          </div>
+          <div className="admin-calendar-stat-card">
+            <Clock3 /> <span>Upcoming</span>
+            <strong>{upcomingTasks.length}</strong>
+          </div>
+          <div className="admin-calendar-stat-card">
+            <AlertCircle /> <span>Overdue</span>
+            <strong>{overdueTasks.length}</strong>
+          </div>
+          <div className="admin-calendar-stat-card">
+            <CheckCircle2 /> <span>Completed</span>
+            <strong>{completedTasks.length}</strong>
+          </div>
+        </section>
+
+        <section className="admin-calendar-main">
+          <div className="admin-calendar-toolbar">
+            <div className="admin-calendar-month">
+              <button type="button" onClick={() => goToMonth(-1)}>
+                <ChevronLeft />
+              </button>
+              <h2>
+                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+              </h2>
+              <button type="button" onClick={() => goToMonth(1)}>
+                <ChevronRight />
+              </button>
             </div>
+          </div>
 
-            {/* ===================================================
-            RIGHT SIDEBAR
-        =================================================== */}
+          <div className="calendar-weekdays">
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) =>
+              <div key={day}>{day}</div>
+            )}
+          </div>
 
-            <div className="admin-calendar-sidebar">
+          <div className="calendar-grid">
+            {calendarDays.map(({ date, currentMonth }, index) => {
+              const dayTasks = getTasksForDate(date);
+              const isToday = formatDate(date) === formatDate(today);
 
-              {/* UPCOMING */}
-
-              <div className="calendar-side-card">
-
-                <div className="calendar-side-header">
-
-                  <div>
-                    <h3>Upcoming Deadlines</h3>
-                    <p>Tasks that need attention</p>
-                  </div>
-
-                  <Clock3 size={20} />
-
-                </div>
-
-                <div className="upcoming-task-list">
-
-                  {upcomingTasks.length > 0 ? (
-                    upcomingTasks.map((task) => (
-                      <button
-                        key={task.id}
-                        className="upcoming-task-item"
-                        onClick={() =>
-                          setSelectedTask(task)
-                        }
-                      >
-
-                        <div
-                          className={`upcoming-task-date ${getPriorityClass(
-                            task.priority
-                          )}`}
-                        >
-                          <span>
-                            {new Date(
-                              task.endDate
-                            ).getDate()}
-                          </span>
-
-                          <small>
-                            {monthNames[
-                              new Date(
-                                task.endDate
-                              ).getMonth()
-                            ].substring(0, 3)}
-                          </small>
-                        </div>
-
-                        <div className="upcoming-task-info">
-
-                          <strong>{task.title}</strong>
-
-                          <span>
-                            <CalendarDays size={13} />
-                            Due:{" "}
-                            {new Date(
-                              task.endDate
-                            ).toLocaleDateString(
-                              "en-IN",
-                              {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              }
-                            )}
-                          </span>
-
-                          <span>
-                            <User size={13} />
-                            {task.employee}
-                          </span>
-
-                        </div>
-
-                        <ChevronRight size={17} />
-
-                      </button>
-                    ))
-                  ) : (
-                    <div className="calendar-empty-state">
-                      No upcoming deadlines
-                    </div>
-                  )}
-
-                </div>
-
-              </div>
-
-              {/* OVERDUE */}
-
-              <div className="calendar-side-card overdue-card">
-
-                <div className="calendar-side-header">
-
-                  <div>
-                    <h3>Overdue Tasks</h3>
-                    <p>Tasks past their deadline</p>
-                  </div>
-
-                  <AlertCircle size={20} />
-
-                </div>
-
-                {overdueTasks.length > 0 ? (
-                  <div className="overdue-list">
-
-                    {overdueTasks.map((task) => (
-                      <button
-                        key={task.id}
-                        className="overdue-item"
-                        onClick={() =>
-                          setSelectedTask(task)
-                        }
-                      >
-
-                        <div className="overdue-icon">
-                          <AlertCircle size={17} />
-                        </div>
-
-                        <div>
-
-                          <strong>{task.title}</strong>
-
-                          <span>
-                            Due:{" "}
-                            {new Date(
-                              task.endDate
-                            ).toLocaleDateString(
-                              "en-IN",
-                              {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              }
-                            )}
-                          </span>
-
-                        </div>
-
+              return (
+                <div key={index} className={[
+                  "calendar-day",
+                  !currentMonth ? "calendar-day-other-month" : "",
+                  isToday ? "calendar-day-today" : "",
+                ].join(" ")}>
+                  <div className="calendar-day-number">{date.getDate()}</div>
+                  <div className="calendar-day-tasks">
+                    {dayTasks.slice(0, 3).map((task) => (
+                      <button type="button" key={task.id}
+                        className={`calendar-task calendar-status-${task.status.toLowerCase().replaceAll(" ", "-")}`}
+                        title={task.title}
+                        onClick={() => setSelectedTask(task)}>
+                        {task.title}
                       </button>
                     ))}
-
+                    {dayTasks.length > 3 &&
+                      <span>+{dayTasks.length - 3} more</span>}
                   </div>
-                ) : (
-                  <div className="no-overdue">
-                    <CheckCircle2 size={28} />
-                    <span>No overdue tasks</span>
-                  </div>
-                )}
-
-              </div>
-
-            </div>
-
+                </div>
+              );
+            })}
           </div>
+        </section>
 
-          {/* =====================================================
-          TASK MODAL
-      ===================================================== */}
+        <section className="calendar-side-card">
+          <h3>Upcoming Deadlines</h3>
+          {upcomingTasks.slice(0, 6).map((task) => (
+            <button type="button" className="upcoming-task-item"
+              key={task.id} onClick={() => setSelectedTask(task)}>
+              <CalendarDays size={17} />
+              <span>{task.title} — {dateKey(task.endDate)}</span>
+              <ChevronRight size={16} />
+            </button>
+          ))}
+          {!upcomingTasks.length && <p>No upcoming deadlines</p>}
+        </section>
 
-          {selectedTask && (
-            <div
-              className="calendar-modal-overlay"
-              onClick={() => setSelectedTask(null)}
-            >
+        {showForm && (
+          <div className="calendar-modal-overlay">
+            <form className="calendar-task-modal" onSubmit={handleCreate}>
+              <button type="button" className="calendar-modal-close"
+                onClick={() => setShowForm(false)}><X /></button>
+              <h2>Add Calendar Event</h2>
 
-              <div
-                className="calendar-task-modal"
-                onClick={(e) =>
-                  e.stopPropagation()
-                }
-              >
+              <label>Event Title *
+                <input required value={form.Event_Title}
+                  onChange={(e) => setForm({ ...form, Event_Title: e.target.value })} />
+              </label>
 
-                <button
-                  className="calendar-modal-close"
-                  onClick={() =>
-                    setSelectedTask(null)
-                  }
-                >
-                  <X size={20} />
-                </button>
+              <label>Event Type
+                <select value={form.Event_Type}
+                  onChange={(e) => setForm({ ...form, Event_Type: e.target.value })}>
+                  <option>Project Deadline</option>
+                  <option>Task</option>
+                  <option>Meeting</option>
+                </select>
+              </label>
 
-                <div className="calendar-modal-icon">
-                  <ClipboardList size={24} />
-                </div>
+              <label>Project ID
+                <input type="number" min="1" value={form.Project_ID}
+                  onChange={(e) => setForm({ ...form, Project_ID: e.target.value })} />
+              </label>
 
-                <div className="calendar-modal-heading">
+              <label>Created By * (Admin ID)
+                <input required type="number" min="1" value={form.Created_By}
+                  onChange={(e) => setForm({ ...form, Created_By: e.target.value })} />
+              </label>
 
-                  <span>Task Details</span>
+              <label>Employee ID (optional)
+                <input type="number" min="1" value={form.Employee_ID}
+                  onChange={(e) => setForm({ ...form, Employee_ID: e.target.value })} />
+              </label>
 
-                  <h2>
-                    {selectedTask.title}
-                  </h2>
+              <label>Start / Assigned Date
+                <input type="date" value={form.Assigned_Date}
+                  onChange={(e) => setForm({ ...form, Assigned_Date: e.target.value })} />
+              </label>
 
-                </div>
+              <label>Event Date *
+                <input required type="date" value={form.Event_Date}
+                  onChange={(e) => setForm({ ...form, Event_Date: e.target.value })} />
+              </label>
 
-                <div className="calendar-modal-status-row">
+              <label>Deadline
+                <input type="date" value={form.Deadline}
+                  onChange={(e) => setForm({ ...form, Deadline: e.target.value })} />
+              </label>
 
-                  <span
-                    className={`task-detail-status ${getStatusClass(
-                      selectedTask.status
-                    )}`}
-                  >
-                    <CircleDot size={14} />
-                    {selectedTask.status}
-                  </span>
+              <label>Start Time
+                <input type="time" value={form.Start_Time}
+                  onChange={(e) => setForm({ ...form, Start_Time: e.target.value })} />
+              </label>
 
-                  <span
-                    className={`task-detail-priority ${getPriorityClass(
-                      selectedTask.priority
-                    )}`}
-                  >
-                    <Flag size={14} />
-                    {selectedTask.priority} Priority
-                  </span>
+              <label>End Time
+                <input type="time" value={form.End_Time}
+                  onChange={(e) => setForm({ ...form, End_Time: e.target.value })} />
+              </label>
 
-                </div>
+              <label>Status
+                <select value={form.Status}
+                  onChange={(e) => setForm({ ...form, Status: e.target.value })}>
+                  <option value="Scheduled">Scheduled</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </label>
 
-                <div className="calendar-modal-description">
+              <label>Description
+                <textarea value={form.Description}
+                  onChange={(e) => setForm({ ...form, Description: e.target.value })} />
+              </label>
 
-                  <label>Description</label>
+              <button type="submit" disabled={saving}>
+                {saving ? "Saving..." : "Create Event"}
+              </button>
+            </form>
+          </div>
+        )}
 
-                  <p>
-                    {selectedTask.description}
-                  </p>
-
-                </div>
-
-                <div className="calendar-task-details-grid">
-
-                  <div className="calendar-detail-box">
-
-                    <span>
-                      <CalendarDays size={16} />
-                      Start Date
-                    </span>
-
-                    <strong>
-                      {new Date(
-                        selectedTask.startDate
-                      ).toLocaleDateString(
-                        "en-IN",
-                        {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        }
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <div className="calendar-detail-box">
-
-                    <span>
-                      <CalendarDays size={16} />
-                      End Date
-                    </span>
-
-                    <strong>
-                      {new Date(
-                        selectedTask.endDate
-                      ).toLocaleDateString(
-                        "en-IN",
-                        {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        }
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <div className="calendar-detail-box">
-
-                    <span>
-                      <User size={16} />
-                      Assigned To
-                    </span>
-
-                    <strong>
-                      {selectedTask.employee}
-                    </strong>
-
-                  </div>
-
-                  <div className="calendar-detail-box">
-
-                    <span>
-                      <Flag size={16} />
-                      Priority
-                    </span>
-
-                    <strong>
-                      {selectedTask.priority}
-                    </strong>
-
-                  </div>
-
-                  <div className="calendar-detail-box">
-
-                    <span>
-                      <ClipboardList size={16} />
-                      Department
-                    </span>
-
-                    <strong>
-                      {selectedTask.department}
-                    </strong>
-
-                  </div>
-
-                  <div className="calendar-detail-box">
-
-                    <span>
-                      <ClipboardList size={16} />
-                      Project
-                    </span>
-
-                    <strong>
-                      {selectedTask.project}
-                    </strong>
-
-                  </div>
-
-                  <div className="calendar-detail-box">
-
-                    <span>
-                      <CircleDot size={16} />
-                      Event Type
-                    </span>
-
-                    <strong>
-                      {selectedTask.eventType}
-                    </strong>
-
-                  </div>
-
-                </div>
-
-                <button
-                  className="calendar-modal-done-btn"
-                  onClick={() =>
-                    setSelectedTask(null)
-                  }
-                >
-                  Close
-                </button>
-
-              </div>
-
+        {selectedTask && (
+          <div className="calendar-modal-overlay"
+            onClick={() => setSelectedTask(null)}>
+            <div className="calendar-task-modal"
+              onClick={(e) => e.stopPropagation()}>
+              <button type="button" className="calendar-modal-close"
+                onClick={() => setSelectedTask(null)}><X /></button>
+              <h2>{selectedTask.title}</h2>
+              <p>{selectedTask.description || "No description"}</p>
+              <p><CalendarDays size={16} /> Start: {dateKey(selectedTask.startDate) || "—"}</p>
+              <p><CalendarDays size={16} /> Deadline: {dateKey(selectedTask.endDate) || "—"}</p>
+              <p><User size={16} /> Employee: {selectedTask.employee}</p>
+              <p>Department: {selectedTask.department}</p>
+              <p>Project: {selectedTask.project}</p>
+              <p>Type: {selectedTask.eventType}</p>
+              <p>Status: {selectedTask.status}</p>
+              <button type="button" onClick={() => deleteTask(selectedTask)}>
+                Delete Event
+              </button>
+              <button type="button" onClick={() => setSelectedTask(null)}>
+                Close
+              </button>
             </div>
-          )}
-
-        </div>
-      </AdminLayout>
-
-    </>
+          </div>
+        )}
+      </div>
+    </AdminLayout>
   );
 };
 

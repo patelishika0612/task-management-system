@@ -97,11 +97,7 @@ useEffect(() => {
         if (employeeData?.image) {
           let imageUrl = employeeData.image;
 
-          // API base URL:
-          // http://localhost:5000/api
-          //
-          // Backend URL:
-          // http://localhost:5000
+     
 
           const backendUrl =
             API.defaults.baseURL.replace("/api", "");
@@ -205,7 +201,7 @@ useEffect(() => {
 
     setDropdownOpen(false);
 
-    navigate("/adduser");
+    navigate("/company-profile");
   };
 
   // =====================================================
@@ -473,7 +469,7 @@ useEffect(() => {
 
                 {/* SETTINGS */}
 
-                <button
+               {/* <button
                   type="button"
                   className="admin-dropdown-item"
                   onClick={
@@ -489,7 +485,7 @@ useEffect(() => {
                     Settings
                   </span>
 
-                </button>
+                </button> */} 
 
                 {/* DIVIDER */}
 

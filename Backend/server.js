@@ -7,9 +7,7 @@ import helmet from "helmet";
 import path from "path";
 import { fileURLToPath } from "url";
 import connection from "./db.js";
-// import "./db.js";
 
-// Routes
 import departmentRoutes from "./routes/departmentRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
@@ -19,39 +17,85 @@ import clientRoutes from "./routes/clientRoutes.js";
 import adminAccessRequestRoutes from "./routes/adminAccessRequestRoutes.js";
 import adminApprovalRequestRoutes from "./routes/adminApprovalRequestRoutes.js";
 import adminLoginRoutes from "./routes/adminLoginRoutes.js";
+import calendarRoutes from "./routes/calendarRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
 // =====================================================
-// __dirname for ES Module
+// DIRNAME FOR ES MODULE
 // =====================================================
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // =====================================================
-// SECURITY & MIDDLEWARE
+// ALLOWED FRONTEND ORIGINS
+// =====================================================
+
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://task.dnsoftech.in",
+    "https://task.dnsoftech.in",
+];
+
+// =====================================================
+// SECURITY MIDDLEWARE
 // =====================================================
 
 app.use(
     helmet({
-        // allow the frontend (different port) to load images from /uploads
-        crossOriginResourcePolicy: { policy: "cross-origin" }
+        crossOriginResourcePolicy: {
+            policy: "cross-origin",
+        },
     })
 );
+
+// =====================================================
+// CORS
+// =====================================================
 
 app.use(
     cors({
-        origin: "*",
-        methods: ["GET", "POST", "PUT", "DELETE"],
-        allowedHeaders: ["Content-Type", "Authorization"]
+        origin: (origin, callback) => {
+            // Allow requests without an Origin header,
+            // such as server-to-server and some API tools.
+            if (!origin || allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+
+            return callback(
+                new Error("CORS policy: Origin not allowed")
+            );
+        },
+        methods: [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS",
+        ],
+        allowedHeaders: [
+            "Content-Type",
+            "Authorization",
+        ],
     })
 );
 
+// =====================================================
+// BODY PARSERS
+// =====================================================
+
 app.use(express.json({ limit: "5mb" }));
-app.use(express.urlencoded({ extended: true, limit: "5mb" }));
+
+app.use(
+    express.urlencoded({
+        extended: true,
+        limit: "5mb",
+    })
+);
 
 // =====================================================
 // STATIC UPLOADS
@@ -63,21 +107,32 @@ app.use(
 );
 
 // =====================================================
-// ROUTES
+// API ROUTES
 // =====================================================
 
-app.use("/api/departments", departmentRoutes);
-app.use("/api/employees",employeeRoutes);
+app.use("/api/departments", (req, res, next) => {
+    console.log("Departments request received");
+    next();
+}, departmentRoutes);
+app.use("/api/employees", employeeRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/project-members", projectMemberRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/clients", clientRoutes);
-app.use("/api/admin-access-requests", adminAccessRequestRoutes);
-app.use("/api/admin-approval-requests",adminApprovalRequestRoutes);
+
 app.use(
-    "/api/admin-login",
-    adminLoginRoutes
+    "/api/admin-access-requests",
+    adminAccessRequestRoutes
 );
+
+app.use(
+    "/api/admin-approval-requests",
+    adminApprovalRequestRoutes
+);
+
+app.use("/api/admin-login", adminLoginRoutes);
+
+app.use("/api/calendar", calendarRoutes);
 
 // =====================================================
 // TEST API
@@ -86,7 +141,7 @@ app.use(
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,
-        message: "Task Management API is running"
+        message: "Task Management API is running",
     });
 });
 
@@ -97,7 +152,7 @@ app.get("/", (req, res) => {
 app.use((req, res) => {
     res.status(404).json({
         success: false,
-        message: "API route not found"
+        message: "API route not found",
     });
 });
 
@@ -106,19 +161,27 @@ app.use((req, res) => {
 // =====================================================
 
 app.use((err, req, res, next) => {
+    if (err.message?.startsWith("CORS policy:")) {
+        return res.status(403).json({
+            success: false,
+            message: "Origin not allowed",
+        });
+    }
+
     console.error("Server Error:", err);
 
     res.status(500).json({
         success: false,
-        message: "Internal server error"
+        message: "Internal server error",
     });
-});// =====================================================
-// START HTTP SERVER
+});
+
+// =====================================================
+// CREATE HTTP SERVER
 // =====================================================
 
 const PORT = process.env.PORT || 5000;
 
-// Create HTTP server
 const server = http.createServer(app);
 
 // =====================================================
@@ -127,9 +190,9 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173",
-        methods: ["GET", "POST"]
-    }
+        origin: allowedOrigins,
+        methods: ["GET", "POST"],
+    },
 });
 
 // =====================================================
@@ -137,53 +200,38 @@ const io = new Server(server, {
 // =====================================================
 
 io.on("connection", (socket) => {
-
-    console.log(
-        "Admin connected:",
-        socket.id
-    );
+    console.log("Admin socket connected:", socket.id);
 
     socket.on("admin-authenticated", async (adminId) => {
-
         try {
-
-            const [admins] =
-                await connection.promise().query(
-                    `
-                    SELECT id
-                    FROM admin_login
-                    WHERE id = ?
-                    LIMIT 1
-                    `,
-                    [adminId]
-                );
+            const [admins] = await connection.promise().query(
+                `
+                SELECT id
+                FROM admin_login
+                WHERE id = ?
+                LIMIT 1
+                `,
+                [adminId]
+            );
 
             if (admins.length === 0) {
-
                 console.log(
-                    `❌ Admin ${adminId} does not exist`
+                    `Admin ${adminId} does not exist`
                 );
 
-                socket.emit(
-                    "adminDeleted",
-                    {
-                        adminId: Number(adminId),
-                        message:
-                            "Your admin account no longer exists."
-                    }
-                );
+                socket.emit("adminDeleted", {
+                    adminId: Number(adminId),
+                    message:
+                        "Your admin account no longer exists.",
+                });
 
                 return;
             }
 
             socket.join(`admin-${adminId}`);
 
-            console.log(
-                `Admin ${adminId} connected`
-            );
-
+            console.log(`Admin ${adminId} connected`);
         } catch (error) {
-
             console.error(
                 "Admin socket authentication error:",
                 error.message
@@ -192,12 +240,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", () => {
-
-        console.log(
-            "Admin disconnected:",
-            socket.id
-        );
-
+        console.log("Admin socket disconnected:", socket.id);
     });
 });
 
@@ -222,42 +265,33 @@ const checkDeletedAdmins = async () => {
             admins.map((admin) => String(admin.id))
         );
 
-        // First database check
+        // Initialize the first database snapshot
         if (!isAdminWatcherInitialized) {
             previousAdmins = currentAdmins;
             isAdminWatcherInitialized = true;
 
-            console.log(
-                "✅ Admin watcher initialized:",
-                [...currentAdmins]
-            );
+            console.log("Admin watcher initialized");
 
             return;
         }
 
-        // Check deleted admins
+        // Notify admins who have been deleted
         for (const adminId of previousAdmins) {
-
             if (!currentAdmins.has(adminId)) {
-
-                console.log(
-                    `❌ Admin ${adminId} deleted`
-                );
+                console.log(`Admin ${adminId} deleted`);
 
                 io.to(`admin-${adminId}`).emit(
                     "adminDeleted",
                     {
                         adminId: Number(adminId),
                         message:
-                            "Your admin account has been deleted."
+                            "Your admin account has been deleted.",
                     }
                 );
             }
         }
 
-        // Update admin list
         previousAdmins = currentAdmins;
-
     } catch (error) {
         console.error(
             "Admin watcher error:",
@@ -266,15 +300,38 @@ const checkDeletedAdmins = async () => {
     }
 };
 
-setInterval(() => {
-    checkDeletedAdmins();
-}, 1000);
+// Check for deleted admins every 5 seconds
+const watcherInterval = setInterval(
+    checkDeletedAdmins,
+    5000
+);
+
 // =====================================================
 // START SERVER
 // =====================================================
 
 server.listen(PORT, () => {
-    console.log(
-        `🚀 Server running on http://localhost:${PORT}`
-    );
+    console.log(`Server running on port ${PORT}`);
 });
+
+// =====================================================
+// GRACEFUL SHUTDOWN
+// =====================================================
+
+const shutdown = () => {
+    clearInterval(watcherInterval);
+
+    server.close(() => {
+        console.log("HTTP server closed");
+
+        connection.end((error) => {
+            if (error) {
+                console.error("Database pool close error:", error.message);
+            }
+
+            process.exit(error ? 1 : 0);
+        });
+    });
+};
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
