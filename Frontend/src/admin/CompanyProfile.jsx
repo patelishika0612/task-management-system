@@ -81,9 +81,9 @@ const CONTACT = {
 // COMPONENT
 // =====================================================
 
-const CompanyProfile = () => {
+const CompanyProfile = ({ layout: Layout = AdminLayout }) => {
     return (
-        <AdminLayout>
+        <Layout>
 
             <div className="cp-page">
 
@@ -299,7 +299,7 @@ const CompanyProfile = () => {
 
             </div>
 
-        </AdminLayout>
+        </Layout>
     );
 };
 

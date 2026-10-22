@@ -233,6 +233,45 @@
   font-size: 11px;
 }
 
+/* when the option is a <button> (client dropdown), reset native button styles */
+button.proj-emp-option {
+  width: 100%;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
+}
+
+button.proj-emp-option:hover { background: #f1f5f9; }
+
+/* Override global .admin-field input styles inside the dropdown */
+.admin-field .proj-emp-search input {
+  width: auto;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  font-size: 13px;
+}
+
+.admin-field .proj-emp-option input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  padding: 0;
+  margin: 0;
+  border-radius: 3px;
+  box-shadow: none;
+}
+
+.admin-field .proj-emp-option small {
+  font-size: 11px;
+  line-height: 1;
+}
+
 /* select all row */
 .proj-emp-select-all {
   border-bottom: 1px solid #edf0f5;

@@ -13,31 +13,30 @@ const promiseDb = db.promise();
 
 const getAllProjectMembers = async (req, res) => {
     try {
-        const [rows] = await promiseDb.query(`
-            SELECT
-                pm.Project_Member_ID AS id,
-                pm.Project_ID AS project_id,
-                p.proj_name,
+      const [rows] = await promiseDb.query(`
+    SELECT
+        pm.id AS id,
+        pm.project_id AS project_id,
+        p.proj_name,
 
-                pm.emp_ID AS employee_id,
-                e.emp_id,
-                e.employee_code,
-                e.emp_name,
-                e.email,
+        pm.employee_id AS employee_id,
+        e.emp_id,
+        e.employee_code,
+        e.emp_name,
+        e.email,
 
-                pm.Assigned_Date AS assigned_at
+        pm.assigned_at AS assigned_at
 
-            FROM project_members pm
+    FROM project_members pm
 
-            LEFT JOIN projects p
-                ON pm.Project_ID = p.project_id
+    LEFT JOIN projects p
+        ON pm.project_id = p.project_id
 
-            LEFT JOIN employe e
-                ON pm.emp_ID = e.emp_id
+    LEFT JOIN employe e
+        ON pm.employee_id = e.emp_id
 
-            ORDER BY pm.Project_Member_ID DESC
-        `);
-
+    ORDER BY pm.id DESC
+`);
         return res.status(200).json({
             success: true,
             count: rows.length,

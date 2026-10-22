@@ -423,6 +423,41 @@
   font-size: 11px;
 }
 
+/* Override global .admin-field input styles inside the dropdown */
+.admin-field .task-drop-search input {
+  width: auto;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  font-size: 13px;
+}
+
+.admin-field .task-drop-option span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-field .task-drop-option input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  margin: 0 !important;
+  padding: 0;
+  flex-shrink: 0;
+  border-radius: 3px;
+  box-shadow: none;
+  accent-color: rgb(47, 51, 135);
+  cursor: pointer;
+}
+
+.admin-field .task-drop-option small {
+  font-size: 11px;
+  line-height: 1;
+}
+
 .task-drop-empty {
   padding: 14px;
   text-align: center;
