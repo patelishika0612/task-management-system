@@ -33,6 +33,7 @@ import {
 } from "chart.js";
 import "./AdminDashboard.css";
 import AdminLayout from "../components/AdminLayout";
+import DirectChat from "../components/DirectChat";
 
 Chart.register(
     CategoryScale,
@@ -48,6 +49,9 @@ Chart.register(
 );
 
 const AdminDashboard = () => {
+
+    const adminId = localStorage.getItem("adminId");
+    const token = localStorage.getItem("token");
 
     const performanceChartRef = useRef(null);
     const workloadChartRef = useRef(null);
@@ -868,6 +872,15 @@ const AdminDashboard = () => {
                 </section>
 
             </div>
+
+            <section style={{ marginTop: "24px" }}>
+                <DirectChat
+                    currentUserId={adminId}
+                    contacts={employees}
+                    token={token}
+                />
+            </section>
+
         </AdminLayout>
     );
 };

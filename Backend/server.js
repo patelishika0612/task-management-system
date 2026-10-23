@@ -18,6 +18,7 @@ import adminAccessRequestRoutes from "./routes/adminAccessRequestRoutes.js";
 import adminApprovalRequestRoutes from "./routes/adminApprovalRequestRoutes.js";
 import adminLoginRoutes from "./routes/adminLoginRoutes.js";
 import calendarRoutes from "./routes/calendarRoutes.js";
+import directChatRoutes from "./routes/directChat.js";
 
 dotenv.config();
 
@@ -133,6 +134,8 @@ app.use(
 app.use("/api/admin-login", adminLoginRoutes);
 
 app.use("/api/calendar", calendarRoutes);
+app.use("/api/calendar", calendarRoutes);
+app.use("/api/chat", directChatRoutes);
 
 // =====================================================
 // TEST API
@@ -195,6 +198,8 @@ const io = new Server(server, {
     },
 });
 
+app.set("io", io);
+
 // =====================================================
 // CONNECTED ADMINS
 // =====================================================
@@ -242,6 +247,59 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => {
         console.log("Admin socket disconnected:", socket.id);
     });
+
+    // =====================================================
+    // DIRECT CHAT SOCKET EVENTS
+    // =====================================================
+
+    socket.on("chat:join", async (data, callback = () => { }) => {
+        try {
+            const conversationId = Number(data?.conversationId);
+
+            if (!Number.isInteger(conversationId) || conversationId <= 0) {
+                return callback({
+                    ok: false,
+                    message: "Invalid conversation ID",
+                });
+            }
+
+            // TODO: અહીં તમારા actual logged-in user ની
+            // identity verify કરીને membership ચકાસવી જરૂરી છે.
+            // માત્ર client દ્વારા મોકલેલી user ID પર વિશ્વાસ ન કરવો.
+
+            const [members] = await connection.promise().query(
+                `
+            SELECT user_id
+            FROM chat_conversation_members
+            WHERE conversation_id = ?
+            `,
+                [conversationId]
+            );
+
+            // નોંધ: હાલના Admin Socket માં socket.user નથી.
+            // નીચેનું membership authorization જોડવા માટે
+            // authenticated user ID server-side પર ઉપલબ્ધ હોવી જોઈએ.
+
+            if (!members.length) {
+                return callback({
+                    ok: false,
+                    message: "Conversation not found",
+                });
+            }
+
+            socket.join(`conversation:${conversationId}`);
+
+            callback({ ok: true });
+        } catch (error) {
+            console.error("Chat socket join error:", error);
+
+            callback({
+                ok: false,
+                message: "Unable to join conversation",
+            });
+        }
+    });
+
 });
 
 // =====================================================
