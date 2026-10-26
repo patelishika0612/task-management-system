@@ -290,6 +290,60 @@
 .task-status-completed { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
 .task-status-overdue   { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
 
+/* ── Selected employee chips ── */
+.task-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.task-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  height: 28px;
+  padding: 0 4px 0 10px;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.task-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-modal .task-chip .task-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #6366f1;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.admin-modal .task-chip .task-chip-remove:hover {
+  background: #c7d2fe;
+  color: #312e81;
+}
+
 /* ── Searchable single-select dropdown ── */
 .task-drop {
   position: relative;

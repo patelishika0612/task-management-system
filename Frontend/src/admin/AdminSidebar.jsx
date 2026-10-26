@@ -16,8 +16,10 @@ import {
   X,
   LogOut,
   ChevronRight,
+  MessageCircle,
 } from "lucide-react";
 
+import ChatSidebarBadge from "../components/ChatSidebarBadge";
 import "./AdminSidebar.css";
 
 const Sidebar = () => {
@@ -80,6 +82,12 @@ const Sidebar = () => {
       icon: <CalendarDays size={19} strokeWidth={2} />,
     },
     {
+      title: "Chat",
+      path: "/chat",
+      icon: <MessageCircle size={19} strokeWidth={2} />,
+      badge: <ChatSidebarBadge role="admin" />,
+    },
+    {
       title: "Clients",
       path: "/clients",
       icon: <UserRound size={19} strokeWidth={2} />,
@@ -108,6 +116,7 @@ const Sidebar = () => {
   // -----------------------------------------
   const handleLogout = () => {
     localStorage.clear();
+    sessionStorage.removeItem("adminData");
     navigate("/login");
   };
 
@@ -190,6 +199,8 @@ const Sidebar = () => {
                     <span className="admin-sidebar-label">
                       {item.title}
                     </span>
+
+                    {item.badge}
 
                     <span className="admin-sidebar-arrow">
                         <ChevronRight size={16} />

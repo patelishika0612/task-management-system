@@ -30,14 +30,16 @@ import AdminDashboard from "./admin/AdminDashboard";
 import EmployeeDashboard from "./employee/EmployeeDashboard";
 import EmployeeProject from "./employee/EmployeeProject";
 import EmployeeLayout from "./components/EmployeeLayout";
+import AdminLayout from "./components/AdminLayout";
+import ChatPage from "./admin/ChatPage";
 
 // Use production backend URL in production.
-// Set VITE_API_BASE_URL or VITE_API_URL in your frontend environment.
+// Set VITE_API_URL or VITE_API_URL in your frontend environment.
 const SOCKET_URL = (
     import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
     "http://localhost:5000"
-).replace(/\/api\/?$/, "").replace(/\/+$/, "");
+).replace(/\/api\/?$/, "").replace(/\/+$/, "");    
 
 // Protected route: admin login required
 const ProtectedRoute = ({ children }) => {
@@ -109,6 +111,7 @@ function App() {
 
                 localStorage.removeItem("adminToken");
                 localStorage.removeItem("adminData");
+                sessionStorage.removeItem("adminData");
                 localStorage.removeItem("adminEmail");
 
                 socket.disconnect();
@@ -264,6 +267,26 @@ function App() {
                 element={
                     <ProtectedRoute>
                         <Calendar />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Chat (admin) */}
+            <Route
+                path="/chat"
+                element={
+                    <ProtectedRoute>
+                        <ChatPage layout={AdminLayout} role="admin" />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Chat (employee / HR) */}
+            <Route
+                path="/employee-chat"
+                element={
+                    <ProtectedRoute>
+                        <ChatPage layout={EmployeeLayout} role="employee" />
                     </ProtectedRoute>
                 }
             />

@@ -16,8 +16,10 @@ import {
   X,
   LogOut,
   ChevronRight,
+  MessageCircle,
 } from "lucide-react";
 
+import ChatSidebarBadge from "../components/ChatSidebarBadge";
 import "./EmployeeSidebar.css";
 
 const EmployeeSidebar = () => {
@@ -78,6 +80,12 @@ const EmployeeSidebar = () => {
       title: "Calendar",
       path: "/calendar",
       icon: <CalendarDays size={19} strokeWidth={2} />,
+    },
+    {
+      title: "Chat",
+      path: "/employee-chat",
+      icon: <MessageCircle size={19} strokeWidth={2} />,
+      badge: <ChatSidebarBadge role="employee" />,
     },
     // {
     //   title: "Clients",
@@ -190,6 +198,8 @@ const EmployeeSidebar = () => {
                     <span className="admin-sidebar-label">
                       {item.title}
                     </span>
+
+                    {item.badge}
 
                     <span className="admin-sidebar-arrow">
                         <ChevronRight size={16} />

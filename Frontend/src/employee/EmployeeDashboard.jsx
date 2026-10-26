@@ -13,7 +13,6 @@ import {
   Activity,
   Target,
   RefreshCw,
-  MessageCircle,
 } from "lucide-react";
 import {
   Chart,
@@ -30,7 +29,6 @@ import {
 } from "chart.js";
 import "./EmployeeDashboard.css";
 import EmployeeLayout from "../components/EmployeeLayout";
-import DirectChat from "../components/DirectChat";
 
 Chart.register(
   CategoryScale,
@@ -77,17 +75,6 @@ const EmployeeDashboard = () => {
   const workloadCanvasRef = useRef(null);
   const performanceChartRef = useRef(null);
   const workloadChartRef = useRef(null);
-
-  // Use the ID and token saved by your employee login.
-  const currentUserId =
-    localStorage.getItem("employeeId") ||
-    localStorage.getItem("emp_id") ||
-    localStorage.getItem("userId");
-
-  const token =
-    localStorage.getItem("token") ||
-    localStorage.getItem("employeeToken") ||
-    localStorage.getItem("adminToken");
 
   const [employees, setEmployees] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -449,16 +436,6 @@ const EmployeeDashboard = () => {
     };
   }, [departments, employees, loading]);
 
-const chatContacts = [
-  {
-    id: 4,
-    name: "HR",
-    role: "HR",
-  },
-];
-
-
-
   return (
     <EmployeeLayout>
       <div className="admin-dashboard employee-dashboard">
@@ -767,31 +744,6 @@ const chatContacts = [
           )}
         </section>
 
-        {/* Direct Messages */}
-        <section className="employee-direct-chat-section">
-          <div className="dashboard-panel-header employee-chat-heading">
-            <div>
-              <h2>
-                <MessageCircle size={21} />
-                Direct Messages
-              </h2>
-              <p>Chat with HR and view your conversations.</p>
-            </div>
-          </div>
-
-          {currentUserId ? (
-           <DirectChat
-  currentUserId={currentUserId}
-  contacts={chatContacts}
-  token={token}
-/>
-          ) : (
-            <div className="dashboard-error" role="alert">
-              Employee ID not found. Please check the employee login
-              and localStorage ID key.
-            </div>
-          )}
-        </section>
       </div>
     </EmployeeLayout>
   );

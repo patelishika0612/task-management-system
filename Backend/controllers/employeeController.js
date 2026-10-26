@@ -419,7 +419,7 @@ const createEmployee = async (req, res) => {
 
 
 // =====================================================
-// UPDATE EMPLOYEE
+  // UPDATE EMPLOYEE
 // =====================================================
 
 const updateEmployee = async (req, res) => {

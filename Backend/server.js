@@ -300,6 +300,60 @@ io.on("connection", (socket) => {
         }
     });
 
+    // Personal room so the chat sidebar receives new messages and
+    // typing events for conversations that are not currently open.
+    socket.on("chat:register", (data) => {
+        const userId = Number(data?.userId);
+
+        if (!Number.isInteger(userId) || userId <= 0) return;
+
+        socket.join(`chat-user:${userId}`);
+    });
+
+    socket.on("chat:typing", async (data) => {
+        try {
+            const conversationId = Number(data?.conversationId);
+            const userId = Number(data?.userId);
+
+            if (
+                !Number.isInteger(conversationId) || conversationId <= 0 ||
+                !Number.isInteger(userId) || userId <= 0
+            ) {
+                return;
+            }
+
+            const [members] = await connection.promise().query(
+                `
+            SELECT m.user_id, c.type
+            FROM chat_conversation_members m
+            INNER JOIN chat_conversations c
+              ON c.id = m.conversation_id
+            WHERE m.conversation_id = ?
+            `,
+                [conversationId]
+            );
+
+            if (!members.some((member) => Number(member.user_id) === userId)) {
+                return;
+            }
+
+            const rooms = members
+                .filter((member) => Number(member.user_id) !== userId)
+                .map((member) => `chat-user:${member.user_id}`);
+
+            if (!rooms.length) return;
+
+            io.to(rooms).emit("chat:typing", {
+                conversationId,
+                conversationType: members[0].type,
+                userId,
+                isTyping: Boolean(data?.isTyping),
+            });
+        } catch (error) {
+            console.error("Chat typing event error:", error);
+        }
+    });
+
 });
 
 // =====================================================

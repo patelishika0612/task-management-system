@@ -503,7 +503,7 @@ const Task = () => {
       return;
     }
 
-    if (!form.employee_code) {
+    if (!form.employee_codes.length) {
       setError("Please select an employee.");
       return;
     }
@@ -534,7 +534,9 @@ const Task = () => {
       const payload = new FormData();
       payload.append("task_name", taskName);
       payload.append("project_id", form.project_id);
-      payload.append("employee_code", form.employee_code);
+      // backend stores a single assignee in employee_code
+      payload.append("employee_code", form.employee_codes[0]);
+      payload.append("employee_codes", JSON.stringify(form.employee_codes));
       payload.append("priority", form.priority);
       payload.append("status", form.status);
       payload.append("start_date", form.start_date || "");
@@ -739,7 +741,7 @@ const Task = () => {
   );
 
   const selectedEmployee = employees.find(
-    (employee) => employee.employee_code === form.employee_code
+    (employee) => employee.employee_code === form.employee_codes[0]
   );
 
   return (
@@ -1441,28 +1443,21 @@ const Task = () => {
                       </div>
 
                       {form.employee_codes.length > 0 && (
-                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                        <div className="task-chips">
                           {form.employee_codes.map((code) => {
                             const employee = employees.find(
                               (item) => item.employee_code === code
                             );
 
                             return (
-                              <span
-                                key={code}
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: 6,
-                                  padding: "5px 9px",
-                                  borderRadius: 6,
-                                  background: "#eef2ff",
-                                }}
-                              >
-                                {employee?.emp_name || code}
+                              <span key={code} className="task-chip">
+                                <span className="task-chip-name">
+                                  {employee?.emp_name || code}
+                                </span>
 
                                 <button
                                   type="button"
+                                  className="task-chip-remove"
                                   onClick={() =>
                                     setForm((previous) => ({
                                       ...previous,

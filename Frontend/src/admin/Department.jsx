@@ -15,7 +15,7 @@ const Department = () => {
   const [departments, setDepartments] = useState([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);                      
   const [editId, setEditId] = useState(null);
   const [viewDepartment, setViewDepartment] = useState(null);
   const [departmentName, setDepartmentName] = useState("");

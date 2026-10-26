@@ -380,10 +380,6 @@ const createRequest = async (req, res) => {
 };
 
 
-// =====================================================
-// UPDATE ACCESS REQUEST
-// =====================================================
-
 const updateRequest = async (req, res) => {
     try {
         const { id } = req.params;

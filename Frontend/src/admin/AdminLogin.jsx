@@ -104,6 +104,17 @@ localStorage.setItem(
 
 localStorage.setItem("adminEmail", result.data.email || email);
 
+// localStorage is shared by every tab, so a second admin logging in from
+// the same browser overwrites adminData. Keep this tab's own identity in
+// sessionStorage so chat keeps sending as the admin who logged in here.
+sessionStorage.setItem(
+    "adminData",
+    JSON.stringify({
+        adminId: result.data.adminId,
+        email: result.data.email,
+    })
+);
+
 window.dispatchEvent(new Event("admin-login"));
 
 navigate("/admindashboard", { replace: true });
