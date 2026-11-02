@@ -57,6 +57,7 @@ const EmployeeSidebar = () => {
   // -----------------------------------------
   const menuItems = [
     {
+
       title: "Dashboard",
       path: "/employeedashboard",
       icon: <LayoutDashboard size={19} strokeWidth={2} />,

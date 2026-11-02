@@ -140,6 +140,26 @@
     grid-template-columns: repeat(3, 1fr);
     gap: 20px;
     margin-top: 10px;
+    animation: cp-slide-in 0.5s ease;
+    cursor: grab;
+    user-select: none;
+    touch-action: pan-y;
+    transition: transform 0.25s ease;
+}
+
+.cp-testimonial-grid:active {
+    cursor: grabbing;
+}
+
+@keyframes cp-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 .cp-testimonial {
@@ -184,6 +204,28 @@
     font-size: 13.5px;
 }
 
+.cp-testimonial-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 22px;
+}
+
+.cp-testimonial-dots button {
+    width: 12px;
+    height: 12px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: #d1d5db;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.cp-testimonial-dots button.active {
+    background: #1e2a5e;
+}
+
 /* CONTACT */
 
 .cp-contact-brand {
@@ -210,6 +252,7 @@
 .cp-contact-item {
     display: flex;
     gap: 10px;
+    text-align: justify ;
 }
 
 .cp-contact-item svg {
@@ -283,4 +326,10 @@
     .cp-services-grid {
         grid-template-columns: 1fr;
     }
+
+    /* mobile uses swipe only */
+    .cp-testimonial-dots {
+        display: none;
+    }
 }
+    

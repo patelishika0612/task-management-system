@@ -1,6 +1,13 @@
 
 import express from "express";
 import connection from "../db.js";
+import {
+    ADMIN_CHAT_ID_OFFSET,
+    getLinkedAdmins,
+    mergeLinkedAdminChats,
+    resolveChatUserId,
+    resolveChatUserIds,
+} from "../services/chatIdentity.js";
 
 const router = express.Router();
 const db = connection.promise();
@@ -11,11 +18,6 @@ const db = connection.promise();
 
 const isValidId = (id) =>
     Number.isInteger(Number(id)) && Number(id) > 0;
-
-// admin_login.id and employe.emp_id both start at 1, but chat tables keep a
-// single user_id column. Admins are stored as offset + admin id so the two
-// never collide. Keep in sync with ADMIN_CHAT_ID_OFFSET in ChatPage.jsx.
-const ADMIN_CHAT_ID_OFFSET = 1000000000;
 
 // Unread counts live on the server so messages sent while the receiver is
 // offline still show up in their sidebar. Each member remembers the last
@@ -51,6 +53,15 @@ const readTrackingReady = ensureReadTracking().catch((error) => {
     console.error("Chat read tracking setup error:", error);
 });
 
+// Admins linked to an employee account chat as that employee. Fold any
+// history they built up under their admin chat id into it.
+const syncLinkedAdmins = () =>
+    readTrackingReady.then(mergeLinkedAdminChats).catch((error) => {
+        console.error("Chat linked admin merge error:", error);
+    });
+
+syncLinkedAdmins();
+
 const markConversationRead = async (conversationId, userId) => {
     await readTrackingReady;
 
@@ -75,6 +86,9 @@ const markConversationRead = async (conversationId, userId) => {
 
 router.get("/contacts", async (req, res) => {
     try {
+        // Picks up admins linked to an employee since the server started.
+        await syncLinkedAdmins();
+
         const [employees] = await db.query(
             `SELECT
                 e.emp_id AS user_id,
@@ -94,18 +108,33 @@ router.get("/contacts", async (req, res) => {
              ORDER BY id ASC`
         );
 
-        const adminContacts = admins.map((admin) => ({
-            user_id: ADMIN_CHAT_ID_OFFSET + Number(admin.id),
-            name: "Admin",
-            email: admin.email,
-            image: null,
-            role: admin.email,
-            isAdmin: true,
-        }));
+        const linkedAdmins = await getLinkedAdmins();
+        const linkedEmployeeIds = new Set(linkedAdmins.values());
+
+        // An admin who is also an employee is listed once, as the employee.
+        const adminContacts = admins
+            .filter(
+                (admin) =>
+                    !linkedAdmins.has(ADMIN_CHAT_ID_OFFSET + Number(admin.id))
+            )
+            .map((admin) => ({
+                user_id: ADMIN_CHAT_ID_OFFSET + Number(admin.id),
+                name: "Admin",
+                email: admin.email,
+                image: null,
+                role: admin.email,
+                isAdmin: true,
+            }));
+
+        const employeeContacts = employees.map((employee) =>
+            linkedEmployeeIds.has(Number(employee.user_id))
+                ? { ...employee, isAdmin: true }
+                : employee
+        );
 
         return res.json({
             success: true,
-            data: [...adminContacts, ...employees],
+            data: [...adminContacts, ...employeeContacts],
         });
     } catch (error) {
         console.error("Get chat contacts error:", error);
@@ -127,8 +156,10 @@ router.post("/direct", async (req, res) => {
     let conn;
 
     try {
-        const senderId = Number(req.body.currentUserId);
-        const receiverId = Number(req.body.userId);
+        const [senderId, receiverId] = await resolveChatUserIds([
+            req.body.currentUserId,
+            req.body.userId,
+        ]);
 
         if (
             !isValidId(senderId) ||
@@ -221,10 +252,10 @@ router.post("/group", async (req, res) => {
 
     try {
         const name = String(req.body.name || "").trim();
-        const currentUserId = Number(req.body.currentUserId);
+        const currentUserId = await resolveChatUserId(req.body.currentUserId);
 
         const requestedMembers = Array.isArray(req.body.memberIds)
-            ? req.body.memberIds.map(Number)
+            ? await resolveChatUserIds(req.body.memberIds)
             : [];
 
         if (
@@ -307,7 +338,7 @@ router.post("/group", async (req, res) => {
 
 router.get("/groups", async (req, res) => {
     try {
-        const userId = Number(req.query.userId);
+        const userId = await resolveChatUserId(req.query.userId);
 
         if (!isValidId(userId)) {
             return res.status(400).json({
@@ -357,7 +388,7 @@ router.get("/groups", async (req, res) => {
 
 router.get("/unread", async (req, res) => {
     try {
-        const userId = Number(req.query.userId);
+        const userId = await resolveChatUserId(req.query.userId);
 
         if (!isValidId(userId)) {
             return res.status(400).json({
@@ -444,7 +475,7 @@ router.get("/unread", async (req, res) => {
 router.post("/:conversationId/read", async (req, res) => {
     try {
         const conversationId = Number(req.params.conversationId);
-        const userId = Number(req.body?.userId);
+        const userId = await resolveChatUserId(req.body?.userId);
 
         if (!isValidId(conversationId) || !isValidId(userId)) {
             return res.status(400).json({
@@ -475,7 +506,7 @@ router.post("/:conversationId/read", async (req, res) => {
 router.get("/:conversationId/messages", async (req, res) => {
     try {
         const conversationId = Number(req.params.conversationId);
-        const userId = Number(req.query.userId);
+        const userId = await resolveChatUserId(req.query.userId);
 
         if (!isValidId(conversationId) || !isValidId(userId)) {
             return res.status(400).json({
@@ -544,7 +575,7 @@ router.get("/:conversationId/messages", async (req, res) => {
 router.post("/:conversationId/messages", async (req, res) => {
     try {
         const conversationId = Number(req.params.conversationId);
-        const senderId = Number(req.body.userId);
+        const senderId = await resolveChatUserId(req.body.userId);
 
         const message =
             typeof req.body.message === "string"

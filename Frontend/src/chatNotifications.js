@@ -36,11 +36,17 @@ export const getChatUserId = (role) => {
   try {
     // Prefer this tab's own login (see AdminLogin.jsx) so two admins logged
     // in from the same browser don't both chat as whoever logged in last.
-    const adminId = JSON.parse(
+    const adminData = JSON.parse(
       sessionStorage.getItem("adminData") ||
         localStorage.getItem("adminData") ||
         "null"
-    )?.adminId;
+    );
+
+    // An admin who is also an employee chats as that employee; the server
+    // sends their chat ID at login (see chatIdentity.js).
+    if (adminData?.chatUserId) return Number(adminData.chatUserId);
+
+    const adminId = adminData?.adminId;
 
     return adminId ? ADMIN_CHAT_ID_OFFSET + Number(adminId) : null;
   } catch {

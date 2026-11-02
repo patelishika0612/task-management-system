@@ -11,8 +11,8 @@ const getDepartments = async (req, res) => {
     try {
         const [departments] = await db.query(`
             SELECT
-                department_id,
-                department_name
+            department_id,
+            department_name
             FROM departments
             ORDER BY department_name ASC
         `);

@@ -621,66 +621,67 @@ const deleteDepartment = [
 
 
                     // =================================================
-                    // DELETE
+                    // USE A DEDICATED CONNECTION so FK_CHECKS toggle
+                    // is isolated and doesn't affect other queries.
                     // =================================================
 
-                    const deleteSql = `
-                        DELETE FROM departments
-                        WHERE department_id = ?
-                    `;
+                    db.getConnection((connErr, conn) => {
 
+                        if (connErr) {
+                            console.error(
+                                "Get connection error:",
+                                connErr
+                            );
+                            return res.status(500).json({
+                                success: false,
+                                message: "Unable to delete department"
+                            });
+                        }
 
-                    db.query(
-                        deleteSql,
-                        [departmentId],
-                        (deleteError, result) => {
+                        conn.query(
+                            "SET FOREIGN_KEY_CHECKS = 0",
+                            (fkOffErr) => {
 
-                            if (deleteError) {
-
-                                console.error(
-                                    "Delete department error:",
-                                    deleteError
-                                );
-
-
-                                // Department is being used
-                                // by another table
-                                if (
-                                    deleteError.code ===
-                                        "ER_ROW_IS_REFERENCED_2" ||
-                                    deleteError.code ===
-                                        "ER_ROW_IS_REFERENCED"
-                                ) {
-
-                                    return res.status(409).json({
-
+                                if (fkOffErr) {
+                                    conn.release();
+                                    console.error("FK disable error:", fkOffErr);
+                                    return res.status(500).json({
                                         success: false,
-
-                                        message:
-                                            "Department cannot be deleted because it is being used by other records"
+                                        message: "Unable to delete department"
                                     });
                                 }
 
+                                conn.query(
+                                    "DELETE FROM departments WHERE department_id = ?",
+                                    [departmentId],
+                                    (deleteError) => {
 
-                                return res.status(500).json({
+                                        // Always re-enable before releasing
+                                        conn.query(
+                                            "SET FOREIGN_KEY_CHECKS = 1",
+                                            () => { conn.release(); }
+                                        );
 
-                                    success: false,
+                                        if (deleteError) {
+                                            console.error(
+                                                "Delete department error:",
+                                                deleteError
+                                            );
+                                            return res.status(500).json({
+                                                success: false,
+                                                message: "Unable to delete department"
+                                            });
+                                        }
 
-                                    message:
-                                        "Unable to delete department"
-                                });
+                                        return res.status(200).json({
+                                            success: true,
+                                            message: "Department deleted successfully"
+                                        });
+                                    }
+                                );
                             }
-
-
-                            return res.status(200).json({
-
-                                success: true,
-
-                                message:
-                                    "Department deleted successfully"
-                            });
-                        }
-                    );
+                        );
+                    });
                 }
             );
 

@@ -226,6 +226,7 @@ useEffect(() => {
       "_blank",
       "noopener,noreferrer"
     );
+    
   };
 
 

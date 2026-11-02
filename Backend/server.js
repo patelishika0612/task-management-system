@@ -19,6 +19,7 @@ import adminApprovalRequestRoutes from "./routes/adminApprovalRequestRoutes.js";
 import adminLoginRoutes from "./routes/adminLoginRoutes.js";
 import calendarRoutes from "./routes/calendarRoutes.js";
 import directChatRoutes from "./routes/directChat.js";
+import { resolveChatUserId } from "./services/chatIdentity.js";
 
 dotenv.config();
 
@@ -302,18 +303,22 @@ io.on("connection", (socket) => {
 
     // Personal room so the chat sidebar receives new messages and
     // typing events for conversations that are not currently open.
-    socket.on("chat:register", (data) => {
-        const userId = Number(data?.userId);
+    socket.on("chat:register", async (data) => {
+        try {
+            const userId = await resolveChatUserId(data?.userId);
 
-        if (!Number.isInteger(userId) || userId <= 0) return;
+            if (!Number.isInteger(userId) || userId <= 0) return;
 
-        socket.join(`chat-user:${userId}`);
+            socket.join(`chat-user:${userId}`);
+        } catch (error) {
+            console.error("Chat register error:", error);
+        }
     });
 
     socket.on("chat:typing", async (data) => {
         try {
             const conversationId = Number(data?.conversationId);
-            const userId = Number(data?.userId);
+            const userId = await resolveChatUserId(data?.userId);
 
             if (
                 !Number.isInteger(conversationId) || conversationId <= 0 ||

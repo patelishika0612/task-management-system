@@ -98,6 +98,7 @@ localStorage.setItem(
     "adminData",
     JSON.stringify({
         adminId: result.data.adminId,
+        chatUserId: result.data.chatUserId,
         email: result.data.email,
     })
 );
@@ -111,6 +112,7 @@ sessionStorage.setItem(
     "adminData",
     JSON.stringify({
         adminId: result.data.adminId,
+        chatUserId: result.data.chatUserId,
         email: result.data.email,
     })
 );
@@ -137,6 +139,7 @@ navigate("/admindashboard", { replace: true });
         "adminData",
         JSON.stringify({
           adminId: result.data.adminId,
+          chatUserId: result.data.chatUserId,
           email: result.data.email,
         })
       );

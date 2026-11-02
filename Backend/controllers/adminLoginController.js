@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import connection from "../db.js";
+import { getAdminChatUserId } from "../services/chatIdentity.js";
 
 // =====================================================
 // SET PASSWORD
@@ -262,6 +263,7 @@ const adminLogin = async (req, res) => {
             message: "Admin login successful.",
             data: {
                 adminId: admin.id,
+                chatUserId: await getAdminChatUserId(admin.id),
                 email: admin.email,
                 role: "admin",
                 token
