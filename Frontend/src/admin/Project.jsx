@@ -458,7 +458,7 @@ const Project = () => {
     try {
       const isEditing = editId !== null;
 
-      // created_by stores one employee ID in the projects table
+      // created_by stores the first assigned employee ID (DB FK requires employe.emp_id)
       const projectPayload = {
         proj_name: form.proj_name.trim(),
         description: form.description,
@@ -1598,6 +1598,8 @@ const Project = () => {
                   {
                     label: "Created By",
                     value:
+                      localStorage.getItem("adminName") ||
+                      localStorage.getItem("adminEmail") ||
                       viewProject.created_by_name ||
                       viewProject.created_by ||
                       "—",
