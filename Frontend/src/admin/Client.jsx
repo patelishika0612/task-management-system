@@ -719,7 +719,7 @@ const Client = () => {
                             <Search size={19} />
 
                             <input
-                                type="search"
+                                type="text"
                                 placeholder="Search by ID, name, company, email or city..."
                                 value={search}
                                 onChange={(e) =>

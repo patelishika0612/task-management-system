@@ -15,6 +15,7 @@ import {
     AlertCircle,
     CheckCircle,
     Eye,
+    EyeOff,
     ChevronLeft,
     ChevronRight,
     Upload,
@@ -133,6 +134,8 @@ const Employee = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+
+    const [showPassword, setShowPassword] = useState(false);
 
     // =================================================
     // API ERROR HELPER
@@ -325,6 +328,7 @@ const Employee = () => {
         setSuccess("");
         setImagePreview("");
         setImageFile(null);
+        setShowPassword(false);
 
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
@@ -411,6 +415,7 @@ const Employee = () => {
         setForm({ ...EMPTY_FORM });
         setImagePreview("");
         setImageFile(null);
+        setShowPassword(false);
         setError("");
 
         if (fileInputRef.current) {
@@ -747,7 +752,7 @@ const Employee = () => {
                             <Search size={19} />
 
                             <input
-                                type="search"
+                                type="text"
                                 placeholder="Search by ID, name, email or code..."
                                 value={search}
                                 onChange={(e) =>
@@ -1114,19 +1119,29 @@ const Employee = () => {
                                                 {editId === null && <span>*</span>}
                                             </label>
 
-                                            <input
-                                                type="password"
-                                                name="password"
-                                                autoComplete="new-password"
-                                                placeholder={
-                                                    editId !== null
-                                                        ? "Leave blank to keep current password"
-                                                        : "Enter password"
-                                                }
-                                                value={form.password}
-                                                onChange={handleChange}
-                                                required={editId === null}
-                                            />
+                                            <div className="emp-password-wrap">
+                                                <input
+                                                    type={showPassword ? "text" : "password"}
+                                                    name="password"
+                                                    autoComplete="new-password"
+                                                    placeholder={
+                                                        editId !== null
+                                                            ? "Leave blank to keep current password"
+                                                            : "Enter password"
+                                                    }
+                                                    value={form.password}
+                                                    onChange={handleChange}
+                                                    required={editId === null}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="emp-password-toggle"
+                                                    onClick={() => setShowPassword((p) => !p)}
+                                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                                >
+                                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {/* DATE */}

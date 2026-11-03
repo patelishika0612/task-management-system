@@ -621,8 +621,10 @@ const deleteDepartment = [
 
 
                     // =================================================
-                    // USE A DEDICATED CONNECTION so FK_CHECKS toggle
-                    // is isolated and doesn't affect other queries.
+                    // USE A DEDICATED CONNECTION so the FK_CHECKS
+                    // toggle is isolated from all other queries.
+                    // The employe FK is NOT NULL so we cannot nullify
+                    // it — instead we bypass the constraint entirely.
                     // =================================================
 
                     db.getConnection((connErr, conn) => {
@@ -638,25 +640,31 @@ const deleteDepartment = [
                             });
                         }
 
+                        // Step 1: disable FK checks on this connection
                         conn.query(
                             "SET FOREIGN_KEY_CHECKS = 0",
                             (fkOffErr) => {
 
                                 if (fkOffErr) {
                                     conn.release();
-                                    console.error("FK disable error:", fkOffErr);
+                                    console.error(
+                                        "FK disable error:",
+                                        fkOffErr
+                                    );
                                     return res.status(500).json({
                                         success: false,
                                         message: "Unable to delete department"
                                     });
                                 }
 
+                                // Step 2: delete the department
                                 conn.query(
                                     "DELETE FROM departments WHERE department_id = ?",
                                     [departmentId],
                                     (deleteError) => {
 
-                                        // Always re-enable before releasing
+                                        // Step 3: always re-enable FK
+                                        // checks before releasing
                                         conn.query(
                                             "SET FOREIGN_KEY_CHECKS = 1",
                                             () => { conn.release(); }

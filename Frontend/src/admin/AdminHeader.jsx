@@ -137,6 +137,11 @@ useEffect(() => {
         } else {
           setProfileImage("");
         }
+
+        // Save admin name for use across the app
+        if (employeeData?.emp_name) {
+          localStorage.setItem("adminName", employeeData.emp_name);
+        }
       }
     } catch (error) {
       console.error(
