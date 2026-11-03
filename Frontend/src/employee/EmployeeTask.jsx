@@ -142,6 +142,38 @@ const getFileSize = (bytes) => {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 };
 
+const OFFICE_EXTENSIONS = ["doc", "docx", "xls", "xlsx", "ppt", "pptx"];
+
+// Browsers can only show images, PDFs and text inline, so Word/Excel/PowerPoint
+// files open in Microsoft's online viewer. It fetches the file itself, which
+// only works for publicly reachable URLs (not localhost).
+const getViewUrl = (url, name) => {
+  const ext = String(name).split(".").pop().toLowerCase();
+  const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(url);
+  if (!OFFICE_EXTENSIONS.includes(ext) || isLocal) return url;
+  return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
+};
+
+// Uploads live on the API origin, where the `download` attribute is ignored,
+// so fetch the file and save it under its original name.
+const downloadAttachment = async (url, name) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Download failed");
+
+    const blobUrl = URL.createObjectURL(await response.blob());
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(blobUrl);
+  } catch {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+};
+
 const EmployeeTask = ({ employee }) => {
   const storedEmployee = useMemo(getEmployeeFromStorage, []);
   const employeeId =
@@ -393,15 +425,6 @@ const [updatingStatus, setUpdatingStatus] = useState(false);
                 Employee ID: {employeeCode}
               </span>
             )}
-            <button
-              type="button"
-              className="employee-task-refresh"
-              onClick={fetchTasks}
-              disabled={loading}
-            >
-              <RefreshCw size={16} className={loading ? "employee-task-spin" : ""} />
-              Refresh
-            </button>
           </div>
         </div>
 
@@ -541,18 +564,13 @@ const [updatingStatus, setUpdatingStatus] = useState(false);
                         </td>
                         <td>
                           <div className="employee-task-name-cell">
-                            <div className="employee-task-row-icon">
-                              <ListChecks size={17} />
-                            </div>
                             <div className="employee-task-name">
                               <strong>{task.task_name || "Untitled task"}</strong>
-                              <span>Task #{task.task_id ?? task.id ?? "—"}</span>
                             </div>
                           </div>
                         </td>
                         <td>
                           <div className="employee-task-project-cell">
-                            <FolderKanban size={15} />
                             <span>{projectName || "—"}</span>
                           </div>
                         </td>
@@ -646,13 +664,7 @@ const [updatingStatus, setUpdatingStatus] = useState(false);
             >
               <div className="employee-task-modal-header">
                 <div className="employee-task-modal-title-wrap">
-                  <div className="employee-task-modal-icon">
-                    <ListChecks size={22} />
-                  </div>
                   <div>
-                    <span className="employee-task-modal-eyebrow">
-                      TASK #{viewTask.task_id ?? viewTask.id ?? "—"}
-                    </span>
                     <h2 id="employee-task-modal-title">
                       {viewTask.task_name || "Task Details"}
                     </h2>
@@ -782,9 +794,21 @@ const [updatingStatus, setUpdatingStatus] = useState(false);
                               <span>{getFileSize(file.size || file.file_size) || "Attached file"}</span>
                             </div>
                             {url ? (
-                              <a href={url} target="_blank" rel="noopener noreferrer" download>
-                                View / Download
-                              </a>
+                              <div className="employee-task-file-actions">
+                                <a
+                                  href={getViewUrl(url, name)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  View
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => downloadAttachment(url, name)}
+                                >
+                                  Download
+                                </button>
+                              </div>
                             ) : (
                               <span className="employee-task-muted">No file URL</span>
                             )}

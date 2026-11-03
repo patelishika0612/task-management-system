@@ -435,7 +435,12 @@
   border-radius: 8px;
 }
 
-.employee-task-file div {
+.employee-task-file-icon {
+  display: flex;
+  color: #272a6c;
+}
+
+.employee-task-file .employee-task-file-info {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -452,12 +457,29 @@
   color: #888;
 }
 
-.employee-task-file a {
-  color: #7252ae;
+.employee-task-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.employee-task-file-actions a,
+.employee-task-file-actions button {
+  padding: 6px 12px;
+  border: 1px solid #272a6c;
+  border-radius: 6px;
+  background: #fff;
   color: #272a6c;
   text-decoration: none;
   font-size: 12px;
+  font-family: inherit;
   white-space: nowrap;
+  cursor: pointer;
+}
+
+.employee-task-file-actions button {
+  background: #272a6c;
+  color: #fff;
 }
 
 .employee-task-modal-footer {
@@ -468,12 +490,19 @@
 }
 
 .employee-task-modal-footer button {
-  border: 0;
-  background: #7252ae;
-  color: white;
   padding: 10px 22px;
-  border-radius: 7px;
+  border: 0;
+  border-radius: 8px;
+  background: rgb(47, 51, 135);
+  color: #fff;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.employee-task-modal-footer button:hover {
+  opacity: 0.9;
 }
 
 .employee-task-error {
@@ -558,27 +587,23 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   width: fit-content;
-  padding: 11px 20px;
+  padding: 7px 16px;
   border: 0;
-  border-radius: 8px;
-  color: white;
+  border-radius: 7px;
+  background: rgb(47, 51, 135);
+  color: #fff;
+  font-size: 13px;
   font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
+  transition: opacity 0.15s;
 }
 
-.employee-task-start-btn {
-  background: #2563eb;
-}
-
-.employee-task-done-btn {
-  background: #16a34a;
-  background: #272a6c;
-}
-
-.employee-task-done-btn {
-  background: #272a6c;
+.employee-task-start-btn:hover:not(:disabled),
+.employee-task-done-btn:hover:not(:disabled) {
+  opacity: 0.9;
 }
 
 .employee-task-start-btn:disabled,

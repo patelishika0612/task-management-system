@@ -308,7 +308,11 @@ const EmployeeCalendar = () => {
                         <div>
                             <span
                                 className={`ec-modal-tag ${
-                                    isProject ? "project-tag" : "task-tag"
+                                    isProject
+                                        ? "project-tag"
+                                        : selectedEvent.type === "task-due"
+                                            ? "task-due-tag"
+                                            : "task-tag"
                                 }`}
                             >
                                 {selectedEvent.label}
@@ -398,13 +402,6 @@ const EmployeeCalendar = () => {
                         ) : (
                             <>
                                 <div className="ec-detail-row">
-                                    <span>Task ID</span>
-                                    <strong>
-                                        {item.task_id ?? "N/A"}
-                                    </strong>
-                                </div>
-
-                                <div className="ec-detail-row">
                                     <span>Task Name</span>
                                     <strong>
                                         {item.title ||
@@ -414,23 +411,9 @@ const EmployeeCalendar = () => {
                                 </div>
 
                                 <div className="ec-detail-row">
-                                    <span>Project ID</span>
+                                    <span>Employee Name</span>
                                     <strong>
-                                        {item.project_id ?? "N/A"}
-                                    </strong>
-                                </div>
-
-                                <div className="ec-detail-row">
-                                    <span>Employee Code</span>
-                                    <strong>
-                                        {item.employee_code || "N/A"}
-                                    </strong>
-                                </div>
-
-                                <div className="ec-detail-row">
-                                    <span>Description</span>
-                                    <strong>
-                                        {item.description || "N/A"}
+                                        {employee?.emp_name || "N/A"}
                                     </strong>
                                 </div>
 
@@ -515,7 +498,7 @@ const EmployeeCalendar = () => {
                         className="ec-today-button"
                         onClick={goToToday}
                     >
-                        Today
+                        {formatDisplayDate(todayKey)}
                     </button>
 
                 </div>

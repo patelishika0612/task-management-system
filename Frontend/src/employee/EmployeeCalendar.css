@@ -758,6 +758,11 @@
     color: #187343;
 }
 
+.task-due-tag {
+    background: #ffe8e5;
+    color: #bd3d2e;
+}
+
 .ec-modal-close {
     display: flex;
     align-items: center;
