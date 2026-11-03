@@ -747,7 +747,6 @@ const [updatingStatus, setUpdatingStatus] = useState(false);
         disabled={updatingStatus}
         onClick={() => handleTaskStatusUpdate("in progress")}
       >
-        <RefreshCw size={17} />
         {updatingStatus ? "Starting..." : "Start Work"}
       </button>
     </div>

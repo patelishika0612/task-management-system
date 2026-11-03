@@ -12,7 +12,6 @@ import {
   CalendarDays,
   Activity,
   Target,
-  RefreshCw,
 } from "lucide-react";
 import {
   Chart,
@@ -453,16 +452,6 @@ const EmployeeDashboard = () => {
               Overview of employees, projects, and task performance.
             </p>
           </div>
-
-          <button
-            type="button"
-            className="dashboard-refresh"
-            onClick={fetchDashboardData}
-            disabled={loading}
-          >
-            <RefreshCw size={16} />
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
         </div>
 
         {error && (

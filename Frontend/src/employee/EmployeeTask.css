@@ -25,6 +25,8 @@
   place-items: center;
   background: #eee8ff;
   color: #7553b5;
+  background: #eceefa;
+  color: #272a6c;
   border-radius: 12px;
 }
 
@@ -49,6 +51,7 @@
   border-radius: 7px;
   padding: 10px 15px;
   background: #7252ae;
+  background: #272a6c;
   color: white;
   cursor: pointer;
 }
@@ -217,6 +220,7 @@
 .employee-task-code {
   font-weight: 700;
   color: #7252ae;
+  color: #272a6c;
 }
 
 .employee-task-badge {
@@ -255,6 +259,7 @@
 
 .status-on-hold {
   background: #eee8ff;
+  background: #eceefa;
   color: #8056b7;
 }
 
@@ -279,7 +284,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: #7252ae;
+  color: #272a6c;
 }
 
 .employee-task-view-btn {
@@ -359,6 +364,7 @@
 
 .employee-task-modal-header span {
   color: #7252ae;
+  color: #272a6c;
   font-size: 12px;
 }
 
@@ -448,6 +454,7 @@
 
 .employee-task-file a {
   color: #7252ae;
+  color: #272a6c;
   text-decoration: none;
   font-size: 12px;
   white-space: nowrap;
@@ -567,6 +574,11 @@
 
 .employee-task-done-btn {
   background: #16a34a;
+  background: #272a6c;
+}
+
+.employee-task-done-btn {
+  background: #272a6c;
 }
 
 .employee-task-start-btn:disabled,
@@ -579,7 +591,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #2563eb;
+  color: #272a6c;
   font-weight: 600;
 }
 

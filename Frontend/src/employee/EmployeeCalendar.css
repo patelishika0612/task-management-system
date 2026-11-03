@@ -3,6 +3,9 @@
     --ec-gold: #c28d4e;
     --ec-gold-dark: #a87539;
     --ec-gold-light: #fff5e8;
+    --ec-gold: #272a6c;
+    --ec-gold-dark: #1c1e52;
+    --ec-gold-light: #eceefa;
     --ec-text: #252525;
     --ec-muted: #777;
     --ec-border: #ececec;
@@ -173,6 +176,8 @@
 .project-icon {
     background: #fff1df;
     color: #b47a36;
+    background: #eceefa;
+    color: #272a6c;
 }
 
 .task-icon {
@@ -296,6 +301,11 @@
 
 .ec-day.ec-selected {
     background: #fff8ed;
+    background: #f5f6fd;
+}
+
+.ec-day.ec-selected {
+    background: #f5f6fd;
     outline: 2px solid var(--ec-gold);
     outline-offset: -2px;
     z-index: 1;
@@ -303,6 +313,7 @@
 
 .ec-day.ec-today {
     background: #fffcf6;
+    background: #fafbff;
 }
 
 .ec-day-number {
@@ -610,6 +621,8 @@
     border-radius: 20px;
     background: #fff5e8;
     color: #a87539;
+    background: #eceefa;
+    color: #1c1e52;
     font-size: 10px;
     font-weight: 600;
 }
@@ -636,6 +649,10 @@
     border-radius: 6px;
     background: #fffaf4;
     color: #a87539;
+    border: 1px solid #c9cceb;
+    border-radius: 6px;
+    background: #f5f6fd;
+    color: #1c1e52;
     font-size: 11px;
     font-weight: 600;
     cursor: pointer;
@@ -705,11 +722,13 @@
     padding: 22px;
     border-bottom: 1px solid #eeeeee;
     background: #fffcf8;
+    background: #fafbff;
 }
 
 .ec-modal-header h3 {
     margin: 10px 0 5px;
     color: #262626;
+    color: #272a6c;
     font-size: 21px;
     font-weight: 700;
 }
