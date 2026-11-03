@@ -20,6 +20,8 @@ import adminLoginRoutes from "./routes/adminLoginRoutes.js";
 import calendarRoutes from "./routes/calendarRoutes.js";
 import directChatRoutes from "./routes/directChat.js";
 import { resolveChatUserId } from "./services/chatIdentity.js";
+import employeeCalendarRoutes from "./routes/employeeCalendar.js";
+import pushRoutes from "./routes/pushRoutes.js";
 
 dotenv.config();
 
@@ -121,7 +123,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/project-members", projectMemberRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/clients", clientRoutes);
-
+app.use("/api/push", pushRoutes);
 app.use(
     "/api/admin-access-requests",
     adminAccessRequestRoutes
@@ -135,8 +137,8 @@ app.use(
 app.use("/api/admin-login", adminLoginRoutes);
 
 app.use("/api/calendar", calendarRoutes);
-app.use("/api/calendar", calendarRoutes);
 app.use("/api/chat", directChatRoutes);
+app.use("/api/employee-calendar", employeeCalendarRoutes);
 
 // =====================================================
 // TEST API

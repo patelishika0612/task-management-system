@@ -40,7 +40,9 @@ export const getAdminChatUserId = async (adminId) => {
 export const resolveChatUserIds = async (ids) => {
     const numbers = ids.map(Number);
 
-    if (!numbers.some((id) => id > ADMIN_CHAT_ID_OFFSET)) return numbers;
+   if (!numbers.some((id) => id >= ADMIN_CHAT_ID_OFFSET)) {
+    return numbers;
+}
 
     const linked = await getLinkedAdmins();
 

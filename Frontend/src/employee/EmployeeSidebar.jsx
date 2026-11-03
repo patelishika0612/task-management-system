@@ -74,12 +74,12 @@ const EmployeeSidebar = () => {
     },
     {
       title: "Tasks",
-      path: "/tasks",
+      path: "/employeetask",
       icon: <ListChecks size={19} strokeWidth={2} />,
     },
     {
       title: "Calendar",
-      path: "/calendar",
+      path: "/employee-calendar",
       icon: <CalendarDays size={19} strokeWidth={2} />,
     },
     {

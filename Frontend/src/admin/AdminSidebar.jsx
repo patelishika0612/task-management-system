@@ -140,6 +140,7 @@ const Sidebar = () => {
       ====================================== */}
       {isMobile && isOpen && (
         <div
+        
           className="admin-sidebar-overlay"
           onClick={() => setIsOpen(false)}
         ></div>

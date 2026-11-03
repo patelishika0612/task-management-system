@@ -1130,3 +1130,10 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+.task-status-in-progress {
+  background: #e8f0ff;
+  color: #2458b8;
+  border: 1px solid #c7d9ff;
+}

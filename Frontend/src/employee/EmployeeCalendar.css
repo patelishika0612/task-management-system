@@ -1,0 +1,984 @@
+
+.ec-page {
+    --ec-gold: #c28d4e;
+    --ec-gold-dark: #a87539;
+    --ec-gold-light: #fff5e8;
+    --ec-text: #252525;
+    --ec-muted: #777;
+    --ec-border: #ececec;
+
+    min-height: 100vh;
+    padding: 25px;
+    background: #f7f8fa;
+    color: var(--ec-text);
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.ec-page *,
+.ec-page *::before,
+.ec-page *::after {
+    box-sizing: border-box;
+}
+
+/* =========================
+   PAGE HEADER
+========================= */
+
+.ec-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.ec-heading-label {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--ec-gold-dark);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.ec-heading h2 {
+    margin: 0 0 7px;
+    color: #222;
+    font-size: 27px;
+    font-weight: 750;
+}
+
+.ec-heading p {
+    margin: 0;
+    color: var(--ec-muted);
+    font-size: 14px;
+}
+
+.ec-today-button {
+    padding: 10px 22px;
+    border: 1px solid var(--ec-gold);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--ec-gold-dark);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.ec-today-button:hover {
+    background: var(--ec-gold);
+    color: #fff;
+}
+
+/* =========================
+   ERROR
+========================= */
+
+.ec-error {
+    padding: 14px 17px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c2c0;
+    border-radius: 8px;
+    background: #fff0ef;
+    color: #b42318;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+/* =========================
+   LOADING
+========================= */
+
+.ec-loading {
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    color: #777;
+}
+
+.ec-loader {
+    width: 38px;
+    height: 38px;
+    border: 3px solid #eee;
+    border-top-color: var(--ec-gold);
+    border-radius: 50%;
+    animation: ecSpin 0.8s linear infinite;
+}
+
+@keyframes ecSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =========================
+   SUMMARY CARDS
+========================= */
+
+.ec-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.ec-summary-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    min-height: 105px;
+    padding: 20px;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.035);
+    transition: 0.2s;
+}
+
+.ec-summary-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 18px rgba(0, 0, 0, 0.07);
+}
+
+.ec-summary-card span {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--ec-muted);
+    font-size: 13px;
+}
+
+.ec-summary-card strong {
+    color: #222;
+    font-size: 27px;
+    font-weight: 750;
+}
+
+.ec-summary-icon {
+    width: 47px;
+    height: 47px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    border-radius: 11px;
+    font-size: 19px;
+    font-weight: 700;
+}
+
+.project-icon {
+    background: #fff1df;
+    color: #b47a36;
+}
+
+.task-icon {
+    background: #e6f5ed;
+    color: #248453;
+}
+
+.event-icon {
+    background: #eee9ff;
+    color: #7554ae;
+}
+
+/* =========================
+   CALENDAR CARD
+========================= */
+
+.ec-calendar-card {
+    padding: 22px;
+    border: 1px solid #ededed;
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.035);
+}
+
+.ec-calendar-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.ec-calendar-toolbar h3 {
+    margin: 0;
+    color: #252525;
+    font-size: 21px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.ec-month-navigation {
+    display: flex;
+    gap: 7px;
+}
+
+.ec-month-navigation button {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #e9e9e9;
+    border-radius: 7px;
+    background: #fafafa;
+    color: #444;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.ec-month-navigation button:hover {
+    border-color: var(--ec-gold);
+    background: var(--ec-gold-light);
+    color: var(--ec-gold-dark);
+}
+
+.ec-toolbar-today {
+    padding: 8px 16px;
+    border: 1px solid var(--ec-gold);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ec-gold-dark);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* =========================
+   WEEKDAYS
+========================= */
+
+.ec-weekdays,
+.ec-days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.ec-weekdays {
+    border-top: 1px solid var(--ec-border);
+    border-bottom: 1px solid var(--ec-border);
+}
+
+.ec-weekdays > div {
+    padding: 13px 5px;
+    color: #777;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ec-weekday-short {
+    display: none;
+}
+
+/* =========================
+   CALENDAR DAYS
+========================= */
+
+.ec-day {
+    position: relative;
+    min-width: 0;
+    min-height: 120px;
+    padding: 9px;
+    border: 1px solid #eeeeee;
+    background: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.ec-day:hover {
+    background: #fffaf4;
+}
+
+.ec-day.ec-selected {
+    background: #fff8ed;
+    outline: 2px solid var(--ec-gold);
+    outline-offset: -2px;
+    z-index: 1;
+}
+
+.ec-day.ec-today {
+    background: #fffcf6;
+}
+
+.ec-day-number {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 27px;
+    height: 27px;
+    margin-bottom: 8px;
+    border-radius: 50%;
+    color: #444;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.ec-day.ec-today .ec-day-number {
+    background: var(--ec-gold);
+    color: #fff;
+}
+
+.ec-day.ec-empty {
+    background: #fafafa;
+    cursor: default;
+}
+
+/* =========================
+   CALENDAR EVENTS
+========================= */
+
+.ec-day-events {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.ec-event {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    padding: 5px 6px;
+    overflow: hidden;
+    border: none;
+    border-left: 3px solid transparent;
+    border-radius: 4px;
+    text-align: left;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.ec-event:hover {
+    filter: brightness(0.94);
+    transform: translateX(2px);
+}
+
+/* Project start */
+.ec-event.project-start {
+    border-left-color: #1c5aab;
+    background: #e3efff;
+    color: #1c5aab;
+}
+
+/* Project end */
+.ec-event.project-end {
+    border-left-color: #7042a4;
+    background: #f0e7ff;
+    color: #7042a4;
+}
+
+/* Task start */
+.ec-event.task-start {
+    border-left-color: #187343;
+    background: #e2f7eb;
+    color: #187343;
+}
+
+/* Task deadline */
+.ec-event.task-due {
+    border-left-color: #bd3d2e;
+    background: #ffe8e5;
+    color: #bd3d2e;
+}
+
+.ec-day-events small {
+    padding-left: 5px;
+    color: #777;
+    font-size: 10px;
+}
+
+/* =========================
+   LEGEND
+========================= */
+
+.ec-legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+    padding: 18px 3px;
+}
+
+.ec-legend span {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #666;
+    font-size: 12px;
+}
+
+.ec-legend i {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+}
+
+.ec-legend i.project-start {
+    background: #1c5aab;
+}
+
+.ec-legend i.project-end {
+    background: #7042a4;
+}
+
+.ec-legend i.task-start {
+    background: #187343;
+}
+
+.ec-legend i.task-due {
+    background: #bd3d2e;
+}
+
+/* =========================
+   SECTION HEADINGS
+========================= */
+
+.ec-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.ec-section-heading h3 {
+    margin: 0 0 5px;
+    color: #252525;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.ec-section-heading p {
+    margin: 0;
+    color: #999;
+    font-size: 12px;
+}
+
+.ec-section-heading > button {
+    padding: 7px 14px;
+    border: 1px solid #e6e6e6;
+    border-radius: 6px;
+    background: #fff;
+    color: #777;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* =========================
+   SELECTED DATE
+========================= */
+
+.ec-selected-card,
+.ec-data-card {
+    padding: 21px;
+    border: 1px solid #ededed;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.035);
+}
+
+.ec-selected-card {
+    margin-bottom: 22px;
+}
+
+.ec-selected-event {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 13px;
+    margin-bottom: 8px;
+    border: none;
+    border-radius: 7px;
+    text-align: left;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.ec-selected-event:hover {
+    filter: brightness(0.97);
+}
+
+.ec-selected-event.project-start {
+    background: #e3efff;
+    color: #1c5aab;
+}
+
+.ec-selected-event.project-end {
+    background: #f0e7ff;
+    color: #7042a4;
+}
+
+.ec-selected-event.task-start {
+    background: #e2f7eb;
+    color: #187343;
+}
+
+.ec-selected-event.task-due {
+    background: #ffe8e5;
+    color: #bd3d2e;
+}
+
+.ec-selected-dot {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.ec-selected-content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.ec-selected-content strong {
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ec-selected-content small {
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+.ec-selected-category {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.ec-arrow {
+    font-size: 22px;
+}
+
+/* =========================
+   PROJECT AND TASK GRID
+========================= */
+
+.ec-data-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 20px;
+}
+
+.ec-data-card {
+    min-width: 0;
+}
+
+.ec-data-item {
+    padding: 15px 0;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.ec-data-item:last-child {
+    border-bottom: none;
+}
+
+.ec-data-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.ec-data-item-header strong {
+    color: #303030;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.ec-status {
+    flex-shrink: 0;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: #fff5e8;
+    color: #a87539;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.ec-data-item p {
+    margin: 7px 0;
+    color: #777;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.ec-data-item p span {
+    color: #444;
+    font-weight: 600;
+}
+
+.ec-view-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 13px;
+    margin-top: 8px;
+    border: 1px solid #e7c69f;
+    border-radius: 6px;
+    background: #fffaf4;
+    color: #a87539;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.ec-view-button:hover {
+    background: var(--ec-gold);
+    color: #fff;
+}
+
+.ec-view-button span {
+    font-size: 15px;
+}
+
+.ec-no-events {
+    padding: 15px 0;
+    color: #999;
+    font-size: 13px;
+    text-align: center;
+}
+
+/* =========================
+   DETAILS MODAL
+========================= */
+
+.ec-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(15, 15, 15, 0.58);
+    backdrop-filter: blur(3px);
+}
+
+.ec-modal {
+    width: 100%;
+    max-width: 560px;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-radius: 13px;
+    background: #fff;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.23);
+    animation: ecModalOpen 0.22s ease;
+}
+
+@keyframes ecModalOpen {
+    from {
+        opacity: 0;
+        transform: translateY(15px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.ec-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 22px;
+    border-bottom: 1px solid #eeeeee;
+    background: #fffcf8;
+}
+
+.ec-modal-header h3 {
+    margin: 10px 0 5px;
+    color: #262626;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.ec-modal-header p {
+    margin: 0;
+    color: #777;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.ec-modal-tag {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.project-tag {
+    background: #e3efff;
+    color: #1c5aab;
+}
+
+.task-tag {
+    background: #e2f7eb;
+    color: #187343;
+}
+
+.ec-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 50%;
+    background: #f0f0f0;
+    color: #555;
+    font-size: 25px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.ec-modal-close:hover {
+    background: #ffe6e2;
+    color: #b42318;
+}
+
+.ec-modal-body {
+    padding: 10px 22px;
+}
+
+.ec-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 14px 0;
+    border-bottom: 1px solid #eeeeee;
+}
+
+.ec-detail-row:last-child {
+    border-bottom: none;
+}
+
+.ec-detail-row > span {
+    flex: 0 0 35%;
+    color: #888;
+    font-size: 12px;
+}
+
+.ec-detail-row > strong {
+    flex: 1;
+    color: #303030;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.ec-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 15px 22px 20px;
+    border-top: 1px solid #eeeeee;
+}
+
+.ec-modal-footer button {
+    min-width: 100px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 7px;
+    background: var(--ec-gold);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.ec-modal-footer button:hover {
+    background: var(--ec-gold-dark);
+}
+
+/* =========================
+   TABLET RESPONSIVE
+========================= */
+
+@media (max-width: 992px) {
+    .ec-page {
+        padding: 18px;
+    }
+
+    .ec-calendar-card {
+        padding: 15px;
+    }
+
+    .ec-day {
+        min-height: 105px;
+        padding: 6px;
+    }
+
+    .ec-data-grid {
+        gap: 14px;
+    }
+}
+
+/* =========================
+   MOBILE RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+    .ec-page {
+        padding: 13px;
+    }
+
+    .ec-heading h2 {
+        font-size: 23px;
+    }
+
+    .ec-heading p {
+        font-size: 12px;
+    }
+
+    .ec-summary {
+        grid-template-columns: 1fr;
+        gap: 11px;
+    }
+
+    .ec-summary-card {
+        min-height: 80px;
+        padding: 14px;
+    }
+
+    .ec-summary-icon {
+        width: 42px;
+        height: 42px;
+    }
+
+    .ec-calendar-card {
+        padding: 10px;
+        overflow-x: auto;
+    }
+
+    .ec-calendar-toolbar {
+        min-width: 320px;
+    }
+
+    .ec-weekdays,
+    .ec-days {
+        min-width: 650px;
+    }
+
+    .ec-day {
+        min-height: 95px;
+    }
+
+    .ec-weekday-full {
+        display: none;
+    }
+
+    .ec-weekday-short {
+        display: inline;
+    }
+
+    .ec-event {
+        padding: 4px;
+        font-size: 9px;
+    }
+
+    .ec-legend {
+        gap: 11px;
+    }
+
+    .ec-legend span {
+        font-size: 11px;
+    }
+
+    .ec-data-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .ec-selected-card,
+    .ec-data-card {
+        padding: 15px;
+    }
+}
+
+/* =========================
+   SMALL MOBILE
+========================= */
+
+@media (max-width: 420px) {
+    .ec-heading {
+        align-items: flex-start;
+    }
+
+    .ec-heading h2 {
+        font-size: 21px;
+    }
+
+    .ec-today-button {
+        padding: 8px 12px;
+        font-size: 11px;
+    }
+
+    .ec-calendar-toolbar h3 {
+        font-size: 17px;
+    }
+
+    .ec-toolbar-today {
+        padding: 7px 10px;
+        font-size: 11px;
+    }
+
+    .ec-selected-event {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .ec-selected-category {
+        display: none;
+    }
+
+    .ec-detail-row {
+        gap: 10px;
+    }
+
+    .ec-detail-row > span {
+        flex-basis: 38%;
+        font-size: 11px;
+    }
+
+    .ec-detail-row > strong {
+        font-size: 12px;
+    }
+
+    .ec-modal-header {
+        padding: 17px;
+    }
+
+    .ec-modal-body {
+        padding: 8px 17px;
+    }
+
+    .ec-modal-footer {
+        padding: 12px 17px 17px;
+    }
+}

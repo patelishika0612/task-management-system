@@ -32,14 +32,20 @@ import EmployeeProject from "./employee/EmployeeProject";
 import EmployeeLayout from "./components/EmployeeLayout";
 import AdminLayout from "./components/AdminLayout";
 import ChatPage from "./admin/ChatPage";
+import EmployeeTask from "./employee/EmployeeTask";
+import EmployeeCalendar from "./employee/EmployeeCalendar";
 
 // Use production backend URL in production.
 // Set VITE_API_URL or VITE_API_URL in your frontend environment.
+
 const SOCKET_URL = (
     import.meta.env.VITE_API_BASE_URL ||
     import.meta.env.VITE_API_URL ||
     "http://localhost:5000"
-).replace(/\/api\/?$/, "").replace(/\/+$/, "");    
+)
+    .replace(/\/api\/?$/, "")
+    .replace(/\/+$/, "");
+
 
 // Protected route: admin login required
 const ProtectedRoute = ({ children }) => {
@@ -62,6 +68,20 @@ const ProtectedRoute = ({ children }) => {
 
     return children;
 };
+
+
+
+const EmployeeProtectedRoute = ({ children }) => {
+    const employeeId = localStorage.getItem("employeeId");
+
+    if (!employeeId) {
+        return <Navigate to="/" replace />;
+    }
+
+    return children;
+};
+
+
 
 function App() {
     const socketRef = useRef(null);
@@ -285,9 +305,9 @@ function App() {
             <Route
                 path="/employee-chat"
                 element={
-                    <ProtectedRoute>
+                    <EmployeeProtectedRoute>
                         <ChatPage layout={EmployeeLayout} role="employee" />
-                    </ProtectedRoute>
+                    </EmployeeProtectedRoute>
                 }
             />
 
@@ -328,10 +348,6 @@ function App() {
             />
 
             {/* Unknown URLs */}
-            <Route
-                path="*"
-                element={<Navigate to="/admin-login" replace />}
-            />
 
 
 
@@ -340,18 +356,36 @@ function App() {
             <Route
                 path="/employeedashboard"
                 element={
-                    <ProtectedRoute>
+                    <EmployeeProtectedRoute>
                         <EmployeeDashboard />
-                    </ProtectedRoute>
+                    </EmployeeProtectedRoute>
+                }
+            />
+
+            {/* Employee projects */}
+            <Route
+                path="/employee-projects"
+                element={
+                    <EmployeeProtectedRoute>
+                        <EmployeeProject />
+                    </EmployeeProtectedRoute>
                 }
             />
 
             <Route
-                path="/employee-projects"
+                path="/employeetask"
                 element={
-                    <ProtectedRoute>
-                        <EmployeeProject />
-                    </ProtectedRoute>
+                    <EmployeeProtectedRoute>
+                        <EmployeeTask />
+                    </EmployeeProtectedRoute>
+                }
+            />
+            <Route
+                path="/employee-calendar"
+                element={
+                    <EmployeeProtectedRoute>
+                        <EmployeeCalendar />
+                    </EmployeeProtectedRoute>
                 }
             />
 
@@ -363,6 +397,12 @@ function App() {
                     </ProtectedRoute>
                 }
             />
+
+            <Route
+                path="*"
+                element={<Navigate to="/admin-login" replace />}
+            />
+
 
         </Routes>
     );

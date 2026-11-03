@@ -1,6 +1,7 @@
 
 import express from "express";
 import connection from "../db.js";
+
 import {
     ADMIN_CHAT_ID_OFFSET,
     getLinkedAdmins,
@@ -8,6 +9,8 @@ import {
     resolveChatUserId,
     resolveChatUserIds,
 } from "../services/chatIdentity.js";
+
+import { createNotification } from "../utils/notificationService.js";
 
 const router = express.Router();
 const db = connection.promise();
@@ -19,9 +22,107 @@ const db = connection.promise();
 const isValidId = (id) =>
     Number.isInteger(Number(id)) && Number(id) > 0;
 
-// Unread counts live on the server so messages sent while the receiver is
-// offline still show up in their sidebar. Each member remembers the last
-// message id they have seen; anything newer from someone else is unread.
+// =====================================================
+// CHAT USER ID TO NOTIFICATION RECIPIENT
+// =====================================================
+
+const getNotificationRecipient = (chatUserId) => {
+    const id = Number(chatUserId);
+
+    if (!Number.isInteger(id) || id <= 0) {
+        return null;
+    }
+
+    // Unlinked admin:
+    // chat user ID = ADMIN_CHAT_ID_OFFSET + admin_login.id
+    if (id >= ADMIN_CHAT_ID_OFFSET) {
+        const adminId = id - ADMIN_CHAT_ID_OFFSET;
+
+        if (adminId <= 0) return null;
+
+        return {
+            recipientId: adminId,
+            recipientType: "admin",
+            url: "/"
+        };
+    }
+
+    // Employee and linked admin both use employee ID.
+    return {
+        recipientId: id,
+        recipientType: "employee",
+        url: "/employeedashboard"
+    };
+};
+
+// =====================================================
+// CHAT NOTIFICATION HELPER
+// =====================================================
+
+const sendChatNotifications = async ({
+    conversationId,
+    messageId,
+    senderId,
+    message,
+    messageType,
+    conversationType,
+    conversationMembers
+}) => {
+    try {
+        const notificationText =
+            messageType === "image"
+                ? "Sent an image"
+                : messageType === "file"
+                    ? "Sent a file"
+                    : message.length > 100
+                        ? `${message.substring(0, 100)}...`
+                        : message;
+
+        const recipients = conversationMembers.filter(
+            (member) =>
+                Number(member.user_id) !== Number(senderId)
+        );
+
+        const notificationPromises = recipients.map(async (member) => {
+            const recipient = getNotificationRecipient(member.user_id);
+
+            if (!recipient) return;
+
+            await createNotification({
+                recipientId: recipient.recipientId,
+                recipientType: recipient.recipientType,
+
+                title:
+                    conversationType === "group"
+                        ? "New Group Message"
+                        : "New Chat Message",
+
+                message: notificationText,
+
+                type: "chat_message",
+
+                referenceId: conversationId,
+
+                referenceType: "chat_conversation",
+
+                url: recipient.url,
+
+                eventKey:
+                    `chat-message-${messageId}-${recipient.recipientType}-${recipient.recipientId}`
+            });
+        });
+
+        await Promise.allSettled(notificationPromises);
+
+    } catch (error) {
+        console.error("Chat notification error:", error.message);
+    }
+};
+
+// =====================================================
+// ENSURE READ TRACKING
+// =====================================================
+
 const ensureReadTracking = async () => {
     const [columns] = await db.query(
         `SELECT COLUMN_NAME
@@ -38,7 +139,7 @@ const ensureReadTracking = async () => {
          ADD COLUMN last_read_message_id INT NULL DEFAULT NULL`
     );
 
-    // Existing history counts as read so nobody gets a flood of old badges.
+    // Existing history counts as read.
     await db.query(
         `UPDATE chat_conversation_members m
          SET m.last_read_message_id = (
@@ -53,14 +154,20 @@ const readTrackingReady = ensureReadTracking().catch((error) => {
     console.error("Chat read tracking setup error:", error);
 });
 
-// Admins linked to an employee account chat as that employee. Fold any
-// history they built up under their admin chat id into it.
+// =====================================================
+// SYNC LINKED ADMINS
+// =====================================================
+
 const syncLinkedAdmins = () =>
     readTrackingReady.then(mergeLinkedAdminChats).catch((error) => {
         console.error("Chat linked admin merge error:", error);
     });
 
 syncLinkedAdmins();
+
+// =====================================================
+// MARK CONVERSATION READ
+// =====================================================
 
 const markConversationRead = async (conversationId, userId) => {
     await readTrackingReady;
@@ -70,7 +177,9 @@ const markConversationRead = async (conversationId, userId) => {
          SET last_read_message_id = GREATEST(
              COALESCE(last_read_message_id, 0),
              COALESCE((
-                 SELECT MAX(id) FROM chat_messages WHERE conversation_id = ?
+                 SELECT MAX(id)
+                 FROM chat_messages
+                 WHERE conversation_id = ?
              ), 0)
          )
          WHERE conversation_id = ?
@@ -80,13 +189,12 @@ const markConversationRead = async (conversationId, userId) => {
 };
 
 // =====================================================
-// CHAT CONTACTS (employees + admins)
+// CHAT CONTACTS
 // GET /api/chat/contacts
 // =====================================================
 
 router.get("/contacts", async (req, res) => {
     try {
-        // Picks up admins linked to an employee since the server started.
         await syncLinkedAdmins();
 
         const [employees] = await db.query(
@@ -111,19 +219,21 @@ router.get("/contacts", async (req, res) => {
         const linkedAdmins = await getLinkedAdmins();
         const linkedEmployeeIds = new Set(linkedAdmins.values());
 
-        // An admin who is also an employee is listed once, as the employee.
         const adminContacts = admins
             .filter(
                 (admin) =>
-                    !linkedAdmins.has(ADMIN_CHAT_ID_OFFSET + Number(admin.id))
+                    !linkedAdmins.has(
+                        ADMIN_CHAT_ID_OFFSET + Number(admin.id)
+                    )
             )
             .map((admin) => ({
-                user_id: ADMIN_CHAT_ID_OFFSET + Number(admin.id),
+                user_id:
+                    ADMIN_CHAT_ID_OFFSET + Number(admin.id),
                 name: "Admin",
                 email: admin.email,
                 image: null,
                 role: admin.email,
-                isAdmin: true,
+                isAdmin: true
             }));
 
         const employeeContacts = employees.map((employee) =>
@@ -134,14 +244,15 @@ router.get("/contacts", async (req, res) => {
 
         return res.json({
             success: true,
-            data: [...adminContacts, ...employeeContacts],
+            data: [...adminContacts, ...employeeContacts]
         });
+
     } catch (error) {
         console.error("Get chat contacts error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Failed to fetch chat contacts",
+            message: "Failed to fetch chat contacts"
         });
     }
 });
@@ -158,7 +269,7 @@ router.post("/direct", async (req, res) => {
     try {
         const [senderId, receiverId] = await resolveChatUserIds([
             req.body.currentUserId,
-            req.body.userId,
+            req.body.userId
         ]);
 
         if (
@@ -168,7 +279,7 @@ router.post("/direct", async (req, res) => {
         ) {
             return res.status(400).json({
                 success: false,
-                message: "Valid, different user IDs are required",
+                message: "Valid, different user IDs are required"
             });
         }
 
@@ -195,12 +306,13 @@ router.post("/direct", async (req, res) => {
             return res.json({
                 success: true,
                 conversationId: existing[0].id,
-                message: "Conversation found",
+                message: "Conversation found"
             });
         }
 
         const [conversation] = await conn.query(
-            `INSERT INTO chat_conversations (type, created_by)
+            `INSERT INTO chat_conversations
+             (type, created_by)
              VALUES ('direct', ?)`,
             [senderId]
         );
@@ -215,7 +327,7 @@ router.post("/direct", async (req, res) => {
                 conversationId,
                 senderId,
                 conversationId,
-                receiverId,
+                receiverId
             ]
         );
 
@@ -224,8 +336,9 @@ router.post("/direct", async (req, res) => {
         return res.status(201).json({
             success: true,
             conversationId,
-            message: "Conversation created",
+            message: "Conversation created"
         });
+
     } catch (error) {
         if (conn) await conn.rollback();
 
@@ -233,8 +346,9 @@ router.post("/direct", async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Failed to create direct conversation",
+            message: "Failed to create direct conversation"
         });
+
     } finally {
         if (conn) conn.release();
     }
@@ -244,7 +358,6 @@ router.post("/direct", async (req, res) => {
 // CREATE GROUP
 // POST /api/chat/group
 // body: { name, currentUserId, memberIds: [] }
-// Creator is automatically added as a member.
 // =====================================================
 
 router.post("/group", async (req, res) => {
@@ -252,7 +365,10 @@ router.post("/group", async (req, res) => {
 
     try {
         const name = String(req.body.name || "").trim();
-        const currentUserId = await resolveChatUserId(req.body.currentUserId);
+
+        const currentUserId = await resolveChatUserId(
+            req.body.currentUserId
+        );
 
         const requestedMembers = Array.isArray(req.body.memberIds)
             ? await resolveChatUserIds(req.body.memberIds)
@@ -266,19 +382,18 @@ router.post("/group", async (req, res) => {
         ) {
             return res.status(400).json({
                 success: false,
-                message: "Valid group name, creator and member IDs are required",
+                message: "Valid group name, creator and member IDs are required"
             });
         }
 
         const memberIds = [
-            ...new Set([currentUserId, ...requestedMembers]),
+            ...new Set([currentUserId, ...requestedMembers])
         ];
 
-        // Creator plus at least two other members.
         if (memberIds.length < 3) {
             return res.status(400).json({
                 success: false,
-                message: "Select at least two other members",
+                message: "Select at least two other members"
             });
         }
 
@@ -294,11 +409,13 @@ router.post("/group", async (req, res) => {
 
         const conversationId = conversation.insertId;
 
-        const placeholders = memberIds.map(() => "(?, ?)").join(", ");
+        const placeholders = memberIds
+            .map(() => "(?, ?)")
+            .join(", ");
 
         const values = memberIds.flatMap((userId) => [
             conversationId,
-            userId,
+            userId
         ]);
 
         await conn.query(
@@ -315,8 +432,9 @@ router.post("/group", async (req, res) => {
             conversationId,
             name,
             memberIds,
-            message: "Group created successfully",
+            message: "Group created successfully"
         });
+
     } catch (error) {
         if (conn) await conn.rollback();
 
@@ -324,8 +442,9 @@ router.post("/group", async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Failed to create group. Check the database schema and conversation type.",
+            message: "Failed to create group. Check the database schema and conversation type."
         });
+
     } finally {
         if (conn) conn.release();
     }
@@ -343,7 +462,7 @@ router.get("/groups", async (req, res) => {
         if (!isValidId(userId)) {
             return res.status(400).json({
                 success: false,
-                message: "Valid userId is required",
+                message: "Valid userId is required"
             });
         }
 
@@ -368,14 +487,15 @@ router.get("/groups", async (req, res) => {
 
         return res.json({
             success: true,
-            data: groups,
+            data: groups
         });
+
     } catch (error) {
         console.error("Get groups error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Failed to fetch groups",
+            message: "Failed to fetch groups"
         });
     }
 });
@@ -383,7 +503,6 @@ router.get("/groups", async (req, res) => {
 // =====================================================
 // UNREAD COUNTS
 // GET /api/chat/unread?userId=27
-// Returns { "direct-<otherUserId>": n, "group-<conversationId>": n }
 // =====================================================
 
 router.get("/unread", async (req, res) => {
@@ -393,7 +512,7 @@ router.get("/unread", async (req, res) => {
         if (!isValidId(userId)) {
             return res.status(400).json({
                 success: false,
-                message: "Valid userId is required",
+                message: "Valid userId is required"
             });
         }
 
@@ -424,14 +543,20 @@ router.get("/unread", async (req, res) => {
             [userId]
         );
 
-        // Direct chats with deleted employees/admins never show up in the
-        // contact list, so their messages must not count towards the badge.
-        const [employees] = await db.query(`SELECT emp_id FROM employe`);
-        const [admins] = await db.query(`SELECT id FROM admin_login`);
+        const [employees] = await db.query(
+            `SELECT emp_id FROM employe`
+        );
+
+        const [admins] = await db.query(
+            `SELECT id FROM admin_login`
+        );
 
         const existingUserIds = new Set([
             ...employees.map((row) => Number(row.emp_id)),
-            ...admins.map((row) => ADMIN_CHAT_ID_OFFSET + Number(row.id)),
+            ...admins.map(
+                (row) =>
+                    ADMIN_CHAT_ID_OFFSET + Number(row.id)
+            )
         ]);
 
         const counts = {};
@@ -454,14 +579,15 @@ router.get("/unread", async (req, res) => {
 
         return res.json({
             success: true,
-            data: counts,
+            data: counts
         });
+
     } catch (error) {
         console.error("Get unread counts error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Failed to fetch unread counts",
+            message: "Failed to fetch unread counts"
         });
     }
 });
@@ -475,43 +601,18 @@ router.get("/unread", async (req, res) => {
 router.post("/:conversationId/read", async (req, res) => {
     try {
         const conversationId = Number(req.params.conversationId);
-        const userId = await resolveChatUserId(req.body?.userId);
 
-        if (!isValidId(conversationId) || !isValidId(userId)) {
+        const userId = await resolveChatUserId(
+            req.body?.userId
+        );
+
+        if (
+            !isValidId(conversationId) ||
+            !isValidId(userId)
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Valid conversationId and userId are required",
-            });
-        }
-
-        await markConversationRead(conversationId, userId);
-
-        return res.json({ success: true });
-    } catch (error) {
-        console.error("Mark chat read error:", error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Failed to mark conversation read",
-        });
-    }
-});
-
-// =====================================================
-// GET CONVERSATION MESSAGES
-// GET /api/chat/:conversationId/messages?userId=27
-// Works for direct and group conversations.
-// =====================================================
-
-router.get("/:conversationId/messages", async (req, res) => {
-    try {
-        const conversationId = Number(req.params.conversationId);
-        const userId = await resolveChatUserId(req.query.userId);
-
-        if (!isValidId(conversationId) || !isValidId(userId)) {
-            return res.status(400).json({
-                success: false,
-                message: "Valid conversationId and userId are required",
+                message: "Valid conversationId and userId are required"
             });
         }
 
@@ -527,7 +628,62 @@ router.get("/:conversationId/messages", async (req, res) => {
         if (members.length === 0) {
             return res.status(403).json({
                 success: false,
-                message: "You are not a member of this conversation",
+                message: "You are not a member of this conversation"
+            });
+        }
+
+        await markConversationRead(conversationId, userId);
+
+        return res.json({
+            success: true
+        });
+
+    } catch (error) {
+        console.error("Mark chat read error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to mark conversation read"
+        });
+    }
+});
+
+// =====================================================
+// GET CONVERSATION MESSAGES
+// GET /api/chat/:conversationId/messages?userId=27
+// =====================================================
+
+router.get("/:conversationId/messages", async (req, res) => {
+    try {
+        const conversationId = Number(req.params.conversationId);
+
+        const userId = await resolveChatUserId(
+            req.query.userId
+        );
+
+        if (
+            !isValidId(conversationId) ||
+            !isValidId(userId)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Valid conversationId and userId are required"
+            });
+        }
+
+        const [members] = await db.query(
+            `SELECT id
+             FROM chat_conversation_members
+             WHERE conversation_id = ?
+               AND user_id = ?
+             LIMIT 1`,
+            [conversationId, userId]
+        );
+
+        if (members.length === 0) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not a member of this conversation"
             });
         }
 
@@ -548,19 +704,19 @@ router.get("/:conversationId/messages", async (req, res) => {
             [conversationId]
         );
 
-        // Opening a conversation reads it.
         await markConversationRead(conversationId, userId);
 
         return res.json({
             success: true,
-            data: messages,
+            data: messages
         });
+
     } catch (error) {
         console.error("Get chat messages error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Failed to fetch messages",
+            message: "Failed to fetch messages"
         });
     }
 });
@@ -569,13 +725,15 @@ router.get("/:conversationId/messages", async (req, res) => {
 // SEND MESSAGE
 // POST /api/chat/:conversationId/messages
 // body: { userId, message, messageType }
-// Works for direct and group conversations.
 // =====================================================
 
 router.post("/:conversationId/messages", async (req, res) => {
     try {
         const conversationId = Number(req.params.conversationId);
-        const senderId = await resolveChatUserId(req.body.userId);
+
+        const senderId = await resolveChatUserId(
+            req.body.userId
+        );
 
         const message =
             typeof req.body.message === "string"
@@ -584,29 +742,32 @@ router.post("/:conversationId/messages", async (req, res) => {
 
         const messageType = req.body.messageType || "text";
 
-        if (!isValidId(conversationId) || !isValidId(senderId)) {
+        if (
+            !isValidId(conversationId) ||
+            !isValidId(senderId)
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Valid conversationId and userId are required",
+                message: "Valid conversationId and userId are required"
             });
         }
 
         if (!["text", "image", "file"].includes(messageType)) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid message type",
+                message: "Invalid message type"
             });
         }
 
         if (messageType === "text" && !message) {
             return res.status(400).json({
                 success: false,
-                message: "Message cannot be empty",
+                message: "Message cannot be empty"
             });
         }
 
-        // Confirm that the sender belongs to this conversation.
-        const [members] = await db.query(
+        // Confirm sender is a conversation member.
+        const [senderMembers] = await db.query(
             `SELECT id
              FROM chat_conversation_members
              WHERE conversation_id = ?
@@ -615,13 +776,14 @@ router.post("/:conversationId/messages", async (req, res) => {
             [conversationId, senderId]
         );
 
-        if (members.length === 0) {
+        if (senderMembers.length === 0) {
             return res.status(403).json({
                 success: false,
-                message: "You are not a member of this conversation",
+                message: "You are not a member of this conversation"
             });
         }
 
+        // Save message.
         const [result] = await db.query(
             `INSERT INTO chat_messages
              (conversation_id, sender_id, message_type, message)
@@ -630,10 +792,11 @@ router.post("/:conversationId/messages", async (req, res) => {
                 conversationId,
                 senderId,
                 messageType,
-                message || null,
+                message || null
             ]
         );
 
+        // Fetch saved message.
         const [rows] = await db.query(
             `SELECT
                 id,
@@ -645,14 +808,23 @@ router.post("/:conversationId/messages", async (req, res) => {
                 file_name,
                 sent_at
              FROM chat_messages
-             WHERE id = ?`,
+             WHERE id = ?
+             LIMIT 1`,
             [result.insertId]
         );
 
-        const io = req.app.get("io");
+        if (rows.length === 0) {
+            return res.status(500).json({
+                success: false,
+                message: "Message saved but could not be retrieved"
+            });
+        }
 
+        // Fetch all conversation members.
         const [conversationMembers] = await db.query(
-            `SELECT m.user_id, c.type
+            `SELECT
+                m.user_id,
+                c.type
              FROM chat_conversation_members m
              INNER JOIN chat_conversations c
                ON c.id = m.conversation_id
@@ -660,32 +832,54 @@ router.post("/:conversationId/messages", async (req, res) => {
             [conversationId]
         );
 
+        const conversationType =
+            conversationMembers[0]?.type ?? null;
+
         const savedMessage = {
             ...rows[0],
-            conversation_type: conversationMembers[0]?.type ?? null,
+            conversation_type: conversationType
         };
 
+        // =================================================
+        // SOCKET.IO MESSAGE EVENT
+        // =================================================
+
+        const io = req.app.get("io");
+
         if (io) {
-            // Socket.IO delivers once per socket even when it is in several
-            // of these rooms. Member rooms keep every chat sidebar updated.
             io.to([
                 `conversation:${conversationId}`,
                 ...conversationMembers.map(
                     (member) => `chat-user:${member.user_id}`
-                ),
+                )
             ]).emit("chat:message", savedMessage);
         }
 
+        // =================================================
+        // SEND NOTIFICATIONS TO OTHER MEMBERS
+        // =================================================
+
+        await sendChatNotifications({
+            conversationId,
+            messageId: result.insertId,
+            senderId,
+            message,
+            messageType,
+            conversationType,
+            conversationMembers
+        });
+
         return res.status(201).json({
             success: true,
-            data: savedMessage,
+            data: savedMessage
         });
+
     } catch (error) {
         console.error("Send chat message error:", error);
 
         return res.status(500).json({
             success: false,
-            message: "Failed to send message",
+            message: "Failed to send message"
         });
     }
 });

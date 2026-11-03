@@ -1,6 +1,8 @@
 
 import bcrypt from "bcryptjs";
 import connection from "../db.js";
+import jwt from "jsonwebtoken";
+
 
 const db = connection.promise();
 
@@ -114,88 +116,105 @@ const getEmployeeById = async (req, res) => {
 // POST /api/employees/login
 // =====================================================
 
+
 const employeeLogin = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+    try {
+        const { email, password } = req.body;
 
-    if (
-      typeof email !== "string" ||
-      !email.trim() ||
-      typeof password !== "string" ||
-      !password
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Email and password are required.",
-      });
+        if (
+            typeof email !== "string" ||
+            !email.trim() ||
+            typeof password !== "string" ||
+            !password
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required."
+            });
+        }
+
+        const [employees] = await db.query(
+            `SELECT
+                emp_id,
+                emp_name,
+                email,
+                password,
+                department_id,
+                employee_code,
+                status
+             FROM employe
+             WHERE email = ?
+             LIMIT 1`,
+            [email.trim()]
+        );
+
+        if (employees.length === 0) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password."
+            });
+        }
+
+        const employee = employees[0];
+
+        const passwordMatches = await bcrypt.compare(
+            password,
+            employee.password
+        );
+
+        if (!passwordMatches) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid email or password."
+            });
+        }
+
+        if (employee.status !== "active") {
+            return res.status(403).json({
+                success: false,
+                message: "Your employee account is inactive."
+            });
+        }
+
+        // Remove password from response
+        const {
+            password: storedPassword,
+            ...safeEmployee
+        } = employee;
+
+        // Generate JWT token
+        if (!process.env.JWT_SECRET) {
+            throw new Error("JWT_SECRET is missing in .env");
+        }
+
+        const token = jwt.sign(
+            {
+                employeeId: employee.emp_id,
+                role: "employee"
+            },
+            process.env.JWT_SECRET,
+            {
+                expiresIn: "1d"
+            }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Login successful.",
+            data: safeEmployee,
+            token
+        });
+
+    } catch (error) {
+        console.error("Employee login error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to login. Please try again."
+        });
     }
-
-    // Find employee by email
-    const [employees] = await db.query(
-      `SELECT
-          emp_id,
-          emp_name,
-          email,
-          password,
-          department_id,
-          employee_code,
-          status
-       FROM employe
-       WHERE email = ?
-       LIMIT 1`,
-      [email.trim()]
-    );
-
-    if (employees.length === 0) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password.",
-      });
-    }
-
-    const employee = employees[0];
-
-    // Compare entered password with stored bcrypt hash
-    const passwordMatches = await bcrypt.compare(
-      password,
-      employee.password
-    );
-
-    if (!passwordMatches) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password.",
-      });
-    }
-
-    // Check employee account status
-    if (employee.status !== "active") {
-      return res.status(403).json({
-        success: false,
-        message: "Your employee account is inactive.",
-      });
-    }
-
-    // Never send password hash to frontend
-    const {
-      password: storedPassword,
-      ...safeEmployee
-    } = employee;
-
-    return res.status(200).json({
-      success: true,
-      message: "Login successful.",
-      data: safeEmployee,
-    });
-  } catch (error) {
-    console.error("Employee login error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to login. Please try again.",
-    });
-  }
 };
+
 
 
 // =====================================================
