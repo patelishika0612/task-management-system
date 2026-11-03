@@ -36,139 +36,144 @@ const Login = () => {
     }));
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+const handleLogin = async (e) => {
+  e.preventDefault();
 
-    const email = formData.email.trim();
-    const password = formData.password;
+  const email = formData.email.trim();
+  const password = formData.password;
 
-    // Validate required fields
-    if (!email || !password.trim()) {
-      Swal.fire({
-        icon: "warning",
-        title: "Required Fields",
-        text: "Please enter your email and password.",
-        confirmButtonColor: "#1557f5",
-      });
-      return;
+  // Validate required fields
+  if (!email || !password.trim()) {
+    Swal.fire({
+      icon: "warning",
+      title: "Required Fields",
+      text: "Please enter your email and password.",
+      confirmButtonColor: "#1557f5",
+    });
+    return;
+  }
+
+  // Validate email
+  if (!isValidEmail(email)) {
+    Swal.fire({
+      icon: "warning",
+      title: "Invalid Email",
+      text: "Please enter a valid email address.",
+      confirmButtonColor: "#1557f5",
+    });
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    const response = await API.post("/employees/login", {
+      email,
+      password,
+    });
+
+    const result = response.data;
+
+    console.log("Login API response:", result);
+
+    if (!result?.success) {
+      throw new Error(
+        result?.message || "Invalid email or password."
+      );
     }
 
-    // Validate email
-    if (!isValidEmail(email)) {
-      Swal.fire({
-        icon: "warning",
-        title: "Invalid Email",
-        text: "Please enter a valid email address.",
-        confirmButtonColor: "#1557f5",
-      });
-      return;
+    // Get employee data from the API response
+    const employee =
+      result?.data?.employee ||
+      result?.employee ||
+      result?.data?.data?.employee ||
+      result?.data;
+
+    // Support different employee ID field names
+    const employeeId =
+      employee?.emp_id ??
+      employee?.employee_id ??
+      employee?.id;
+
+    if (
+      !employee ||
+      employeeId === undefined ||
+      employeeId === null ||
+      String(employeeId).trim() === ""
+    ) {
+      console.error("Unexpected login response:", result);
+
+      throw new Error(
+        "Employee information or employee ID not found."
+      );
     }
 
-    try {
-      setLoading(true);
+    // Save token if provided by the backend
+    const token =
+      result?.token ||
+      result?.data?.token ||
+      result?.data?.data?.token;
 
-      // Call employee login API
-      const response = await API.post("/employees/login", {
-        email,
-        password,
-      });
-
-      const result = response.data;
-
-      // Check backend response
-      if (!result?.success) {
-        throw new Error(result?.message || "Invalid email or password.");
-      }
-
-      const employee =
-        result?.data?.employee ||
-        result?.employee ||
-        result?.data?.data?.employee ||
-        result?.data;
-
-      const employeeId =
-        employee?.emp_id ??
-        employee?.employee_id ??
-        employee?.id;
-
-      if (
-        employeeId === undefined ||
-        employeeId === null ||
-        String(employeeId).trim() === ""
-      ) {
-        console.error("Unexpected login response:", result);
-
-        throw new Error(
-          "Employee ID not found in login response."
-        );
-      }
-      if (!employee || !employee.emp_id) {
-        throw new Error("Invalid response received from the server.");
-      }
-
-      // Save token only if the backend returns one
-      const token = result.token || result.data?.token;
-
-      if (token) {
-        localStorage.setItem("token", token);
-      }
-
-      // Save employee information
-      localStorage.setItem("employeeId", String(employeeId));
-
-      localStorage.setItem(
-        "employeeEmail",
-        employee?.email || email
-      );
-
-      localStorage.setItem(
-        "employeeName",
-        employee?.emp_name || ""
-      );
-
-      localStorage.setItem(
-        "employeeImage",
-        employee?.image || ""
-      );
-
-      console.log("Logged-in employee:", {
-        employeeId,
-        email: employee?.email || email,
-        name: employee?.emp_name || "",
-      });
-
-      // Show success message
-      await Swal.fire({
-        icon: "success",
-        title: "Welcome Back!",
-        text: "Login successful.",
-        showConfirmButton: false,
-        timer: 1200,
-      });
-
-      // Navigate to employee dashboard
-      navigate("/employeedashboard");
-    } catch (error) {
-      console.error(
-        "LOGIN ERROR:",
-        error.response?.data || error.message
-      );
-
-      const message =
-        error.response?.data?.message ||
-        error.message ||
-        "Unable to login. Please try again.";
-
-      Swal.fire({
-        icon: "error",
-        title: "Login Failed",
-        text: message,
-        confirmButtonColor: "#1557f5",
-      });
-    } finally {
-      setLoading(false);
+    if (token) {
+      localStorage.setItem("token", token);
     }
-  };
+
+    // Save employee information
+    localStorage.setItem("employeeId", String(employeeId));
+    localStorage.setItem(
+      "employeeEmail",
+      employee?.email || email
+    );
+    localStorage.setItem(
+      "employeeName",
+      employee?.emp_name ||
+        employee?.employee_name ||
+        employee?.name ||
+        ""
+    );
+    localStorage.setItem(
+      "employeeImage",
+      employee?.image || ""
+    );
+
+    console.log("Logged-in employee:", {
+      employeeId,
+      email: employee?.email || email,
+    });
+
+    await Swal.fire({
+      icon: "success",
+      title: "Welcome Back!",
+      text: "Login successful.",
+      showConfirmButton: false,
+      timer: 1200,
+    });
+
+    // Open Employee Dashboard after successful login
+    navigate("/employeedashboard", { replace: true });
+
+  } catch (error) {
+    console.error(
+      "LOGIN ERROR:",
+      error.response?.data || error.message
+    );
+
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Unable to login. Please try again.";
+
+    Swal.fire({
+      icon: "error",
+      title: "Login Failed",
+      text: message,
+      confirmButtonColor: "#1557f5",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="admin-login-page">

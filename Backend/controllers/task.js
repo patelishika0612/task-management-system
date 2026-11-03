@@ -445,6 +445,44 @@ const updateTask = async (req, res) => {
     }
 };
 
+export const updateTaskStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!status) {
+            return res.status(400).json({
+                success: false,
+                message: "Status is required"
+            });
+        }
+
+        const [result] = await db.query(
+            "UPDATE task SET status = ?, updated_at = NOW() WHERE task_id = ?",
+            [status, id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Task not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Task status updated successfully"
+        });
+
+    } catch (error) {
+        console.error("Update task status error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to update task status"
+        });
+    }
+};
 
 // =====================================================
 // DELETE TASK
@@ -500,5 +538,6 @@ export default {
     getTaskById,
     createTask,
     updateTask,
+     updateTaskStatus,
     deleteTask
 };

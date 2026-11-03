@@ -20,6 +20,7 @@ import adminLoginRoutes from "./routes/adminLoginRoutes.js";
 import calendarRoutes from "./routes/calendarRoutes.js";
 import directChatRoutes from "./routes/directChat.js";
 import { resolveChatUserId } from "./services/chatIdentity.js";
+import employeeCalendarRoutes from "./routes/employeeCalendar.js";
 
 dotenv.config();
 
@@ -135,8 +136,8 @@ app.use(
 app.use("/api/admin-login", adminLoginRoutes);
 
 app.use("/api/calendar", calendarRoutes);
-app.use("/api/calendar", calendarRoutes);
 app.use("/api/chat", directChatRoutes);
+app.use("/api/employee-calendar", employeeCalendarRoutes);
 
 // =====================================================
 // TEST API

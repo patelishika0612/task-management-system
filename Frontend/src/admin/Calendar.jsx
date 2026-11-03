@@ -68,37 +68,49 @@ const Calendar = () => {
 
   const dateKey = (value) => {
     if (!value) return "";
-    const match = String(value).match(/^\d{4}-\d{2}-\d{2}/);
-    if (match) return match[0];
 
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? "" : formatDate(parsed);
-  };
+    const match = String(value).match(/^(\d{4}-\d{2}-\d{2})/);
 
-  const normalizeTask = (item) => ({
-    id: item.Event_ID,
-    title: item.Event_Title || "Untitled event",
-    description: item.Description || "",
-    startDate: item.Assigned_Date || item.Event_Date,
-    endDate: item.Deadline || item.Event_Date,
-    status:
-      item.Current_Status === "Overdue"
-        ? "Overdue"
-        : item.Status === "Scheduled"
-          ? "Pending"
-          : item.Status || "Pending",
-    rawStatus: item.Status || "Scheduled",
-    priority: item.Priority || "Medium",
-    employee: item.Employee_Name || "Unassigned",
-    employeeId: item.Employee_ID || "",
-    department:
-      item.Department_Name || item.department_name || "—",
-    project:
-      item.Project_Name ||
-      (item.Project_ID ? `Project #${item.Project_ID}` : "—"),
-    projectId: item.Project_ID || "",
-    eventType: item.Event_Type || "Task",
-  });
+    return match ? match[1] : "";
+};
+
+const normalizeTask = (item) => ({
+  id: item.Event_ID,
+  sourceId: item.Source_ID,
+  source: item.Source || "calendar",
+
+  title: item.Event_Title || "Untitled event",
+  description: item.Description || "",
+
+  startDate: item.Start_Date || item.Assigned_Date || "",
+  endDate: item.End_Date || item.Due_Date || item.Deadline || "",
+
+  // Event only on its exact date
+  eventDate: dateKey(item.Event_Date),
+
+  status:
+    item.Current_Status === "Overdue"
+      ? "Overdue"
+      : item.Status === "Scheduled"
+        ? "Pending"
+        : item.Status || "Pending",
+
+  rawStatus: item.Status || "Scheduled",
+  priority: item.Priority || "Medium",
+
+  employee: item.Employee_Name || "Unassigned",
+  employeeId: item.Employee_ID || "",
+  department: item.Department_Name || "—",
+
+  project:
+    item.Project_Name ||
+    item.proj_name ||
+    (item.Project_ID ? `Project #${item.Project_ID}` : "—"),
+
+  projectId: item.Project_ID || "",
+  eventType: item.Event_Type || "Task",
+  client: item.Client_Name || "",
+});
 
   const fetchCalendarEvents = useCallback(async () => {
     setLoading(true);
@@ -186,15 +198,13 @@ const Calendar = () => {
     return days;
   }, [currentDate]);
 
-  const getTasksForDate = (date) => {
-    const current = formatDate(date);
+const getTasksForDate = (date) => {
+    const currentDateKey = formatDate(date);
 
-    return filteredTasks.filter((task) => {
-      const start = dateKey(task.startDate);
-      const end = dateKey(task.endDate);
-      return start && end && current >= start && current <= end;
-    });
-  };
+    return filteredTasks.filter(
+        (task) => task.eventDate === currentDateKey
+    );
+};
 
   const updateFilter = (field, value) => {
     setFilters((previous) => ({ ...previous, [field]: value }));
@@ -226,19 +236,30 @@ const Calendar = () => {
     )),
   ];
 
-  const upcomingTasks = filteredTasks.filter((task) => {
-    const end = dateKey(task.endDate);
-    return end >= formatDate(today) && task.status !== "Completed";
-  }).sort((a, b) => dateKey(a.endDate).localeCompare(dateKey(b.endDate)));
+const upcomingTasks = filteredTasks.filter((task) => {
+  const eventDate = dateKey(task.eventDate);
 
-  const overdueTasks = filteredTasks.filter((task) => {
-    const end = dateKey(task.endDate);
-    return end && end < formatDate(today) && task.status !== "Completed";
-  });
-
-  const completedTasks = filteredTasks.filter(
-    (task) => task.status === "Completed"
+  return (
+    eventDate >= formatDate(today) &&
+    task.status !== "Completed"
   );
+}).sort((a, b) =>
+  dateKey(a.eventDate).localeCompare(dateKey(b.eventDate))
+);
+
+const overdueTasks = filteredTasks.filter((task) => {
+  const eventDate = dateKey(task.eventDate);
+
+  return (
+    eventDate &&
+    eventDate < formatDate(today) &&
+    task.status !== "Completed"
+  );
+});
+
+const completedTasks = filteredTasks.filter(
+  (task) => task.status === "Completed"
+);
 
   const handleCreate = async (event) => {
     event.preventDefault();

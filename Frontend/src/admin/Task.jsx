@@ -15,7 +15,12 @@ const PAGE_SIZE = 4;
 
 // Must match the ENUM values of the `task` table
 const PRIORITY_OPTIONS = ["low", "medium", "high", "urgent"];
-const STATUS_OPTIONS = ["pending", "on hold", "completed"];
+const STATUS_OPTIONS = [
+  "pending",
+  "on hold",
+  "in progress",
+  "completed",
+];
 
 const EMPTY_FORM = {
   task_name: "",
@@ -618,6 +623,15 @@ const Task = () => {
       tone: "orange",
     },
     {
+      label: "In Progress",
+      value: tasks.filter(
+        (task) => task.status === "in progress"
+      ).length,
+      icon: <RefreshCw size={20} />,
+      tone: "blue",
+    },
+
+    {
       label: "On Hold",
       value: tasks.filter((task) => task.status === "on hold").length,
       icon: <PauseCircle size={20} />,
@@ -1009,7 +1023,7 @@ const Task = () => {
 
                             className={`task-badge task-status-${task.status?.replace(/\s+/g, "-")}`}
 
-                       
+
                           >
                             {task.status}
                           </span>
@@ -1726,7 +1740,7 @@ const Task = () => {
                         {viewTask.description || "No description provided."}
                       </p>
                     </section>
-{/* 
+                    {/* 
                     {/* {/* <section className="task-view-card">
                       <h3>Task Progress</h3>
                       <div className="task-view-progress-head">
@@ -1744,7 +1758,7 @@ const Task = () => {
                       <small className="task-view-progress-note">
                         {getDueText(viewTask) || "No deadline set"}
                       </small> */}
-                    {/* </section> */} 
+                    {/* </section> */}
 
                     <section className="task-view-card">
                       <h3>Comments</h3>
@@ -1775,7 +1789,7 @@ const Task = () => {
 
                             className={`task-badge task-status-${viewTask.status?.replace(/\s+/g, "-")}`}
 
-                          
+
 
                           >
                             {viewTask.status}
