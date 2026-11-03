@@ -36,8 +36,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #e8f4ff;
-  color: #168bd1;
+  background: #eceefa;
+  color: #272a6c;
 }
 
 .admin-calendar-header h1 {
@@ -61,7 +61,7 @@
   border: 1px solid #d9e2ed;
   border-radius: 9px;
   background: #ffffff;
-  color: #168bd1;
+  color: #272a6c;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
@@ -69,9 +69,9 @@
 }
 
 .admin-calendar-today-btn:hover {
-  background: #168bd1;
+  background: #272a6c;
   color: #ffffff;
-  border-color: #168bd1;
+  border-color: #272a6c;
 }
 
 
@@ -107,8 +107,8 @@
 }
 
 .calendar-stat-icon.blue {
-  background: #e8f4ff;
-  color: #168bd1;
+  background: #eceefa;
+  color: #272a6c;
 }
 
 .calendar-stat-icon.orange {
@@ -205,9 +205,9 @@
 }
 
 .calendar-navigation-btn:hover {
-  color: #168bd1;
-  background: #eef8ff;
-  border-color: #cbe8fa;
+  color: #272a6c;
+  background: #eceefa;
+  border-color: #c9cceb;
 }
 
 .calendar-legend {
@@ -232,7 +232,7 @@
 }
 
 .blue-dot {
-  background: #168bd1;
+  background: #272a6c;
 }
 
 .orange-dot {
@@ -290,7 +290,7 @@
 }
 
 .calendar-grid::-webkit-scrollbar-thumb:hover {
-  background: #168bd1;
+  background: #272a6c;
 }
 
 .calendar-day {
@@ -320,7 +320,7 @@
 }
 
 .calendar-day-today {
-  background: #f2f9ff;
+  background: #f5f6fd;
 }
 
 .calendar-day-today .calendar-day-number {
@@ -329,7 +329,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #168bd1;
+  background: #272a6c;
   color: #ffffff;
   border-radius: 50%;
 }
@@ -383,12 +383,12 @@
 }
 
 .calendar-status-progress {
-  background: #e9f6ff;
-  color: #168bd1;
+  background: #eceefa;
+  color: #272a6c;
 }
 
 .calendar-status-progress span {
-  background: #168bd1;
+  background: #272a6c;
 }
 
 .calendar-status-pending {
@@ -408,6 +408,86 @@
 .calendar-status-completed span {
   background: #29a35a;
 }
+
+.calendar-status-in-progress,
+.calendar-status-scheduled {
+  background: #eceefa;
+  color: #272a6c;
+}
+
+.calendar-status-overdue {
+  background: #fff0f0;
+  color: #df4d4d;
+}
+
+/* Event type colours (same as employee calendar) */
+.calendar-task.project-start,
+.calendar-task.project-end,
+.calendar-task.task-start,
+.calendar-task.task-due,
+.calendar-task.meeting {
+  border-left: 3px solid transparent;
+  border-radius: 4px;
+}
+
+.calendar-task.project-start {
+  border-left-color: #1c5aab;
+  background: #e3efff;
+  color: #1c5aab;
+}
+
+.calendar-task.project-end {
+  border-left-color: #7042a4;
+  background: #f0e7ff;
+  color: #7042a4;
+}
+
+.calendar-task.task-start {
+  border-left-color: #187343;
+  background: #e2f7eb;
+  color: #187343;
+}
+
+.calendar-task.task-due {
+  border-left-color: #bd3d2e;
+  background: #ffe8e5;
+  color: #bd3d2e;
+}
+
+.calendar-task.meeting {
+  border-left-color: #272a6c;
+  background: #eceefa;
+  color: #272a6c;
+}
+
+.calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 3px 0;
+}
+
+.calendar-legend span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #666666;
+  font-size: 12px;
+}
+
+.calendar-legend i {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+.calendar-legend i.project-start { background: #1c5aab; }
+.calendar-legend i.project-end   { background: #7042a4; }
+.calendar-legend i.task-start    { background: #187343; }
+.calendar-legend i.task-due      { background: #bd3d2e; }
+.calendar-legend i.meeting       { background: #272a6c; }
 
 .calendar-task:hover {
   transform: translateY(-1px);
@@ -433,6 +513,7 @@
 }
 
 .calendar-side-card {
+  margin-top: 20px;
   background: #ffffff;
   border: 1px solid #e6ebf2;
   border-radius: 14px;
@@ -463,7 +544,7 @@
 }
 
 .calendar-side-header > svg {
-  color: #168bd1;
+  color: #272a6c;
 }
 
 
@@ -494,7 +575,18 @@
 }
 
 .upcoming-task-item:hover {
-  background: #f8fbfe;
+  background: #f5f6fd;
+}
+
+.upcoming-task-item > span {
+  flex: 1;
+  color: #303b4c;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.upcoming-task-item > svg:first-child {
+  color: #272a6c;
 }
 
 .upcoming-task-date {
@@ -532,8 +624,8 @@
 }
 
 .calendar-priority-low {
-  background: #edf8ff;
-  color: #2389c8;
+  background: #eceefa;
+  color: #272a6c;
 }
 
 .upcoming-task-info {
@@ -699,13 +791,13 @@
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  background: #eaf6ff;
-  color: #168bd1;
+  background: #eceefa;
+  color: #272a6c;
   margin-bottom: 14px;
 }
 
 .calendar-modal-heading span {
-  color: #168bd1;
+  color: #272a6c;
   font-size: 11px;
   font-weight: 600;
 }
@@ -737,8 +829,8 @@
 }
 
 .task-detail-status.calendar-status-progress {
-  background: #e9f6ff;
-  color: #168bd1;
+  background: #eceefa;
+  color: #272a6c;
 }
 
 .task-detail-status.calendar-status-pending {
@@ -762,8 +854,8 @@
 }
 
 .task-detail-priority.calendar-priority-low {
-  background: #edf8ff;
-  color: #2389c8;
+  background: #eceefa;
+  color: #272a6c;
 }
 
 
@@ -823,7 +915,7 @@
 }
 
 .calendar-detail-box span svg {
-  color: #168bd1;
+  color: #272a6c;
 }
 
 .calendar-detail-box strong {
@@ -843,7 +935,7 @@
   padding: 11px;
   border: none;
   border-radius: 8px;
-  background: #168bd1;
+  background: #272a6c;
   color: #ffffff;
   font-size: 12px;
   font-weight: 600;
@@ -852,7 +944,142 @@
 }
 
 .calendar-modal-done-btn:hover {
-  background: #117bb9;
+  background: #1c1e52;
+}
+
+.calendar-modal-done-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.calendar-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.calendar-modal-actions .calendar-modal-done-btn,
+.calendar-modal-delete-btn {
+  flex: 1;
+  margin-top: 0;
+}
+
+.calendar-modal-delete-btn {
+  padding: 11px;
+  border: 1px solid #f5c2c0;
+  border-radius: 8px;
+  background: #fff0f0;
+  color: #dc5353;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.calendar-modal-delete-btn:hover {
+  background: #dc5353;
+  border-color: #dc5353;
+  color: #ffffff;
+}
+
+
+/* =========================================
+   HEADER ACTIONS + MODAL FORM
+========================================= */
+
+.calendar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-calendar-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-calendar-header h1 svg {
+  color: #272a6c;
+}
+
+.admin-calendar-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 17px;
+  border: 1px solid #272a6c;
+  border-radius: 9px;
+  background: #272a6c;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.admin-calendar-add-btn:hover {
+  background: #1c1e52;
+  border-color: #1c1e52;
+}
+
+.calendar-task-modal h2 {
+  margin: 0 0 18px;
+  padding-right: 40px;
+  color: #272a6c;
+  font-size: 20px;
+}
+
+.calendar-task-modal > p {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 10px;
+  color: #4c596c;
+  font-size: 13px;
+}
+
+.calendar-task-modal > p svg {
+  color: #272a6c;
+}
+
+.calendar-task-modal label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 13px;
+  color: #4c596c;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.calendar-task-modal input,
+.calendar-task-modal select,
+.calendar-task-modal textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #dce5ef;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1c2738;
+  font-size: 13px;
+  font-weight: 400;
+  font-family: inherit;
+  box-sizing: border-box;
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.calendar-task-modal textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.calendar-task-modal input:focus,
+.calendar-task-modal select:focus,
+.calendar-task-modal textarea:focus {
+  border-color: #272a6c;
+  box-shadow: 0 0 0 3px rgba(39, 42, 108, 0.1);
 }
 
 
@@ -1117,13 +1344,13 @@
 }
 
 .admin-calendar-filter-title svg {
-  color: #1687d9;
+  color: #272a6c;
 }
 
 .admin-calendar-clear-btn {
   border: none;
   background: transparent;
-  color: #1687d9;
+  color: #272a6c;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -1161,8 +1388,8 @@
 }
 
 .admin-calendar-filter-group select:focus {
-  border-color: #1687d9;
-  box-shadow: 0 0 0 3px rgba(22, 135, 217, 0.08);
+  border-color: #272a6c;
+  box-shadow: 0 0 0 3px rgba(39, 42, 108, 0.08);
 }
 
 /* =========================================================

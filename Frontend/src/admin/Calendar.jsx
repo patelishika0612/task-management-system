@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   AlertCircle,
   ClipboardList,
+  Filter,
   User,
 } from "lucide-react";
 
@@ -72,6 +73,16 @@ const Calendar = () => {
     const match = String(value).match(/^(\d{4}-\d{2}-\d{2})/);
 
     return match ? match[1] : "";
+};
+
+// Same colour scheme as the employee calendar: colour by event type
+const eventTypeClass = (eventType = "") => {
+  const type = eventType.toLowerCase();
+  if (type.includes("project")) {
+    return type.includes("start") ? "project-start" : "project-end";
+  }
+  if (type.includes("meeting")) return "meeting";
+  return type.includes("start") ? "task-start" : "task-due";
 };
 
 const normalizeTask = (item) => ({
@@ -320,8 +331,8 @@ const completedTasks = filteredTasks.filter(
             <p>Track tasks, deadlines and project activities</p>
           </div>
           <div className="calendar-actions">
-            <button type="button" onClick={goToToday}>Today</button>
-            <button type="button" onClick={() => setShowForm(true)}>
+            <button type="button" className="admin-calendar-today-btn" onClick={goToToday}>Today</button>
+            <button type="button" className="admin-calendar-add-btn" onClick={() => setShowForm(true)}>
               <Plus size={16} /> Add Event
             </button>
           </div>
@@ -336,9 +347,19 @@ const completedTasks = filteredTasks.filter(
         {loading && <p>Loading calendar events...</p>}
 
         <section className="admin-calendar-filter-card">
+          <div className="admin-calendar-filter-header">
+            <div className="admin-calendar-filter-title">
+              <Filter size={17} /> Filters
+            </div>
+            <button type="button" className="admin-calendar-clear-btn"
+              onClick={clearFilters}>
+              Clear Filters
+            </button>
+          </div>
+
           <div className="admin-calendar-filters">
-            <label>
-              Employee
+            <div className="admin-calendar-filter-group">
+              <label>Employee</label>
               <select value={filters.employee}
                 onChange={(e) => updateFilter("employee", e.target.value)}>
                 <option>All Employees</option>
@@ -346,10 +367,10 @@ const completedTasks = filteredTasks.filter(
                   <option key={value}>{value}</option>
                 )}
               </select>
-            </label>
+            </div>
 
-            <label>
-              Department
+            <div className="admin-calendar-filter-group">
+              <label>Department</label>
               <select value={filters.department}
                 onChange={(e) => updateFilter("department", e.target.value)}>
                 <option>All Departments</option>
@@ -357,10 +378,10 @@ const completedTasks = filteredTasks.filter(
                   <option key={value}>{value}</option>
                 )}
               </select>
-            </label>
+            </div>
 
-            <label>
-              Project
+            <div className="admin-calendar-filter-group">
+              <label>Project</label>
               <select value={filters.project}
                 onChange={(e) => updateFilter("project", e.target.value)}>
                 <option>All Projects</option>
@@ -368,10 +389,10 @@ const completedTasks = filteredTasks.filter(
                   <option key={value}>{value}</option>
                 )}
               </select>
-            </label>
+            </div>
 
-            <label>
-              Event Type
+            <div className="admin-calendar-filter-group">
+              <label>Event Type</label>
               <select value={filters.eventType}
                 onChange={(e) => updateFilter("eventType", e.target.value)}>
                 <option>All Events</option>
@@ -379,10 +400,10 @@ const completedTasks = filteredTasks.filter(
                   <option key={value}>{value}</option>
                 )}
               </select>
-            </label>
+            </div>
 
-            <label>
-              Status
+            <div className="admin-calendar-filter-group">
+              <label>Status</label>
               <select value={filters.status}
                 onChange={(e) => updateFilter("status", e.target.value)}>
                 <option value="all">All Status</option>
@@ -391,42 +412,54 @@ const completedTasks = filteredTasks.filter(
                 <option value="Completed">Completed</option>
                 <option value="Overdue">Overdue</option>
               </select>
-            </label>
-
-            <button type="button" onClick={clearFilters}>Clear Filters</button>
+            </div>
           </div>
         </section>
 
         <section className="admin-calendar-stats">
           <div className="admin-calendar-stat-card">
-            <ClipboardList /> <span>Total Events</span>
-            <strong>{filteredTasks.length}</strong>
+            <div className="calendar-stat-icon blue"><ClipboardList size={20} /></div>
+            <div>
+              <span>Total Events</span>
+              <strong>{filteredTasks.length}</strong>
+            </div>
           </div>
           <div className="admin-calendar-stat-card">
-            <Clock3 /> <span>Upcoming</span>
-            <strong>{upcomingTasks.length}</strong>
+            <div className="calendar-stat-icon orange"><Clock3 size={20} /></div>
+            <div>
+              <span>Upcoming</span>
+              <strong>{upcomingTasks.length}</strong>
+            </div>
           </div>
           <div className="admin-calendar-stat-card">
-            <AlertCircle /> <span>Overdue</span>
-            <strong>{overdueTasks.length}</strong>
+            <div className="calendar-stat-icon red"><AlertCircle size={20} /></div>
+            <div>
+              <span>Overdue</span>
+              <strong>{overdueTasks.length}</strong>
+            </div>
           </div>
           <div className="admin-calendar-stat-card">
-            <CheckCircle2 /> <span>Completed</span>
-            <strong>{completedTasks.length}</strong>
+            <div className="calendar-stat-icon green"><CheckCircle2 size={20} /></div>
+            <div>
+              <span>Completed</span>
+              <strong>{completedTasks.length}</strong>
+            </div>
           </div>
         </section>
 
         <section className="admin-calendar-main">
           <div className="admin-calendar-toolbar">
             <div className="admin-calendar-month">
-              <button type="button" onClick={() => goToMonth(-1)}>
-                <ChevronLeft />
+              <button type="button" className="calendar-navigation-btn"
+                onClick={() => goToMonth(-1)}>
+                <ChevronLeft size={18} />
               </button>
               <h2>
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h2>
-              <button type="button" onClick={() => goToMonth(1)}>
-                <ChevronRight />
+              <button type="button" className="calendar-navigation-btn"
+                onClick={() => goToMonth(1)}>
+                <ChevronRight size={18} />
               </button>
             </div>
           </div>
@@ -452,14 +485,14 @@ const completedTasks = filteredTasks.filter(
                   <div className="calendar-day-tasks">
                     {dayTasks.slice(0, 3).map((task) => (
                       <button type="button" key={task.id}
-                        className={`calendar-task calendar-status-${task.status.toLowerCase().replaceAll(" ", "-")}`}
+                        className={`calendar-task ${eventTypeClass(task.eventType)}`}
                         title={task.title}
                         onClick={() => setSelectedTask(task)}>
                         {task.title}
                       </button>
                     ))}
                     {dayTasks.length > 3 &&
-                      <span>+{dayTasks.length - 3} more</span>}
+                      <span className="calendar-more-tasks">+{dayTasks.length - 3} more</span>}
                   </div>
                 </div>
               );
@@ -467,8 +500,22 @@ const completedTasks = filteredTasks.filter(
           </div>
         </section>
 
+        <div className="calendar-legend">
+          <span><i className="project-start" /> Project Start</span>
+          <span><i className="project-end" /> Project End</span>
+          <span><i className="task-start" /> Task Start</span>
+          <span><i className="task-due" /> Task Deadline</span>
+          <span><i className="meeting" /> Meeting</span>
+        </div>
+
         <section className="calendar-side-card">
-          <h3>Upcoming Deadlines</h3>
+          <div className="calendar-side-header">
+            <div>
+              <h3>Upcoming Deadlines</h3>
+              <p>Next events by deadline</p>
+            </div>
+            <Clock3 size={18} />
+          </div>
           {upcomingTasks.slice(0, 6).map((task) => (
             <button type="button" className="upcoming-task-item"
               key={task.id} onClick={() => setSelectedTask(task)}>
@@ -477,7 +524,8 @@ const completedTasks = filteredTasks.filter(
               <ChevronRight size={16} />
             </button>
           ))}
-          {!upcomingTasks.length && <p>No upcoming deadlines</p>}
+          {!upcomingTasks.length &&
+            <p className="calendar-empty-state">No upcoming deadlines</p>}
         </section>
 
         {showForm && (
@@ -555,7 +603,7 @@ const completedTasks = filteredTasks.filter(
                   onChange={(e) => setForm({ ...form, Description: e.target.value })} />
               </label>
 
-              <button type="submit" disabled={saving}>
+              <button type="submit" className="calendar-modal-done-btn" disabled={saving}>
                 {saving ? "Saving..." : "Create Event"}
               </button>
             </form>
@@ -578,12 +626,16 @@ const completedTasks = filteredTasks.filter(
               <p>Project: {selectedTask.project}</p>
               <p>Type: {selectedTask.eventType}</p>
               <p>Status: {selectedTask.status}</p>
-              <button type="button" onClick={() => deleteTask(selectedTask)}>
-                Delete Event
-              </button>
-              <button type="button" onClick={() => setSelectedTask(null)}>
-                Close
-              </button>
+              <div className="calendar-modal-actions">
+                <button type="button" className="calendar-modal-delete-btn"
+                  onClick={() => deleteTask(selectedTask)}>
+                  Delete Event
+                </button>
+                <button type="button" className="calendar-modal-done-btn"
+                  onClick={() => setSelectedTask(null)}>
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -23,8 +23,8 @@
   height: 52px;
   display: grid;
   place-items: center;
-  background: #eee8ff;
-  color: #7553b5;
+  background: #eceefa;
+  color: #272a6c;
   border-radius: 12px;
 }
 
@@ -48,7 +48,7 @@
   border: 0;
   border-radius: 7px;
   padding: 10px 15px;
-  background: #7252ae;
+  background: #272a6c;
   color: white;
   cursor: pointer;
 }
@@ -216,7 +216,7 @@
 
 .employee-task-code {
   font-weight: 700;
-  color: #7252ae;
+  color: #272a6c;
 }
 
 .employee-task-badge {
@@ -254,7 +254,7 @@
 }
 
 .status-on-hold {
-  background: #eee8ff;
+  background: #eceefa;
   color: #8056b7;
 }
 
@@ -279,7 +279,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: #7252ae;
+  color: #272a6c;
 }
 
 .employee-task-view-btn {
@@ -358,7 +358,7 @@
 }
 
 .employee-task-modal-header span {
-  color: #7252ae;
+  color: #272a6c;
   font-size: 12px;
 }
 
@@ -447,7 +447,7 @@
 }
 
 .employee-task-file a {
-  color: #7252ae;
+  color: #272a6c;
   text-decoration: none;
   font-size: 12px;
   white-space: nowrap;
@@ -462,7 +462,7 @@
 
 .employee-task-modal-footer button {
   border: 0;
-  background: #7252ae;
+  background: #272a6c;
   color: white;
   padding: 10px 22px;
   border-radius: 7px;
@@ -562,11 +562,11 @@
 }
 
 .employee-task-start-btn {
-  background: #2563eb;
+  background: #272a6c;
 }
 
 .employee-task-done-btn {
-  background: #16a34a;
+  background: #272a6c;
 }
 
 .employee-task-start-btn:disabled,
@@ -579,7 +579,7 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  color: #2563eb;
+  color: #272a6c;
   font-weight: 600;
 }
 
@@ -597,4 +597,34 @@
 .employee-task-completed-message p {
   margin: 4px 0 0;
   color: #64748b;
+}
+/* =========================
+   UNIFIED BUTTONS (Nirvanza navy)
+========================= */
+
+.employee-task-view-btn,
+.employee-task-start-btn,
+.employee-task-done-btn,
+.employee-task-modal-footer button {
+  border: 0;
+  background: #272a6c;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+/* Only the Start Work / Mark Completed buttons are compact */
+.employee-task-start-btn,
+.employee-task-done-btn {
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.employee-task-view-btn:hover,
+.employee-task-start-btn:hover:not(:disabled),
+.employee-task-done-btn:hover:not(:disabled),
+.employee-task-modal-footer button:hover {
+  background: #1c1e52;
 }

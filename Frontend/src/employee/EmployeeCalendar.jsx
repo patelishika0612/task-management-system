@@ -509,14 +509,6 @@ const EmployeeCalendar = () => {
                                 : "View your assigned projects and task deadlines"}
                         </p>
                     </div>
-
-                    <button
-                        type="button"
-                        className="ec-today-button"
-                        onClick={goToToday}
-                    >
-                        Today
-                    </button>
                 </div>
 
                 {/* ERROR */}

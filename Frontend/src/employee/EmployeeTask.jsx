@@ -393,15 +393,6 @@ const [updatingStatus, setUpdatingStatus] = useState(false);
                 Employee ID: {employeeCode}
               </span>
             )}
-            <button
-              type="button"
-              className="employee-task-refresh"
-              onClick={fetchTasks}
-              disabled={loading}
-            >
-              <RefreshCw size={16} className={loading ? "employee-task-spin" : ""} />
-              Refresh
-            </button>
           </div>
         </div>
 
@@ -731,7 +722,7 @@ const [updatingStatus, setUpdatingStatus] = useState(false);
         disabled={updatingStatus}
         onClick={() => handleTaskStatusUpdate("completed")}
       >
-        <CheckCircle2 size={17} />
+        <CheckCircle2 size={14} />
         {updatingStatus ? "Updating..." : "Mark as Done"}
       </button>
     </div>
@@ -747,7 +738,7 @@ const [updatingStatus, setUpdatingStatus] = useState(false);
         disabled={updatingStatus}
         onClick={() => handleTaskStatusUpdate("in progress")}
       >
-        <RefreshCw size={17} />
+        <RefreshCw size={14} />
         {updatingStatus ? "Starting..." : "Start Work"}
       </button>
     </div>
