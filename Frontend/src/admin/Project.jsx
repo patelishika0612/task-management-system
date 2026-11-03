@@ -752,7 +752,7 @@ const Project = () => {
               <Search size={19} />
 
               <input
-                type="search"
+                type="text"
                 placeholder="Search by ID, name, client or status..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}

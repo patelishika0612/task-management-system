@@ -265,7 +265,7 @@ const employeeId =
               <Search size={17} />
 
               <input
-                type="search"
+                type="text"
                 placeholder="Search project, client, status or ID..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}

@@ -809,7 +809,7 @@ const Task = () => {
             <div className="admin-search">
               <Search size={18} />
               <input
-                type="search"
+                type="text"
                 placeholder="Search by task name or ID..."
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}

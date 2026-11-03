@@ -1045,7 +1045,7 @@ export default function DirectChat({
         <div className="direct-chat__search">
           <Search size={18} />
           <input
-            type="search"
+            type="text"
             placeholder="Search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}

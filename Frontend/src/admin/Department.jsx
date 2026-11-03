@@ -177,7 +177,7 @@ const Department = () => {
             <div className="admin-search">
               <Search size={19} />
               <input
-                type="search"
+                type="text"
                 placeholder="Search by ID or name..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
