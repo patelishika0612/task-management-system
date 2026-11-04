@@ -3,7 +3,7 @@ import React, { useEffect, useRef } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import "./App.css";
-
+import ScrollToTop from "./components/ScrollToTop";
 // Admin pages
 import Adminprofile from "./admin/Profile";
 import Login from "./admin/Login";
@@ -168,6 +168,9 @@ function App() {
     }, []);
 
     return (
+
+        <>
+         <ScrollToTop />
         <Routes>
             {/* Public routes */}
             <Route
@@ -405,6 +408,7 @@ function App() {
 
 
         </Routes>
+        </>
     );
 }
 

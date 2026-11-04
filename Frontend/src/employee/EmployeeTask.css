@@ -635,3 +635,29 @@
   margin: 4px 0 0;
   color: #64748b;
 }
+
+
+.employee-task-status-select {
+  width: 100%;
+  max-width: 350px;
+  padding: 12px 15px;
+  border: 1px solid #dce2eb;
+  border-radius: 9px;
+  background: #fff;
+  color: #253047;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.employee-task-status-select:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.employee-task-status-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

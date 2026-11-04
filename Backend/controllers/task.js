@@ -6,7 +6,7 @@ import { createNotification } from "../utils/notificationService.js";
 const db = connection.promise();
 
 const PRIORITIES = ["low", "medium", "high", "urgent"];
-const STATUSES = ["pending", "in progress", "on hold", "completed"];
+const STATUSES = ["not started", "in progress", "on hold", "completed"];
 
 const TASK_SELECT = `
     SELECT
@@ -332,7 +332,7 @@ const createTask = async (req, res) => {
                 project_id,
                 String(employee_code).trim(),
                 priority || "low",
-                status || "pending",
+               status || "not started",
                 start_date || null,
                 due_date || null,
                 description || null,
@@ -496,7 +496,7 @@ const updateTask = async (req, res) => {
                 project_id,
                 String(employee_code).trim(),
                 priority || "low",
-                status || "pending",
+                status || "not started",
                 start_date || null,
                 due_date || null,
                 description || null,
@@ -521,7 +521,7 @@ const updateTask = async (req, res) => {
         });
 
         // Send an additional notification only if status changed.
-        const newStatus = status || "pending";
+       const newStatus = status || "not started";
 
         if (currentTask.status !== newStatus) {
             await notifyTaskEmployee({

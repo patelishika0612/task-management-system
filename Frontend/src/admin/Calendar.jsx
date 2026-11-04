@@ -82,6 +82,10 @@ const eventTypeClass = (eventType = "") => {
   if (type.includes("project")) {
     return type.includes("start") ? "project-start" : "project-end";
   }
+
+
+
+  
   if (type.includes("meeting")) return "meeting";
   return type.includes("start") ? "task-start" : "task-due";
 };

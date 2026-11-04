@@ -88,8 +88,8 @@ const isOverdue = (task) => {
   const status = normalize(task.status);
   return Boolean(
     task.due_date &&
-      !["completed", "complete", "done"].includes(status) &&
-      String(task.due_date).slice(0, 10) < getToday()
+    !["completed", "complete", "done"].includes(status) &&
+    String(task.due_date).slice(0, 10) < getToday()
   );
 };
 
@@ -203,7 +203,7 @@ const EmployeeTask = ({ employee }) => {
   const [priorityFilter, setPriorityFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [viewTask, setViewTask] = useState(null);
-const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const fetchTasks = useCallback(async () => {
     setLoading(true);
@@ -262,8 +262,8 @@ const [updatingStatus, setUpdatingStatus] = useState(false);
       setTasks([]);
       setError(
         err.response?.data?.message ||
-          err.message ||
-          "Unable to load your assigned tasks. Please try again."
+        err.message ||
+        "Unable to load your assigned tasks. Please try again."
       );
     } finally {
       setLoading(false);
@@ -358,50 +358,50 @@ const [updatingStatus, setUpdatingStatus] = useState(false);
 
 
   const handleTaskStatusUpdate = async (newStatus) => {
-  if (!viewTask || updatingStatus) return;
+    if (!viewTask || updatingStatus) return;
 
-  try {
-    setUpdatingStatus(true);
-    setError("");
+    try {
+      setUpdatingStatus(true);
+      setError("");
 
-    const taskId = viewTask.task_id ?? viewTask.id;
+      const taskId = viewTask.task_id ?? viewTask.id;
 
-    const response = await API.patch(
-      `/tasks/${taskId}/status`,
-      { status: newStatus }
-    );
+      const response = await API.patch(
+        `/tasks/${taskId}/status`,
+        { status: newStatus }
+      );
 
-    const updatedTask = response.data?.data || {
-      ...viewTask,
-      status: newStatus,
-    };
+      const updatedTask = response.data?.data || {
+        ...viewTask,
+        status: newStatus,
+      };
 
-    // Update task in employee list
-    setTasks((previous) =>
-      previous.map((task) =>
-        String(task.task_id ?? task.id) === String(taskId)
-          ? { ...task, ...updatedTask, status: newStatus }
-          : task
-      )
-    );
+      // Update task in employee list
+      setTasks((previous) =>
+        previous.map((task) =>
+          String(task.task_id ?? task.id) === String(taskId)
+            ? { ...task, ...updatedTask, status: newStatus }
+            : task
+        )
+      );
 
-    // Update open popup
-    setViewTask((previous) =>
-      previous
-        ? { ...previous, ...updatedTask, status: newStatus }
-        : null
-    );
-  } catch (err) {
-    console.error("Task status update error:", err);
+      // Update open popup
+      setViewTask((previous) =>
+        previous
+          ? { ...previous, ...updatedTask, status: newStatus }
+          : null
+      );
+    } catch (err) {
+      console.error("Task status update error:", err);
 
-    setError(
-      err.response?.data?.message ||
-      "Unable to update task status."
-    );
-  } finally {
-    setUpdatingStatus(false);
-  }
-};
+      setError(
+        err.response?.data?.message ||
+        "Unable to update task status."
+      );
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   const openTask = (task) => setViewTask(task);
 
@@ -719,50 +719,35 @@ const [updatingStatus, setUpdatingStatus] = useState(false);
                     </div>
                   </div>
                 </section>
-<section className="employee-task-detail-section">
+             <section className="employee-task-detail-section">
   <h3>Update Task Progress</h3>
 
-  {normalize(viewTask.status) === "completed" ? (
-    <div className="employee-task-completed-message">
-      <CheckCircle2 size={20} />
-      <div>
-        <strong>Task Completed</strong>
-        <p>You have successfully completed this task.</p>
-      </div>
-    </div>
-  ) : normalize(viewTask.status) === "in progress" ? (
-    <div className="employee-task-progress-actions">
-      <div className="employee-task-progress-message">
-        <Clock3 size={18} />
-        <span>Work is currently in progress.</span>
-      </div>
+  <div className="employee-task-progress-actions">
 
-      <button
-        type="button"
-        className="employee-task-done-btn"
-        disabled={updatingStatus}
-        onClick={() => handleTaskStatusUpdate("completed")}
-      >
-        <CheckCircle2 size={17} />
-        {updatingStatus ? "Updating..." : "Mark as Done"}
-      </button>
+    <div className="employee-task-progress-message">
+      <Clock3 size={18} />
+      <span>Select your current task status.</span>
     </div>
-  ) : (
-    <div className="employee-task-start-actions">
-      <p>
-        This task is waiting for you to start working.
-      </p>
 
-      <button
-        type="button"
-        className="employee-task-start-btn"
-        disabled={updatingStatus}
-        onClick={() => handleTaskStatusUpdate("in progress")}
-      >
-        {updatingStatus ? "Starting..." : "Start Work"}
-      </button>
-    </div>
-  )}
+    <select
+      className="employee-task-status-select"
+      value={normalize(viewTask.status)}
+      disabled={updatingStatus}
+      onChange={(e) =>
+        handleTaskStatusUpdate(e.target.value)
+      }
+    >
+      <option value="not started">Not Started</option>
+      <option value="in progress">In Progress</option>
+      <option value="on hold">On Hold</option>
+      <option value="completed">Completed</option>
+    </select>
+
+    {updatingStatus && (
+      <p>Updating task status...</p>
+    )}
+
+  </div>
 </section>
 
                 <section className="employee-task-detail-section">

@@ -16,9 +16,9 @@ const PAGE_SIZE = 4;
 // Must match the ENUM values of the `task` table
 const PRIORITY_OPTIONS = ["low", "medium", "high", "urgent"];
 const STATUS_OPTIONS = [
-  "pending",
-  "on hold",
+  "not started",
   "in progress",
+  "on hold",
   "completed",
 ];
 
@@ -27,7 +27,7 @@ const EMPTY_FORM = {
   project_id: "",
   employee_codes: [],
   priority: "low",
-  status: "pending",
+  status: "not started",
   start_date: "",
   due_date: "",
   description: "",
@@ -453,7 +453,7 @@ const Task = () => {
           : "",
         employee_codes: employeeCodes.slice(0, 2),
         priority: data.priority || "low",
-        status: data.status || "pending",
+        status: data.status || "not started",
         start_date: toDateInput(data.start_date),
         due_date: toDateInput(data.due_date),
         description: data.description || "",
@@ -617,8 +617,10 @@ const Task = () => {
       tone: "blue",
     },
     {
-      label: "Pending",
-      value: tasks.filter((task) => task.status === "pending").length,
+      label: "Not Started",
+    value: tasks.filter(
+  (task) => task.status === "not started"
+).length,
       icon: <Clock size={20} />,
       tone: "orange",
     },
