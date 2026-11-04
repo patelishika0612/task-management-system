@@ -6,7 +6,7 @@ import { createNotification } from "../utils/notificationService.js";
 const db = connection.promise();
 
 const PRIORITIES = ["low", "medium", "high", "urgent"];
-const STATUSES = ["pending", "on hold", "completed"];
+const STATUSES = ["pending", "in progress", "on hold", "completed"];
 
 const TASK_SELECT = `
     SELECT
