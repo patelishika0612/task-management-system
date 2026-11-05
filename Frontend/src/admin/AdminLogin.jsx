@@ -10,6 +10,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import "./AdminLogin.css";
+import { subscribeAdminPushNotifications } from "../adminPushNotification";
+
 // Form validation helpers
 const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).trim());
 
@@ -40,135 +42,97 @@ const AdminLogin = () => {
   // ADMIN LOGIN
   // =====================================================
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+ 
+const handleLogin = async (e) => {
+  e.preventDefault();
 
-    setError("");
-    setSuccess("");
+  setError("");
+  setSuccess("");
 
-    // =================================================
-    // VALIDATION
-    // =================================================
+  if (!email.trim()) {
+    setError("Email is required.");
+    return;
+  }
 
-    if (!email.trim()) {
-      setError("Email is required.");
+  if (!password.trim()) {
+    setError("Password is required.");
+    return;
+  }
+
+  // Permission request user na Sign In click par j karo.
+  let permissionPromise = Promise.resolve(
+    "Notification" in window ? Notification.permission : "unsupported"
+  );
+
+  if ("Notification" in window && Notification.permission === "default") {
+    permissionPromise = Notification.requestPermission();
+  }
+
+  try {
+    setLoading(true);
+
+    const response = await API.post("/admin-login/login", {
+      email: email.trim().toLowerCase(),
+      password,
+    });
+
+    const result = response.data;
+
+    if (!result.success) {
+      setError(result.message || "Invalid email or password.");
       return;
     }
 
-    if (!password.trim()) {
-      setError("Password is required.");
+    if (!result.data?.token || !result.data?.adminId) {
+      setError("Login response is missing admin credentials.");
       return;
     }
 
+    localStorage.setItem("adminToken", result.data.token);
+
+    const adminData = {
+      adminId: result.data.adminId,
+      chatUserId: result.data.chatUserId,
+      email: result.data.email,
+    };
+
+    localStorage.setItem("adminData", JSON.stringify(adminData));
+    localStorage.setItem("adminEmail", result.data.email || email);
+
+    sessionStorage.setItem("adminData", JSON.stringify(adminData));
+
+    // Push setup fail thay to pan login successful rehse.
     try {
-      setLoading(true);
+      const permission = await permissionPromise;
 
-      // =================================================
-      // LOGIN API
-      // =================================================
-
-      const response = await API.post(
-        "/admin-login/login",
-        {
-          email: email.trim().toLowerCase(),
-          password: password,
-        }
-      );
-
-      const result = response.data;
-
-      // =================================================
-      // CHECK RESPONSE
-      // =================================================
-
-    
-if (!result.success) {
-    setError(result.message || "Invalid email or password.");
-    return;
-}
-
-if (!result.data?.token || !result.data?.adminId) {
-    setError("Login response is missing admin credentials.");
-    return;
-}
-
-localStorage.setItem("adminToken", result.data.token);
-
-localStorage.setItem(
-    "adminData",
-    JSON.stringify({
-        adminId: result.data.adminId,
-        chatUserId: result.data.chatUserId,
-        email: result.data.email,
-    })
-);
-
-localStorage.setItem("adminEmail", result.data.email || email);
-
-// localStorage is shared by every tab, so a second admin logging in from
-// the same browser overwrites adminData. Keep this tab's own identity in
-// sessionStorage so chat keeps sending as the admin who logged in here.
-sessionStorage.setItem(
-    "adminData",
-    JSON.stringify({
-        adminId: result.data.adminId,
-        chatUserId: result.data.chatUserId,
-        email: result.data.email,
-    })
-);
-
-window.dispatchEvent(new Event("admin-login"));
-
-navigate("/admindashboard", { replace: true });
-
-
-      // =================================================
-      // SAVE JWT TOKEN
-      // =================================================
-
-      localStorage.setItem(
-        "adminToken",
-        result.data.token
-      );
-
-      // =================================================
-      // SAVE ADMIN DATA
-      // =================================================
-
-      localStorage.setItem(
-        "adminData",
-        JSON.stringify({
-          adminId: result.data.adminId,
-          chatUserId: result.data.chatUserId,
-          email: result.data.email,
-        })
-      );
-
-      // =================================================
-      // SUCCESS
-      // =================================================
-
-
-      setSuccess("Login successful!");
-
-      window.dispatchEvent(new Event("admin-login"));
-
-      navigate("/admindashboard", { replace: true });
-
-    } catch (error) {
-      console.error(
-        "Admin login error:",
-        error
-      );
-
-      setError(
-        error.response?.data?.message ||
-        "Unable to connect to server."
-      );
-    } finally {
-      setLoading(false);
+      if (permission === "granted") {
+        const pushResult = await subscribeAdminPushNotifications();
+        console.log("Admin push subscription:", pushResult);
+      } else {
+        console.log("Admin notification permission:", permission);
+      }
+    } catch (pushError) {
+      console.error("Admin push setup failed:", pushError);
     }
-  };
+
+    setSuccess("Login successful!");
+
+    window.dispatchEvent(new Event("admin-login"));
+
+    navigate("/admindashboard", { replace: true });
+
+  } catch (error) {
+    console.error("Admin login error:", error);
+
+    setError(
+      error.response?.data?.message ||
+      "Unable to connect to server."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // =====================================================
   // UI

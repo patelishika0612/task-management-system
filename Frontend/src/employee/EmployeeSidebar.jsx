@@ -105,7 +105,7 @@ const EmployeeSidebar = () => {
   // DASHBOARD
   // -----------------------------------------
   const goToDashboard = () => {
-    navigate("/dashboard");
+    navigate("/employeedashboard");
 
     if (isMobile) {
       setIsOpen(false);

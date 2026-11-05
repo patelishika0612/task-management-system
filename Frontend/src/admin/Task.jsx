@@ -451,7 +451,7 @@ const Task = () => {
         project_id: data.project_id
           ? String(data.project_id)
           : "",
-        employee_codes: employeeCodes.slice(0, 2),
+employee_codes: employeeCodes,
         priority: data.priority || "low",
         status: data.status || "not started",
         start_date: toDateInput(data.start_date),
@@ -618,9 +618,9 @@ const Task = () => {
     },
     {
       label: "Not Started",
-    value: tasks.filter(
-  (task) => task.status === "not started"
-).length,
+      value: tasks.filter(
+        (task) => task.status === "not started"
+      ).length,
       icon: <Clock size={20} />,
       tone: "orange",
     },
@@ -997,20 +997,35 @@ const Task = () => {
                             )}
                           </div>
                         </td>
+<td>
+    <div className="task-assignee">
+        {task.employees?.length > 0 ? (
+            task.employees.map((employee) => (
+                <div
+                    className="task-assignee"
+                    key={employee.emp_id}
+                    style={{ marginBottom: "6px" }}
+                >
+                    <span className="task-avatar">
+                        {getInitials(employee.emp_name)}
+                    </span>
 
-                        <td>
-                          <div className="task-assignee">
-                            <span className="task-avatar">
-                              {getInitials(task.emp_name)}
-                            </span>
-                            <div className="task-cell-main">
-                              <strong>{task.emp_name || "—"}</strong>
-                              {task.employee_code && (
-                                <small>{task.employee_code}</small>
-                              )}
-                            </div>
-                          </div>
-                        </td>
+                    <div className="task-cell-main">
+                        <strong>{employee.emp_name}</strong>
+                        <small>{employee.employee_code}</small>
+                    </div>
+                </div>
+            ))
+        ) : (
+            <div className="task-cell-main">
+                <strong>{task.emp_name || "—"}</strong>
+                {task.employee_code && (
+                    <small>{task.employee_code}</small>
+                )}
+            </div>
+        )}
+    </div>
+</td>
 
                         <td>
                           <span
@@ -1411,10 +1426,7 @@ const Task = () => {
                                           ? previous.employee_codes.filter(
                                             (code) => code !== employee.employee_code
                                           )
-                                          : [
-                                            ...previous.employee_codes,
-                                            employee.employee_code,
-                                          ],
+                                          : [...previous.employee_codes, employee.employee_code],
                                       }));
 
                                       setError("");

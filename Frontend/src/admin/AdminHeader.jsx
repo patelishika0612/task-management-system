@@ -4,7 +4,7 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-
+import { unsubscribeAdminPushNotifications } from "../adminPushNotification";
 import {
   User,
   LogOut,
@@ -162,26 +162,37 @@ useEffect(() => {
   // LOGOUT
   // =====================================================
 
-  const handleLogout = () => {
+ 
+const handleLogout = async () => {
+  try {
+    // Remove current admin's push subscription first.
+    const result = await unsubscribeAdminPushNotifications();
 
-    localStorage.removeItem(
-      "adminEmail"
-    );
+    console.log("Admin push unsubscribe:", result);
 
+    if (!result.success) {
+      console.error("Admin push unsubscribe failed:", result.message);
+    }
+  } catch (error) {
+    console.error("Admin logout push cleanup error:", error);
+  } finally {
+    localStorage.removeItem("adminEmail");
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminData");
+    localStorage.removeItem("adminName");
     localStorage.removeItem("token");
+    localStorage.removeItem("keepLogged");
 
-    localStorage.removeItem(
-      "keepLogged"
-    );
+    sessionStorage.removeItem("adminData");
 
     setAdminEmail("");
-
     setProfileImage("");
-
     setDropdownOpen(false);
 
-    navigate("/admin-login");
-  };
+    navigate("/admin-login", { replace: true });
+  }
+};
+
 
   // =====================================================
   // PROFILE

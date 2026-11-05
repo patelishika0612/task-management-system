@@ -93,23 +93,101 @@ const isOverdue = (task) => {
   );
 };
 
-const parseEmployeeCodes = (task) => {
-  const values = [
-    task.employee_codes,
-    task.employee_code,
-    task.assigned_employee_codes,
-    task.assigned_to,
-  ];
+// =====================================================
+// EMPLOYEE HELPERS
+// =====================================================
 
-  for (const value of values) {
-    if (Array.isArray(value)) return value.map(String);
-    if (typeof value === "string" && value.trim()) {
-      const parsed = safeJson(value, null);
-      if (Array.isArray(parsed)) return parsed.map(String);
-      return value.split(",").map((item) => item.trim()).filter(Boolean);
+const parseEmployeeCodes = (value, fallbackCode = null) => {
+    let codes = [];
+
+    if (Array.isArray(value)) {
+        codes = value;
+    } else if (typeof value === "string" && value.trim()) {
+        try {
+            const parsed = JSON.parse(value);
+            codes = Array.isArray(parsed) ? parsed : [value];
+        } catch {
+            codes = [value];
+        }
     }
-  }
-  return [];
+
+    if (!codes.length && fallbackCode) {
+        codes = [fallbackCode];
+    }
+
+    return [...new Set(
+        codes
+            .map((code) => String(code).trim())
+            .filter(Boolean)
+    )].slice(0, 2);
+};
+
+const getEmployeesByCodes = async (employeeCodes = []) => {
+    if (!employeeCodes.length) return [];
+
+    const placeholders = employeeCodes.map(() => "?").join(",");
+
+    const [rows] = await db.query(
+        `SELECT emp_id, emp_name, employee_code
+         FROM employe
+         WHERE employee_code IN (${placeholders})`,
+        employeeCodes
+    );
+
+    // Maintain the same order as selected employees.
+    const employeeMap = new Map(
+        rows.map((employee) => [String(employee.employee_code), employee])
+    );
+
+    return employeeCodes
+        .map((code) => employeeMap.get(String(code)))
+        .filter(Boolean);
+};
+
+const getEmployeeByCode = async (employeeCode) => {
+    const employees = await getEmployeesByCodes([employeeCode]);
+    return employees[0] || null;
+};
+
+const attachAssignedEmployees = async (rows) => {
+    if (!rows.length) return rows;
+
+    const allCodes = [
+        ...new Set(
+            rows.flatMap((row) =>
+                parseEmployeeCodes(row.employee_codes, row.employee_code)
+            )
+        )
+    ];
+
+    const employees = await getEmployeesByCodes(allCodes);
+
+    const employeeMap = new Map(
+        employees.map((employee) => [
+            String(employee.employee_code),
+            employee
+        ])
+    );
+
+    return rows.map((row) => {
+        const employeeCodes = parseEmployeeCodes(
+            row.employee_codes,
+            row.employee_code
+        );
+
+        const assignedEmployees = employeeCodes
+            .map((code) => employeeMap.get(String(code)))
+            .filter(Boolean);
+
+        return {
+            ...row,
+            employee_codes: employeeCodes,
+            employees: assignedEmployees,
+            employee_names: assignedEmployees.map(
+                (employee) => employee.emp_name
+            )
+        };
+    });
 };
 
 const parseAttachments = (task) => {
@@ -713,10 +791,18 @@ const EmployeeTask = ({ employee }) => {
                       <span><FolderKanban size={14} /> Project</span>
                       <strong>{viewTask.proj_name || viewTask.project_name || "—"}</strong>
                     </div>
-                    <div className="employee-task-info-item">
-                      <span>Assigned Employee</span>
-                      <strong>{employeeCode || "You"}</strong>
-                    </div>
+                  <div className="employee-task-info-item">
+  <span>Assigned Employee</span>
+  <strong>
+    {employee?.emp_name ||
+      employee?.employee_name ||
+      employee?.name ||
+      storedEmployee?.emp_name ||
+      storedEmployee?.employee_name ||
+      storedEmployee?.name ||
+      "You"}
+  </strong>
+</div>
                   </div>
                 </section>
              <section className="employee-task-detail-section">

@@ -104,7 +104,7 @@ const Sidebar = () => {
   // DASHBOARD
   // -----------------------------------------
   const goToDashboard = () => {
-    navigate("/dashboard");
+    navigate("/admindashboard");
 
     if (isMobile) {
       setIsOpen(false);

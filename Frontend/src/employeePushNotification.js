@@ -110,3 +110,106 @@ export const enableEmployeePushNotifications = async () => {
     };
   }
 };
+
+export const subscribeEmployeePushNotifications = async () => {
+  try {
+    if (
+      !("serviceWorker" in navigator) ||
+      !("PushManager" in window)
+    ) {
+      throw new Error("Browser does not support push notifications.");
+    }
+
+    if (!("Notification" in window) ||
+        Notification.permission !== "granted") {
+      return {
+        success: false,
+        message: "Notification permission not granted.",
+      };
+    }
+
+    const registration =
+      await navigator.serviceWorker.register("/sw.js");
+
+    await navigator.serviceWorker.ready;
+
+    const keyResponse = await EmployeeAPI.get("/push/public-key");
+    const publicKey = keyResponse.data.publicKey;
+
+    if (!publicKey) {
+      throw new Error("VAPID public key not received.");
+    }
+
+    let subscription =
+      await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey:
+          urlBase64ToUint8Array(publicKey),
+      });
+    }
+
+    await EmployeeAPI.post(
+      "/push/subscribe",
+      subscription.toJSON()
+    );
+
+    return {
+      success: true,
+      message: "Push notifications enabled successfully.",
+    };
+  } catch (error) {
+    console.error("PUSH SUBSCRIPTION ERROR:", error);
+
+    return {
+      success: false,
+      message:
+        error.response?.data?.message ||
+        error.message ||
+        "Unable to enable notifications.",
+    };
+  }
+};
+export const disableEmployeePushNotifications = async () => {
+  try {
+    const registration = await navigator.serviceWorker.getRegistration("/");
+
+    if (!registration) {
+      return { success: true };
+    }
+
+    const subscription =
+      await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      return { success: true };
+    }
+
+    // Delete subscription from backend first
+    await EmployeeAPI.post(
+      "/push/unsubscribe",
+      { endpoint: subscription.endpoint }
+    );
+
+    // Then unsubscribe browser
+    await subscription.unsubscribe();
+
+    console.log("Employee push notifications disabled.");
+
+    return { success: true };
+
+  } catch (error) {
+    console.error("PUSH UNSUBSCRIBE ERROR:", error);
+
+    return {
+      success: false,
+      message:
+        error.response?.data?.message ||
+        error.message ||
+        "Unable to disable notifications.",
+    };
+  }
+};
+

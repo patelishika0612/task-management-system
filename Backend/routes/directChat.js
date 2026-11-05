@@ -26,15 +26,34 @@ const isValidId = (id) =>
 // CHAT USER ID TO NOTIFICATION RECIPIENT
 // =====================================================
 
-const getNotificationRecipient = (chatUserId) => {
+const getNotificationRecipient = async (chatUserId) => {
     const id = Number(chatUserId);
 
     if (!Number.isInteger(id) || id <= 0) {
         return null;
     }
 
-    // Unlinked admin:
-    // chat user ID = ADMIN_CHAT_ID_OFFSET + admin_login.id
+    // Linked Admin: chat uses employee ID,
+    // but push subscription is stored with admin ID.
+    const [linkedAdmins] = await db.query(
+        `SELECT a.id AS admin_id
+         FROM admin_login a
+         INNER JOIN employe e
+           ON LOWER(TRIM(e.email)) = LOWER(TRIM(a.email))
+         WHERE e.emp_id = ?
+         LIMIT 1`,
+        [id]
+    );
+
+    if (linkedAdmins.length > 0) {
+        return {
+            recipientId: Number(linkedAdmins[0].admin_id),
+            recipientType: "admin",
+            url: "/admindashboard"
+        };
+    }
+
+    // Unlinked Admin
     if (id >= ADMIN_CHAT_ID_OFFSET) {
         const adminId = id - ADMIN_CHAT_ID_OFFSET;
 
@@ -43,18 +62,17 @@ const getNotificationRecipient = (chatUserId) => {
         return {
             recipientId: adminId,
             recipientType: "admin",
-            url: "/"
+            url: "/admindashboard"
         };
     }
 
-    // Employee and linked admin both use employee ID.
+    // Normal Employee
     return {
         recipientId: id,
         recipientType: "employee",
         url: "/employeedashboard"
     };
 };
-
 // =====================================================
 // CHAT NOTIFICATION HELPER
 // =====================================================
@@ -84,8 +102,8 @@ const sendChatNotifications = async ({
         );
 
         const notificationPromises = recipients.map(async (member) => {
-            const recipient = getNotificationRecipient(member.user_id);
-
+            const recipient = await getNotificationRecipient(member.user_id);
+            
             if (!recipient) return;
 
             await createNotification({
@@ -197,6 +215,10 @@ router.get("/contacts", async (req, res) => {
     try {
         await syncLinkedAdmins();
 
+        const currentUserId = await resolveChatUserId(
+            req.query.userId
+        );
+
         const [employees] = await db.query(
             `SELECT
                 e.emp_id AS user_id,
@@ -227,12 +249,11 @@ router.get("/contacts", async (req, res) => {
                     )
             )
             .map((admin) => ({
-                user_id:
-                    ADMIN_CHAT_ID_OFFSET + Number(admin.id),
+                user_id: ADMIN_CHAT_ID_OFFSET + Number(admin.id),
                 name: "Admin",
                 email: admin.email,
                 image: null,
-                role: admin.email,
+                role: "Admin",
                 isAdmin: true
             }));
 
@@ -242,9 +263,75 @@ router.get("/contacts", async (req, res) => {
                 : employee
         );
 
+        const contacts = [
+            ...adminContacts,
+            ...employeeContacts
+        ];
+
+        // Fetch the latest message for every direct conversation
+        // belonging to the logged-in user.
+        let lastMessageMap = {};
+
+        if (isValidId(currentUserId)) {
+            const [lastMessages] = await db.query(
+                `SELECT
+                    other.user_id AS contact_user_id,
+                    msg.id AS message_id,
+                    msg.sender_id,
+                    msg.message,
+                    msg.message_type,
+                    msg.file_name,
+                    msg.file_url,
+                    msg.sent_at,
+                    c.id AS conversation_id
+                 FROM chat_conversation_members mine
+
+                 INNER JOIN chat_conversations c
+                    ON c.id = mine.conversation_id
+                   AND c.type = 'direct'
+
+                 INNER JOIN chat_conversation_members other
+                    ON other.conversation_id = c.id
+                   AND other.user_id <> mine.user_id
+
+                 INNER JOIN chat_messages msg
+                    ON msg.conversation_id = c.id
+                   AND msg.id = (
+                       SELECT MAX(msg2.id)
+                       FROM chat_messages msg2
+                       WHERE msg2.conversation_id = c.id
+                         AND msg2.deleted_at IS NULL
+                   )
+
+                 WHERE mine.user_id = ?`,
+                [currentUserId]
+            );
+
+            lastMessageMap = lastMessages.reduce((map, item) => {
+                map[String(item.contact_user_id)] = {
+                    id: item.message_id,
+                    sender_id: item.sender_id,
+                    message: item.message,
+                    message_type: item.message_type,
+                    file_name: item.file_name,
+                    file_url: item.file_url,
+                    sent_at: item.sent_at,
+                    conversation_id: item.conversation_id
+                };
+
+                return map;
+            }, {});
+        }
+
+        const contactsWithLastMessage = contacts.map((contact) => ({
+            ...contact,
+            last_message:
+                lastMessageMap[String(contact.user_id)] || null
+        }));
+
         return res.json({
             success: true,
-            data: [...adminContacts, ...employeeContacts]
+            data: contactsWithLastMessage
         });
 
     } catch (error) {
@@ -252,7 +339,7 @@ router.get("/contacts", async (req, res) => {
 
         return res.status(500).json({
             success: false,
-            message: "Failed to fetch chat contacts"
+            message: "Failed to fetch contacts"
         });
     }
 });

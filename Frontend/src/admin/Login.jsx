@@ -12,6 +12,10 @@ import {
 import Swal from "sweetalert2";
 import API from "../api";
 import "./AdminLogin.css";
+import {
+  subscribeEmployeePushNotifications,
+} from "../employeePushNotification";
+
 
 const isValidEmail = (value) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim());
@@ -63,6 +67,20 @@ const Login = () => {
       });
       return;
     }
+
+
+    // Permission request must start directly from the login click.
+    const permissionPromise = (() => {
+      if (!("Notification" in window)) {
+        return Promise.resolve("unsupported");
+      }
+
+      if (Notification.permission === "default") {
+        return Notification.requestPermission();
+      }
+
+      return Promise.resolve(Notification.permission);
+    })();
 
     try {
       setLoading(true);
@@ -119,7 +137,7 @@ const Login = () => {
       }
 
       localStorage.setItem("token", token);
-     
+
 
       // Save employee information
       localStorage.setItem("employeeId", String(employeeId));
@@ -138,6 +156,22 @@ const Login = () => {
         "employeeImage",
         employee?.image || ""
       );
+// Enable push subscription after successful authentication.
+try {
+  const permission = await permissionPromise;
+
+  if (permission === "granted") {
+    const pushResult =
+      await subscribeEmployeePushNotifications();
+
+    console.log("Employee push subscription:", pushResult);
+  } else {
+    console.log("Employee notification permission:", permission);
+  }
+} catch (pushError) {
+  // Push failure should not prevent employee login.
+  console.error("Push setup failed:", pushError);
+}
 
       console.log("Logged-in employee:", {
         employeeId,
@@ -146,7 +180,7 @@ const Login = () => {
 
       await Swal.fire({
         icon: "success",
-        title: "Welcome Back!",
+        title: "Welcome !",
         text: "Login successful.",
         showConfirmButton: false,
         timer: 1200,

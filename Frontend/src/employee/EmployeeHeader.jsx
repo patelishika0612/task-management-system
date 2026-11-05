@@ -9,6 +9,9 @@ import {
   BriefcaseBusiness,
   Bell,
 } from "lucide-react";
+import {
+  disableEmployeePushNotifications
+} from "../employeePushNotification";
 
 import API from "../api";
 import UserImg from "../img/user.png";
@@ -144,7 +147,16 @@ const EmployeeHeader = () => {
     };
   }, []);
 
-  const handleLogout = () => {
+const handleLogout = async () => {
+  try {
+    // Remove current employee's push subscription
+    const result = await disableEmployeePushNotifications();
+
+    if (!result.success) {
+      alert(result.message || "Unable to disable notifications.");
+      return;
+    }
+
     [
       "employeeId",
       "employeeEmail",
@@ -160,7 +172,12 @@ const EmployeeHeader = () => {
     setDropdownOpen(false);
 
     navigate("/admin-login");
-  };
+
+  } catch (error) {
+    console.error("Logout error:", error);
+    alert("Logout failed. Please try again.");
+  }
+};
 
   const handleProfile = () => {
     setDropdownOpen(false);

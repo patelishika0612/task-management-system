@@ -29,7 +29,9 @@ const ChatPage = ({ layout: Layout, role = "admin" }) => {
   useEffect(() => {
     let cancelled = false;
 
-    API.get("/chat/contacts")
+    API.get(
+    `/chat/contacts?userId=${encodeURIComponent(currentUserId)}`
+  )
       .then((response) => {
         if (cancelled) return;
 

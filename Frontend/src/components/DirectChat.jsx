@@ -49,6 +49,20 @@ const getContactName = (contact) =>
   contact?.email ||
   `User ${getContactId(contact) ?? ""}`;
 
+
+
+const getContactImage = (contact) =>
+  contact?.image ||
+  contact?.profile_image ||
+  contact?.profileImage ||
+  contact?.profile_pic ||
+  contact?.profile_picture ||
+  contact?.employee_image ||
+  contact?.employee_photo ||
+  contact?.photo ||
+  contact?.avatar ||
+  "";
+
 const getContactSubtitle = (contact) =>
   contact?.department_name ||
   contact?.department ||
@@ -96,22 +110,36 @@ const formatTime = (value) => {
     : date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 };
 
-const Avatar = ({ name, image, seed, isGroup = false, online = false }) => (
-  <span
-    className="direct-chat__avatar"
-    style={{ background: getAvatarColor(seed ?? name) }}
-  >
-    {image ? (
-      <img src={getImageUrl(image)} alt={name} />
-    ) : isGroup ? (
-      <Users size={20} />
-    ) : (
-      getInitials(name)
-    )}
-    {online && <span className="direct-chat__presence" />}
-  </span>
-);
+const Avatar = ({ name, image, seed, isGroup = false, online = false }) => {
+  const [imageError, setImageError] = useState(false);
 
+  useEffect(() => {
+    setImageError(false);
+  }, [image]);
+
+  const imageUrl = image ? getImageUrl(image) : "";
+
+  return (
+    <span
+      className="direct-chat__avatar"
+      style={{ background: getAvatarColor(seed ?? name) }}
+    >
+      {imageUrl && !imageError ? (
+        <img
+          src={imageUrl}
+          alt={name}
+          onError={() => setImageError(true)}
+        />
+      ) : isGroup ? (
+        <Users size={20} />
+      ) : (
+        getInitials(name)
+      )}
+
+      {online && <span className="direct-chat__presence" />}
+    </span>
+  );
+};
 const getMessageId = (message) =>
   message?.id ??
   message?.message_id ??
@@ -156,13 +184,23 @@ const TYPING_RESEND_MS = 2500;
 const getDirectKey = (userId) => `direct-${userId}`;
 const getGroupKey = (conversationId) => `group-${conversationId}`;
 
-const getPreviewText = (message) =>
-  getMessageText(message) ||
-  message?.file_name ||
-  (message?.message_type && message.message_type !== "text"
-    ? "Attachment"
-    : "");
+const getPreviewText = (message) => {
+  const text = getMessageText(message);
 
+  if (text) return text;
+
+  if (message?.message_type === "image") {
+    return "Sent an image";
+  }
+
+  if (message?.message_type === "file") {
+    return message?.file_name
+      ? `Sent a file: ${message.file_name}`
+      : "Sent a file";
+  }
+
+  return message?.file_name || "";
+};
 const toTimestamp = (value) => {
   const time = value ? new Date(value).getTime() : NaN;
   return Number.isNaN(time) ? Date.now() : time;
@@ -209,6 +247,41 @@ export default function DirectChat({
     loadUnread(currentUserId)
   );
   const [lastMessages, setLastMessages] = useState({});
+  // Restore last messages from the backend after page refresh.
+useEffect(() => {
+  if (!contacts.length) return;
+
+  setLastMessages((previous) => {
+    const next = { ...previous };
+
+    contacts.forEach((contact) => {
+      const last = contact.last_message;
+
+      if (!last) return;
+
+      const key = getDirectKey(getContactId(contact));
+
+      const incomingTime = toTimestamp(
+        getMessageTime(last)
+      );
+
+      const existing = next[key];
+
+      // Do not replace a newer live message with older API data.
+      if (existing && existing.time > incomingTime) return;
+
+      next[key] = {
+        text: getPreviewText(last),
+        time: incomingTime,
+        isMine:
+          Number(getSenderId(last)) === Number(currentUserId)
+      };
+    });
+
+    return next;
+  });
+}, [contacts, currentUserId]);
+
   const [typingUsers, setTypingUsers] = useState({});
 
   const socketRef = useRef(null);
@@ -971,9 +1044,8 @@ export default function DirectChat({
 
     return (
       <span
-        className={`direct-chat__contact-status ${
-          unreadCounts[key] ? "is-unread" : ""
-        }`}
+        className={`direct-chat__contact-status ${unreadCounts[key] ? "is-unread" : ""
+          }`}
       >
         {last ? `${last.isMine ? "You: " : ""}${last.text}` : fallback}
       </span>
@@ -1179,14 +1251,13 @@ export default function DirectChat({
                   <button
                     type="button"
                     key={contactId}
-                    className={`direct-chat__contact ${
-                      selected ? "is-active" : ""
-                    }`}
+                    className={`direct-chat__contact ${selected ? "is-active" : ""
+                      }`}
                     onClick={() => openConversation(contact)}
                   >
                     <Avatar
                       name={name}
-                      image={contact?.image}
+                      image={getContactImage(contact)}
                       seed={contactId}
                     />
 
@@ -1220,9 +1291,8 @@ export default function DirectChat({
                 <button
                   type="button"
                   key={id}
-                  className={`direct-chat__contact ${
-                    selected ? "is-active" : ""
-                  }`}
+                  className={`direct-chat__contact ${selected ? "is-active" : ""
+                    }`}
                   onClick={() => openGroupConversation(group)}
                 >
                   <Avatar name={group.name} seed={`group-${id}`} isGroup />
@@ -1273,7 +1343,7 @@ export default function DirectChat({
 
               <Avatar
                 name={getContactName(activeContact)}
-                image={activeContact.image}
+                image={getContactImage(activeContact)}
                 seed={
                   activeContact.isGroup
                     ? `group-${activeContact.id}`
@@ -1386,9 +1456,8 @@ export default function DirectChat({
                           ? `message-${messageId}`
                           : `message-${index}`
                       }
-                      className={`direct-chat__message-row ${
-                        isMine ? "is-mine" : "is-theirs"
-                      }`}
+                      className={`direct-chat__message-row ${isMine ? "is-mine" : "is-theirs"
+                        }`}
                     >
                       {activeContact.isGroup && !isMine && (
                         <small className="direct-chat__sender">
