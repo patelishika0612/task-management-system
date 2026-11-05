@@ -193,7 +193,8 @@ const updateProject = async (req, res) => {
                 start_date = ?,
                 end_date = ?,
                 priority = ?,
-                status = ?
+                status = ?,
+                updated_at = NOW()
             WHERE project_id = ?
         `, [
             proj_name,

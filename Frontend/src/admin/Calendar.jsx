@@ -40,6 +40,7 @@ const Calendar = () => {
     new Date(today.getFullYear(), today.getMonth(), 1)
   );
   const [tasks, setTasks] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
@@ -163,6 +164,16 @@ const normalizeTask = (item) => ({
   useEffect(() => {
     fetchCalendarEvents();
   }, [fetchCalendarEvents]);
+
+  // Department filter lists every department, not only those on this month's events.
+  useEffect(() => {
+    API.get("/departments")
+      .then((response) => {
+        const records = Array.isArray(response.data?.data) ? response.data.data : [];
+        setDepartments(records.map((item) => item.department_name).filter(Boolean));
+      })
+      .catch((error) => console.error("Departments API error:", error));
+  }, []);
 
   const filteredTasks = useMemo(() => tasks.filter((task) => {
     const employeeMatch =
@@ -337,9 +348,9 @@ const completedTasks = filteredTasks.filter(
           </div>
           <div className="calendar-actions">
             <button type="button" className="admin-calendar-today-btn" onClick={goToToday}>Today</button>
-            <button type="button" className="admin-calendar-add-btn" onClick={() => setShowForm(true)}>
+            {/* <button type="button" className="admin-calendar-add-btn" onClick={() => setShowForm(true)}>
               <Plus size={16} /> Add Event
-            </button>
+            </button> */}
           </div>
         </header>
 

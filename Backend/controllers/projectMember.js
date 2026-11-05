@@ -6,6 +6,31 @@ import db from "../db.js";
 
 const promiseDb = db.promise();
 
+// assigned_at was created as DATE, so every assignment showed midnight
+// (5:30 am IST). Widen it to DATETIME so the real assignment time is kept.
+const ensureAssignedAtColumn = async () => {
+    try {
+        const [columns] = await promiseDb.query(`
+            SELECT DATA_TYPE
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'project_members'
+              AND COLUMN_NAME = 'assigned_at'
+        `);
+
+        if (columns[0]?.DATA_TYPE?.toLowerCase() === "date") {
+            await promiseDb.query(
+                "ALTER TABLE project_members MODIFY assigned_at DATETIME NULL"
+            );
+            console.log("Changed project_members.assigned_at to DATETIME");
+        }
+    } catch (error) {
+        console.error("assigned_at column check error:", error.message);
+    }
+};
+
+ensureAssignedAtColumn();
+
 
 // =====================================================
 // GET ALL PROJECT MEMBERS
@@ -190,7 +215,7 @@ const createProjectMember = async (req, res) => {
         // ─── INSERT ───────────────────────────────────────────
         const [result] = await promiseDb.query(
             `INSERT INTO project_members (project_id, employee_id, assigned_at)
-             VALUES (?, ?, CURDATE())`,
+             VALUES (?, ?, NOW())`,
             [projectId, employeeId]
         );
 

@@ -200,7 +200,8 @@ const updateEmployee = async (req, res) => {
                 Date_of_join = ?,
                 image = ?,
                 status = ?,
-                employee_code = ?
+                employee_code = ?,
+                updated_at = NOW()
             WHERE emp_id = ?
         `, [
             emp_name,

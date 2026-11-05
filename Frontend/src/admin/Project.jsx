@@ -85,6 +85,7 @@ const Project = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editId, setEditId] = useState(null);
+  const [editCreatorId, setEditCreatorId] = useState(null);
   const [viewProject, setViewProject] = useState(null);
 
   const [form, setForm] = useState(EMPTY_FORM);
@@ -229,6 +230,7 @@ const Project = () => {
   // =========================================
   const openAddModal = () => {
     setEditId(null);
+    setEditCreatorId(null);
     setForm({ ...EMPTY_FORM });
 
     setEmpSearch("");
@@ -332,6 +334,7 @@ const Project = () => {
       }
 
       setEditId(data.project_id);
+      setEditCreatorId(data.created_by ?? null);
 
       setForm({
         proj_name: data.proj_name || "",
@@ -369,6 +372,7 @@ const Project = () => {
 
     setIsModalOpen(false);
     setEditId(null);
+    setEditCreatorId(null);
     setForm({ ...EMPTY_FORM });
 
     setEmpSearch("");
@@ -458,7 +462,24 @@ const Project = () => {
     try {
       const isEditing = editId !== null;
 
-      // created_by stores the first assigned employee ID (DB FK requires employe.emp_id)
+      // created_by must be an employe.emp_id (DB FK). Use the logged-in
+      // admin's own employee record, keep the original creator when editing,
+      // and fall back to the first assigned employee only if neither exists.
+      const adminEmail = String(localStorage.getItem("adminEmail") || "")
+        .trim()
+        .toLowerCase();
+
+      const adminEmployee = employees.find(
+        (item) =>
+          adminEmail &&
+          String(item.email || "").trim().toLowerCase() === adminEmail
+      );
+
+      const creatorId =
+        (isEditing && editCreatorId) ||
+        (adminEmployee ? Number(adminEmployee.emp_id) : null) ||
+        selectedEmployeeIds[0];
+
       const projectPayload = {
         proj_name: form.proj_name.trim(),
         description: form.description,
@@ -467,7 +488,7 @@ const Project = () => {
         end_date: form.end_date || null,
         priority: form.priority,
         status: form.status,
-        created_by: selectedEmployeeIds[0],
+        created_by: creatorId,
       };
 
       // STEP 1: Create or update project
@@ -563,6 +584,7 @@ const Project = () => {
 
       setIsModalOpen(false);
       setEditId(null);
+      setEditCreatorId(null);
       setForm({ ...EMPTY_FORM });
 
       setEmpSearch("");
@@ -1598,8 +1620,6 @@ const Project = () => {
                   {
                     label: "Created By",
                     value:
-                      localStorage.getItem("adminName") ||
-                      localStorage.getItem("adminEmail") ||
                       viewProject.created_by_name ||
                       viewProject.created_by ||
                       "—",

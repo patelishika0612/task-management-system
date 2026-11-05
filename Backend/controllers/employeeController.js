@@ -624,7 +624,8 @@ const updateEmployee = async (req, res) => {
                     date_of_join = ?,
                     image = ?,
                     status = ?,
-                    employee_code = ?
+                    employee_code = ?,
+                    updated_at = NOW()
                 WHERE emp_id = ?
                 `,
                 [
@@ -658,7 +659,8 @@ const updateEmployee = async (req, res) => {
                     date_of_join = ?,
                     image = ?,
                     status = ?,
-                    employee_code = ?
+                    employee_code = ?,
+                    updated_at = NOW()
                 WHERE emp_id = ?
                 `,
                 [
@@ -853,7 +855,7 @@ const createEmployeeProfile = async (req, res) => {
 
     const [result] = await db.query(
       `UPDATE employe
-       SET image = ?
+       SET image = ?, updated_at = NOW()
        WHERE emp_id = ?`,
       [imageUrl, empId]
     );

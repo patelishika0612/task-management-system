@@ -102,10 +102,17 @@ const formatRelativeTime = (value) => {
   const date = toDate(value);
   if (!date) return "";
   const days = -daysFromToday(value);
-  const time = date.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
-  if (days === 0) return `Today · ${time}`;
-  if (days === 1) return `Yesterday · ${time}`;
-  return `${formatDate(value)} · ${time}`;
+  // Date-only values (older project assignments) arrive as UTC midnight;
+  // showing their time would print a fake "5:30 am", so show the day only.
+  const isDateOnly =
+    /^\d{4}-\d{2}-\d{2}$/.test(String(value)) ||
+    /T00:00:00(\.000)?Z$/.test(String(value));
+  const time = isDateOnly
+    ? ""
+    : ` · ${date.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}`;
+  if (days === 0) return `Today${time}`;
+  if (days === 1) return `Yesterday${time}`;
+  return `${formatDate(value)}${time}`;
 };
 
 const getGreeting = () => {
