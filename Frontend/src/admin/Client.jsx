@@ -39,7 +39,7 @@ const isValidEmail = (value) =>
     );
 
 const isValidPhone = (value) =>
-    /^[6-9]\d{9}$/.test(String(value).trim());
+    /^\d{10}$/.test(String(value).trim());
 
 const isValidPincode = (value) =>
     /^\d{6}$/.test(String(value).trim());
@@ -58,8 +58,7 @@ const phoneInputProps = {
     type: "tel",
     inputMode: "numeric",
     maxLength: 10,
-    pattern: "[6-9][0-9]{9}",
-    title: "Enter a valid 10-digit mobile number",
+    title: "Enter a 10-digit contact number",
 };
 
 const DIGIT_FIELDS = {
@@ -80,8 +79,8 @@ const PAGE_SIZE = 5;
 const STATUS_OPTIONS = [
     "Active",
     "Inactive",
-    "Prospect",
-    "Churned",
+    "Interested",
+    "Discontinued",
 ];
 
 const EMPTY_FORM = {
@@ -429,7 +428,7 @@ const Client = () => {
 
         if (f.Phone && !isValidPhone(f.Phone)) {
             setError(
-                "Phone must be a valid 10-digit mobile number."
+                "Phone must be a 10-digit number."
             );
             return;
         }
@@ -439,7 +438,7 @@ const Client = () => {
             !isValidPhone(f.Alternate_Phone)
         ) {
             setError(
-                "Alternate phone must be a valid 10-digit mobile number."
+                "Alternate phone must be a 10-digit number."
             );
             return;
         }

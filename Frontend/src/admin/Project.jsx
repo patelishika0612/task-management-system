@@ -21,7 +21,15 @@ import "./Project.css";
 
 const PAGE_SIZE = 5;
 
-const PRIORITY_OPTIONS = ["low", "medium", "high", "critical"];
+const PRIORITY_OPTIONS = ["low", "medium", "high", "urgent"];
+
+// Today's date as YYYY-MM-DD in local time (toISOString would use UTC)
+const getTodayDate = () => {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+};
 
 const STATUS_OPTIONS = [
   "not started",
@@ -87,6 +95,8 @@ const Project = () => {
   const [editId, setEditId] = useState(null);
   const [editCreatorId, setEditCreatorId] = useState(null);
   const [viewProject, setViewProject] = useState(null);
+  const [viewMembers, setViewMembers] = useState([]);
+  const [viewMembersLoading, setViewMembersLoading] = useState(false);
 
   const [form, setForm] = useState(EMPTY_FORM);
 
@@ -221,8 +231,62 @@ const Project = () => {
   // =========================================
   // VIEW PROJECT
   // =========================================
-  const openViewModal = (project) => {
+  const openViewModal = async (project) => {
     setViewProject(project);
+    setViewMembers([]);
+    setViewMembersLoading(true);
+
+    try {
+      const membersResponse = await API.get("/project-members");
+      const membersResult = checkApiResponse(
+        membersResponse.data,
+        "Unable to fetch project assignments."
+      );
+
+      const projectMembers = getArrayData(membersResult).filter(
+        (member) =>
+          Number(member.project_id) === Number(project.project_id)
+      );
+
+      // Resolve names from the employee list when the join returned none
+      const memberNames = [
+        ...new Set(
+          projectMembers
+            .map((member) => {
+              const memberEmployeeId =
+                member.emp_id ?? member.employee_id;
+
+              const employee = employees.find(
+                (item) =>
+                  memberEmployeeId != null &&
+                  Number(item.emp_id) === Number(memberEmployeeId)
+              );
+
+              const name = member.emp_name || employee?.emp_name;
+              const code =
+                member.employee_code || employee?.employee_code;
+
+              if (!name) return null;
+              return code ? `${name} (${code})` : name;
+            })
+            .filter(Boolean)
+        ),
+      ];
+
+      setViewMembers(memberNames);
+    } catch (err) {
+      console.error(
+        "Project members fetch error:",
+        getErrorMessage(err, "Unable to fetch project assignments.")
+      );
+    } finally {
+      setViewMembersLoading(false);
+    }
+  };
+
+  const closeViewModal = () => {
+    setViewProject(null);
+    setViewMembers([]);
   };
 
   // =========================================
@@ -231,6 +295,8 @@ const Project = () => {
   const openAddModal = () => {
     setEditId(null);
     setEditCreatorId(null);
+
+    // Add mode: always start with empty dates
     setForm({ ...EMPTY_FORM });
 
     setEmpSearch("");
@@ -281,6 +347,15 @@ const Project = () => {
         projectResult.data ||
         projectResult.project ||
         projectResult;
+      const today = getTodayDate();
+
+      const projectStartDate = data.start_date
+        ? String(data.start_date).split("T")[0]
+        : "";
+
+      const projectEndDate = data.end_date
+        ? String(data.end_date).split("T")[0]
+        : "";
 
       // Get project-member assignments
       const membersResponse = await API.get("/project-members");
@@ -307,7 +382,7 @@ const Project = () => {
                 (item) =>
                   (member.employee_code &&
                     String(item.employee_code) ===
-                      String(member.employee_code)) ||
+                    String(member.employee_code)) ||
                   (memberEmployeeId != null &&
                     Number(item.emp_id) === Number(memberEmployeeId))
               );
@@ -335,21 +410,27 @@ const Project = () => {
 
       setEditId(data.project_id);
       setEditCreatorId(data.created_by ?? null);
+setForm({
+  proj_name: data.proj_name || "",
+  description: data.description || "",
+  client_name: data.client_name || "",
 
-      setForm({
-        proj_name: data.proj_name || "",
-        description: data.description || "",
-        client_name: data.client_name || "",
-        start_date: data.start_date
-          ? String(data.start_date).split("T")[0]
-          : "",
-        end_date: data.end_date
-          ? String(data.end_date).split("T")[0]
-          : "",
-        priority: data.priority || "medium",
-        status: data.status || "not started",
-        created_by: selectedEmployeeCodes,
-      });
+  start_date:
+    projectStartDate && projectStartDate >= today
+      ? projectStartDate
+      : "",
+
+  end_date:
+    projectEndDate &&
+    projectEndDate >= today &&
+    projectEndDate >= (projectStartDate || today)
+      ? projectEndDate
+      : "",
+
+  priority: data.priority || "medium",
+  status: data.status || "not started",
+  created_by: selectedEmployeeCodes,
+});
 
       setEmpSearch("");
       setClientSearch("");
@@ -425,7 +506,17 @@ const Project = () => {
       return;
     }
 
-    if (end_date && end_date < start_date) {
+    if (start_date < getTodayDate()) {
+      setError("Start date cannot be before today.");
+      return;
+    }
+
+    if (end_date < getTodayDate()) {
+      setError("End date cannot be before today.");
+      return;
+    }
+
+    if (end_date < start_date) {
       setError("End date cannot be before start date.");
       return;
     }
@@ -504,13 +595,13 @@ const Project = () => {
       const projectId = isEditing
         ? Number(editId)
         : Number(
-            projectResult.project_id ??
-              projectResult.insertId ??
-              projectResult.data?.project_id ??
-              projectResult.data?.insertId ??
-              projectResult.data?.project?.project_id ??
-              projectResult.project?.project_id
-          );
+          projectResult.project_id ??
+          projectResult.insertId ??
+          projectResult.data?.project_id ??
+          projectResult.data?.insertId ??
+          projectResult.data?.project?.project_id ??
+          projectResult.project?.project_id
+        );
 
       if (!Number.isInteger(projectId) || projectId <= 0) {
         throw new Error(
@@ -962,9 +1053,8 @@ const Project = () => {
                   <button
                     type="button"
                     key={page}
-                    className={`admin-page-btn ${
-                      currentPage === page ? "admin-page-active" : ""
-                    }`}
+                    className={`admin-page-btn ${currentPage === page ? "admin-page-active" : ""
+                      }`}
                     onClick={() => setCurrentPage(page)}
                   >
                     {page}
@@ -1109,11 +1199,10 @@ const Project = () => {
 
                           <ChevronDown
                             size={16}
-                            className={`proj-emp-chevron${
-                              clientDropOpen
+                            className={`proj-emp-chevron${clientDropOpen
                                 ? " proj-emp-chevron-open"
                                 : ""
-                            }`}
+                              }`}
                           />
                         </button>
 
@@ -1214,6 +1303,7 @@ const Project = () => {
                       <input
                         type="date"
                         name="start_date"
+                        min={getTodayDate()}
                         value={form.start_date}
                         onChange={handleChange}
                         required
@@ -1222,14 +1312,17 @@ const Project = () => {
 
                     {/* END DATE */}
                     <div className="admin-field">
-                      <label>End Date</label>
+                      <label>
+                        End Date <span>*</span>
+                      </label>
 
                       <input
                         type="date"
                         name="end_date"
-                        min={form.start_date || undefined}
+                        min={form.start_date || getTodayDate()}
                         value={form.end_date}
                         onChange={handleChange}
+                        required
                       />
                     </div>
 
@@ -1300,33 +1393,32 @@ const Project = () => {
                             {form.created_by.length === 0
                               ? "-- Select Employees --"
                               : employees.length > 0 &&
-                                  form.created_by.length ===
-                                    employees.filter(
-                                      (employee) => employee.employee_code
-                                    ).length
+                                form.created_by.length ===
+                                employees.filter(
+                                  (employee) => employee.employee_code
+                                ).length
                                 ? "All Employees Selected"
                                 : form.created_by.length === 1
                                   ? (() => {
-                                      const employee = employees.find(
-                                        (item) =>
-                                          item.employee_code ===
-                                          form.created_by[0]
-                                      );
+                                    const employee = employees.find(
+                                      (item) =>
+                                        item.employee_code ===
+                                        form.created_by[0]
+                                    );
 
-                                      return employee
-                                        ? `${employee.emp_name} (${employee.employee_code})`
-                                        : "1 selected";
-                                    })()
+                                    return employee
+                                      ? `${employee.emp_name} (${employee.employee_code})`
+                                      : "1 selected";
+                                  })()
                                   : `${form.created_by.length} employees selected`}
                           </span>
 
                           <ChevronDown
                             size={16}
-                            className={`proj-emp-chevron${
-                              empDropOpen
+                            className={`proj-emp-chevron${empDropOpen
                                 ? " proj-emp-chevron-open"
                                 : ""
-                            }`}
+                              }`}
                           />
                         </button>
 
@@ -1392,9 +1484,9 @@ const Project = () => {
                                     created_by: allSelected
                                       ? []
                                       : validEmployees.map(
-                                          (employee) =>
-                                            employee.employee_code
-                                        ),
+                                        (employee) =>
+                                          employee.employee_code
+                                      ),
                                   }));
                                 }}
                               />
@@ -1424,12 +1516,12 @@ const Project = () => {
                                         created_by:
                                           previous.created_by.includes(code)
                                             ? previous.created_by.filter(
-                                                (item) => item !== code
-                                              )
+                                              (item) => item !== code
+                                            )
                                             : [
-                                                ...previous.created_by,
-                                                code,
-                                              ],
+                                              ...previous.created_by,
+                                              code,
+                                            ],
                                       }));
                                     }}
                                   />
@@ -1479,9 +1571,8 @@ const Project = () => {
 
                                 <button
                                   type="button"
-                                  aria-label={`Remove ${
-                                    employee?.emp_name || code
-                                  }`}
+                                  aria-label={`Remove ${employee?.emp_name || code
+                                    }`}
                                   onClick={() =>
                                     setForm((previous) => ({
                                       ...previous,
@@ -1548,7 +1639,7 @@ const Project = () => {
             className="admin-modal-overlay"
             onMouseDown={(event) => {
               if (event.target === event.currentTarget) {
-                setViewProject(null);
+                closeViewModal();
               }
             }}
           >
@@ -1572,7 +1663,7 @@ const Project = () => {
                 <button
                   type="button"
                   className="admin-modal-close"
-                  onClick={() => setViewProject(null)}
+                  onClick={closeViewModal}
                   aria-label="Close project details"
                 >
                   <X size={21} />
@@ -1618,6 +1709,12 @@ const Project = () => {
                     value: viewProject.status,
                   },
                   {
+                    label: "Assigned Employees",
+                    value: viewMembersLoading
+                      ? "Loading..."
+                      : viewMembers.join(", ") || "—",
+                  },
+                  {
                     label: "Created By",
                     value:
                       viewProject.created_by_name ||
@@ -1628,16 +1725,16 @@ const Project = () => {
                     label: "Created At",
                     value: viewProject.created_at
                       ? new Date(
-                          viewProject.created_at
-                        ).toLocaleString()
+                        viewProject.created_at
+                      ).toLocaleString()
                       : "—",
                   },
                   {
                     label: "Updated At",
                     value: viewProject.updated_at
                       ? new Date(
-                          viewProject.updated_at
-                        ).toLocaleString()
+                        viewProject.updated_at
+                      ).toLocaleString()
                       : "—",
                   },
                 ].map(({ label, value }) => (
@@ -1658,7 +1755,7 @@ const Project = () => {
                 <button
                   type="button"
                   className="admin-cancel-btn"
-                  onClick={() => setViewProject(null)}
+                  onClick={closeViewModal}
                 >
                   Close
                 </button>

@@ -231,26 +231,107 @@ const updateProject = async (req, res) => {
 
 
 // =====================================================
-// DELETE PROJECT
+// DELETE PROJECT WITH RELATED TASKS
 // =====================================================
 
 const deleteProject = async (req, res) => {
+    let conn;
+
     try {
         const { id } = req.params;
 
-        // delete related project members first to avoid FK constraint
-        await db.query(
+        conn = await connection.promise().getConnection();
+
+        await conn.beginTransaction();
+
+        // Check project exists
+        const [project] = await conn.query(
+            "SELECT project_id FROM projects WHERE project_id = ?",
+            [id]
+        );
+
+        if (project.length === 0) {
+            await conn.rollback();
+
+            return res.status(404).json({
+                success: false,
+                message: "Project not found"
+            });
+        }
+
+        // 1. Delete all tasks belonging to this project
+        const [taskResult] = await conn.query(
+            "DELETE FROM task WHERE project_id = ?",
+            [id]
+        );
+
+        // 2. Delete project members
+        await conn.query(
             "DELETE FROM project_members WHERE project_id = ?",
             [id]
         );
 
-
-
-
-        
-        const [result] = await db.query(
+        // 3. Delete project
+        await conn.query(
             "DELETE FROM projects WHERE project_id = ?",
             [id]
+        );
+
+        await conn.commit();
+
+        return res.status(200).json({
+            success: true,
+            message: "Project and its related tasks deleted successfully",
+            deleted_tasks: taskResult.affectedRows
+        });
+
+    } catch (error) {
+        if (conn) {
+            await conn.rollback();
+        }
+
+        console.error("Delete project error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to delete project and related tasks"
+        });
+
+    } finally {
+        if (conn) {
+            conn.release();
+        }
+    }
+};
+
+// =====================================================
+// UPDATE PROJECT STATUS
+// =====================================================
+
+const updateProjectStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const allowedStatuses = [
+            "not started",
+            "in progress",
+            "on hold",
+            "completed"
+        ];
+
+        if (!allowedStatuses.includes(status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid project status"
+            });
+        }
+
+        const [result] = await db.query(
+            `UPDATE projects
+             SET status = ?, updated_at = NOW()
+             WHERE project_id = ?`,
+            [status, id]
         );
 
         if (result.affectedRows === 0) {
@@ -262,15 +343,19 @@ const deleteProject = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            message: "Project deleted successfully"
+            message: "Project status updated successfully",
+            data: {
+                project_id: Number(id),
+                status
+            }
         });
 
     } catch (error) {
-        console.error("Delete project error:", error);
+        console.error("Update project status error:", error);
 
         res.status(500).json({
             success: false,
-            message: "Failed to delete project"
+            message: "Failed to update project status"
         });
     }
 };
@@ -285,5 +370,6 @@ export default {
     getProjectById,
     createProject,
     updateProject,
-    deleteProject
+    deleteProject,
+    updateProjectStatus
 };

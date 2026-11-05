@@ -31,6 +31,9 @@ const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const [adminEmail, setAdminEmail] = useState("");
+const [adminName, setAdminName] = useState(
+  localStorage.getItem("adminName") || ""
+);
 
   const [profileImage, setProfileImage] = useState("");
 
@@ -139,9 +142,14 @@ useEffect(() => {
         }
 
         // Save admin name for use across the app
-        if (employeeData?.emp_name) {
-          localStorage.setItem("adminName", employeeData.emp_name);
-        }
+       if (employeeData?.emp_name) {
+  setAdminName(employeeData.emp_name);
+
+  localStorage.setItem(
+    "adminName",
+    employeeData.emp_name
+  );
+}
       }
     } catch (error) {
       console.error(
@@ -180,6 +188,7 @@ const handleLogout = async () => {
     localStorage.removeItem("adminToken");
     localStorage.removeItem("adminData");
     localStorage.removeItem("adminName");
+    setAdminName("");
     localStorage.removeItem("token");
     localStorage.removeItem("keepLogged");
 
@@ -370,9 +379,9 @@ useEffect(() => {
 
               <div className="admin-user-details">
 
-                <span className="admin-user-name">
-                  Admin
-                </span>
+              <span className="admin-user-name">
+  {adminName || "Admin"}
+</span>
 
                 <span className="admin-user-email">
                   {adminEmail}
@@ -424,10 +433,9 @@ useEffect(() => {
 
                   <div className="admin-dropdown-user">
 
-                    <strong>
-                      Admin
-                    </strong>
-
+                  <strong>
+  {adminName || "Admin"}
+</strong>
                     <span>
                       {adminEmail}
                     </span>

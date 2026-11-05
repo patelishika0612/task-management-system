@@ -698,3 +698,34 @@
     padding-right: 16px;
   }
 }
+
+
+.employee-project-progress-status {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.employee-project-status-select {
+  min-width: 180px;
+  padding: 10px 14px;
+  border: 1px solid #d8dee9;
+  border-radius: 8px;
+  background: #fff;
+  color: #263449;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.employee-project-status-select:focus {
+  border-color: #4361ee;
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+.employee-project-status-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

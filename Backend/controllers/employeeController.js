@@ -762,57 +762,66 @@ const deleteEmployee = async (req, res) => {
 // =====================================================
 
 // Get employee profile using email
+// =====================================================
+// GET EMPLOYEE PROFILE BY EMAIL
+// GET /api/employees/profile?email=example@gmail.com
+// =====================================================
+
 const getEmployeeProfile = async (req, res) => {
-  try {
-    const email = String(req.query.email || "").trim();
+    try {
+        const email = String(req.query.email || "").trim();
 
-    if (!email) {
-      return res.status(400).json({
-        success: false,
-        message: "Employee email is required.",
-      });
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Employee email is required.",
+            });
+        }
+
+        const [rows] = await db.query(
+            `SELECT
+                e.emp_id,
+                e.emp_name,
+                e.email,
+                e.phone,
+                e.department_id,
+                d.department_name,
+                e.date_of_join,
+                e.employee_code,
+                e.image,
+                e.status,
+                e.created_at,
+                e.updated_at
+            FROM employe e
+            LEFT JOIN departments d
+                ON e.department_id = d.department_id
+            WHERE e.email = ?
+            LIMIT 1`,
+            [email]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "Employee profile not found.",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data: rows[0],
+        });
+
+    } catch (error) {
+        console.error("Get employee profile error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch employee profile.",
+            error: error.message,
+        });
     }
-
-    const [rows] = await db.query(
-      `SELECT
-        e.emp_id,
-        e.emp_name,
-        e.email,
-        e.phone,
-        e.department_id,
-        d.department_name,
-        e.date_of_join,
-        e.employee_code,
-        e.image,
-        e.status
-       FROM employe e
-       LEFT JOIN departments d
-         ON e.department_id = d.department_id
-       WHERE e.email = ?
-       LIMIT 1`,
-      [email]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Employee profile not found.",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: rows[0],
-    });
-  } catch (error) {
-    console.error("Get employee profile error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to fetch employee profile.",
-    });
-  }
-};
+}; 
 
 
 // Upload employee profile image

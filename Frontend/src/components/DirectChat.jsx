@@ -10,6 +10,11 @@ import {
   SendHorizontal,
   Users,
   X,
+  Pencil,
+Trash2,
+Check,
+  Forward,
+
 } from "lucide-react";
 import API from "../api";
 import {
@@ -241,6 +246,16 @@ export default function DirectChat({
   const [socketConnected, setSocketConnected] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+
+  const [activeMessageMenuId, setActiveMessageMenuId] = useState(null);
+const [editingMessageId, setEditingMessageId] = useState(null);
+const [editingMessageText, setEditingMessageText] = useState("");
+const [savingEdit, setSavingEdit] = useState(false);
+const [showForwardModal, setShowForwardModal] = useState(false);
+const [forwardingMessage, setForwardingMessage] = useState(null);
+const [selectedForwardTargets, setSelectedForwardTargets] = useState([]);
+const [forwarding, setForwarding] = useState(false);
+
   // Sidebar activity, keyed by getDirectKey / getGroupKey.
   // Seeded from messages that arrived while the chat page was closed.
   const [unreadCounts, setUnreadCounts] = useState(() =>
@@ -337,7 +352,8 @@ useEffect(() => {
   // API HELPER
   // =====================================================
 
-  const request = useCallback(async (url, options = {}) => {
+const request = useCallback(async (url, options = {}) => {
+  try {
     const response = await API.request({
       url,
       method: options.method || "GET",
@@ -346,7 +362,17 @@ useEffect(() => {
     });
 
     return response.data;
-  }, []);
+  } catch (error) {
+    console.error("CHAT API ERROR:", {
+      url: error.config?.url || url,
+      method: error.config?.method || options.method || "GET",
+      status: error.response?.status,
+      response: error.response?.data,
+    });
+
+    throw error;
+  }
+}, []);
 
   // =====================================================
   // SOCKET CONNECTION
@@ -477,6 +503,59 @@ useEffect(() => {
       });
     };
 
+
+
+    const handleMessageUpdated = (payload) => {
+  const updatedMessage = payload?.message ?? payload;
+  if (!updatedMessage) return;
+
+  const messageId = getMessageId(updatedMessage);
+  const eventConversationId =
+    updatedMessage.conversation_id ??
+    updatedMessage.conversationId ??
+    payload?.conversationId;
+
+  if (
+    eventConversationId != null &&
+    Number(eventConversationId) === Number(conversationRef.current)
+  ) {
+    setMessages((previous) =>
+      previous.map((item) =>
+        String(getMessageId(item)) === String(messageId)
+          ? { ...item, ...updatedMessage }
+          : item
+      )
+    );
+  }
+};
+
+const handleMessageDeleted = (payload) => {
+  const messageId =
+    payload?.messageId ??
+    payload?.message_id ??
+    payload?.id ??
+    getMessageId(payload?.message);
+
+  const eventConversationId =
+    payload?.conversationId ??
+    payload?.conversation_id ??
+    payload?.message?.conversation_id;
+
+  if (!messageId) return;
+
+  if (
+    eventConversationId != null &&
+    Number(eventConversationId) === Number(conversationRef.current)
+  ) {
+    setMessages((previous) =>
+      previous.filter(
+        (item) =>
+          String(getMessageId(item)) !== String(messageId)
+      )
+    );
+  }
+};
+
     const handleTyping = ({
       conversationId: typingConversationId,
       conversationType,
@@ -509,6 +588,7 @@ useEffect(() => {
       );
     };
 
+
     const handleDisconnect = () => setSocketConnected(false);
 
     const handleConnectError = (err) => {
@@ -521,6 +601,8 @@ useEffect(() => {
     socket.on("connect_error", handleConnectError);
     socket.on("chat:message", handleIncomingMessage);
     socket.on("chat:typing", handleTyping);
+socket.on("chat:message_updated", handleMessageUpdated);
+socket.on("chat:message_deleted", handleMessageDeleted);
 
     return () => {
       socket.off("connect", joinCurrentConversation);
@@ -528,6 +610,8 @@ useEffect(() => {
       socket.off("connect_error", handleConnectError);
       socket.off("chat:message", handleIncomingMessage);
       socket.off("chat:typing", handleTyping);
+      socket.off("chat:message_updated", handleMessageUpdated);
+socket.off("chat:message_deleted", handleMessageDeleted);
       socket.disconnect();
 
       Object.values(typingExpireTimersRef.current).forEach(clearTimeout);
@@ -972,6 +1056,112 @@ useEffect(() => {
     [currentUserId, messageText, request, sending, stopTyping]
   );
 
+
+
+  // =====================================================
+// EDIT MESSAGE
+// =====================================================
+
+const handleEditMessage = async (message) => {
+  const messageId = getMessageId(message);
+  const text = editingMessageText.trim();
+  const id = conversationRef.current;
+
+  if (!messageId || !id || !text) {
+    setError("Please enter a message.");
+    return;
+  }
+
+  setSavingEdit(true);
+  setError("");
+
+  try {
+    const result = await request(
+      `/chat/${encodeURIComponent(id)}/messages/${encodeURIComponent(messageId)}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          userId: Number(currentUserId),
+          message: text,
+        }),
+      }
+    );
+
+    const data = extractData(result);
+    const updatedMessage = data?.message ?? data;
+
+    setMessages((previous) =>
+      previous.map((item) =>
+        String(getMessageId(item)) === String(messageId)
+          ? { ...item, ...updatedMessage, message: text }
+          : item
+      )
+    );
+
+    setEditingMessageId(null);
+    setEditingMessageText("");
+    setActiveMessageMenuId(null);
+  } catch (err) {
+    console.error("Edit message error:", err);
+    setError(
+      err.response?.data?.message ||
+      err.message ||
+      "Unable to edit message."
+    );
+  } finally {
+    setSavingEdit(false);
+  }
+};
+
+// =====================================================
+// DELETE MESSAGE
+// =====================================================
+
+const handleDeleteMessage = async (message) => {
+  const messageId = getMessageId(message);
+  const id = conversationRef.current;
+
+  if (!messageId || !id) return;
+
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this message?"
+  );
+
+  if (!confirmed) return;
+
+  setError("");
+
+  try {
+    await request(
+      `/chat/${encodeURIComponent(id)}/messages/${encodeURIComponent(messageId)}`,
+      {
+        method: "DELETE",
+        body: JSON.stringify({
+          userId: Number(currentUserId),
+        }),
+      }
+    );
+
+    const updatedMessages = messages.filter(
+      (item) =>
+        String(getMessageId(item)) !== String(messageId)
+    );
+
+    setMessages(updatedMessages);
+    rememberLastMessage(activeKey, updatedMessages);
+
+    setActiveMessageMenuId(null);
+    setEditingMessageId(null);
+    setEditingMessageText("");
+  } catch (err) {
+    console.error("Delete message error:", err);
+    setError(
+      err.response?.data?.message ||
+      err.message ||
+      "Unable to delete message."
+    );
+  }
+};
   // =====================================================
   // FILTER CONTACTS
   // =====================================================
@@ -1109,6 +1299,168 @@ useEffect(() => {
     else setShowCreateGroup(false);
   };
 
+
+  // =====================================================
+// OPEN FORWARD MODAL
+// =====================================================
+
+const openForwardModal = (message) => {
+  setForwardingMessage(message);
+  setSelectedForwardTargets([]);
+  setShowForwardModal(true);
+  setActiveMessageMenuId(null);
+  setError("");
+};
+
+// =====================================================
+// TOGGLE FORWARD TARGET
+// =====================================================
+
+const toggleForwardTarget = (targetKey) => {
+  setSelectedForwardTargets((previous) =>
+    previous.includes(targetKey)
+      ? previous.filter((item) => item !== targetKey)
+      : [...previous, targetKey]
+  );
+};
+
+// =====================================================
+// FORWARD MESSAGE
+// =====================================================
+
+const handleForwardMessage = async () => {
+  const sourceConversationId = conversationRef.current;
+  const messageId = getMessageId(forwardingMessage);
+
+  if (!sourceConversationId || !messageId) {
+    setError("Original message not found.");
+    return;
+  }
+
+  if (selectedForwardTargets.length === 0) {
+    setError("Please select at least one contact or group.");
+    return;
+  }
+
+  setForwarding(true);
+  setError("");
+
+  try {
+    const targetConversationIds = [];
+    const targetKeys = [];
+
+    for (const target of selectedForwardTargets) {
+      const [type, rawId] = target.split(":");
+      const targetId = Number(rawId);
+
+      if (!Number.isInteger(targetId) || targetId <= 0) {
+        continue;
+      }
+
+      if (type === "direct") {
+        // Create or get the direct conversation.
+        const result = await request("/chat/direct", {
+          method: "POST",
+          body: JSON.stringify({
+            currentUserId: Number(currentUserId),
+            userId: targetId,
+          }),
+        });
+
+        const data = extractData(result);
+
+        const conversation =
+          data?.conversationId ??
+          data?.conversation_id ??
+          data?.id;
+
+        if (!conversation) {
+          throw new Error("Could not open target conversation.");
+        }
+
+        targetConversationIds.push(Number(conversation));
+        targetKeys.push({
+          key: getDirectKey(targetId),
+          conversationId: Number(conversation),
+        });
+      }
+
+      if (type === "group") {
+        targetConversationIds.push(targetId);
+
+        targetKeys.push({
+          key: getGroupKey(targetId),
+          conversationId: targetId,
+        });
+      }
+    }
+
+    if (!targetConversationIds.length) {
+      throw new Error("Please select valid recipients.");
+    }
+
+    const result = await request(
+      `/chat/${encodeURIComponent(sourceConversationId)}/messages/${encodeURIComponent(messageId)}/forward`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          userId: Number(currentUserId),
+          targetConversationIds: [...new Set(targetConversationIds)],
+        }),
+      }
+    );
+
+    const forwardedMessages = extractData(result);
+
+    if (!Array.isArray(forwardedMessages)) {
+      throw new Error("Message forwarding failed.");
+    }
+
+    // Update sidebar previews immediately.
+    setLastMessages((previous) => {
+      const next = { ...previous };
+
+      forwardedMessages.forEach((message) => {
+        const target = targetKeys.find(
+          (item) =>
+            Number(item.conversationId) ===
+            Number(message.conversation_id)
+        );
+
+        if (!target) return;
+
+        next[target.key] = {
+          text: getPreviewText(message),
+          time: toTimestamp(getMessageTime(message)),
+          isMine: true,
+        };
+      });
+
+      return next;
+    });
+
+    setShowForwardModal(false);
+    setForwardingMessage(null);
+    setSelectedForwardTargets([]);
+
+    window.alert("Message forwarded successfully!");
+  } catch (err) {
+  console.error("Forward message error:", {
+    url: err.config?.url,
+    method: err.config?.method,
+    status: err.response?.status,
+    response: err.response?.data,
+  });
+
+  setError(
+    err.response?.data?.message ||
+    err.message ||
+    "Unable to forward message."
+  );
+} finally {
+  setForwarding(false);
+}
+};
   return (
     <div
       className={`direct-chat ${activeContact ? "has-active-chat" : ""}`}
@@ -1465,10 +1817,103 @@ useEffect(() => {
                         </small>
                       )}
 
-                      <div className="direct-chat__bubble">
-                        {getMessageText(message)}
-                      </div>
+                    <div className="direct-chat__bubble-wrapper">
+  {editingMessageId === messageId ? (
+    <div className="direct-chat__edit-box">
+      <input
+        type="text"
+        value={editingMessageText}
+        onChange={(event) =>
+          setEditingMessageText(event.target.value)
+        }
+        maxLength={2000}
+        autoFocus
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            handleEditMessage(message);
+          }
 
+          if (event.key === "Escape") {
+            setEditingMessageId(null);
+            setEditingMessageText("");
+          }
+        }}
+      />
+
+      <button
+        type="button"
+        disabled={savingEdit || !editingMessageText.trim()}
+        onClick={() => handleEditMessage(message)}
+        title="Save"
+      >
+        <Check size={16} />
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setEditingMessageId(null);
+          setEditingMessageText("");
+        }}
+        title="Cancel"
+      >
+        <X size={16} />
+      </button>
+    </div>
+  ) : (
+    <div
+      className="direct-chat__bubble"
+  onClick={() => {
+  setActiveMessageMenuId((previous) =>
+    String(previous) === String(messageId)
+      ? null
+      : messageId
+  );
+}}
+      title={isMine ? "Click for message options" : ""}
+    >
+      {getMessageText(message)}
+    </div>
+  )}
+
+{editingMessageId !== messageId &&
+  String(activeMessageMenuId) === String(messageId) && (
+      <div className="direct-chat__message-actions">
+        {message.message_type !== "image" &&
+          message.message_type !== "file" && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingMessageId(messageId);
+                setEditingMessageText(getMessageText(message));
+                setActiveMessageMenuId(null);
+              }}
+            >
+              <Pencil size={15} />
+              Edit
+            </button>
+          )}
+
+        <button
+          type="button"
+          className="is-delete"
+          onClick={() => handleDeleteMessage(message)}
+        >
+          <Trash2 size={15} />
+          Delete
+        </button>
+        <button
+  type="button"
+  onClick={() => openForwardModal(message)}
+>
+  <Forward size={15} />
+  Forward
+</button>
+
+      </div>
+    )}
+</div>
                       {isLastInRun && (
                         <span className="direct-chat__time">
                           {formatTime(getMessageTime(message))}
@@ -1481,6 +1926,136 @@ useEffect(() => {
 
               <div ref={messagesEndRef} />
             </div>
+{showForwardModal && (
+  <div className="direct-chat__forward-overlay">
+    <div className="direct-chat__forward-modal">
+
+      <div className="direct-chat__forward-header">
+        <h3>Forward Message</h3>
+
+        <button
+          type="button"
+          onClick={() => {
+            setShowForwardModal(false);
+            setForwardingMessage(null);
+            setSelectedForwardTargets([]);
+          }}
+          aria-label="Close"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <p className="direct-chat__forward-subtitle">
+        Select contacts or groups
+      </p>
+
+      <div className="direct-chat__forward-list">
+
+        <h4>Contacts</h4>
+
+        {contacts
+          .filter(
+            (contact) =>
+              Number(getContactId(contact)) !== Number(currentUserId)
+          )
+          .map((contact) => {
+            const id = getContactId(contact);
+            const targetKey = `direct:${id}`;
+
+            return (
+              <label
+                key={targetKey}
+                className="direct-chat__forward-option"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedForwardTargets.includes(targetKey)}
+                  onChange={() => toggleForwardTarget(targetKey)}
+                />
+
+                <Avatar
+                  name={getContactName(contact)}
+                  image={getContactImage(contact)}
+                  seed={id}
+                />
+
+                <span>{getContactName(contact)}</span>
+              </label>
+            );
+          })}
+
+        <h4>Groups</h4>
+
+        {groups.map((group) => {
+          const id =
+            group.conversationId ??
+            group.conversation_id ??
+            group.id;
+
+          const targetKey = `group:${id}`;
+
+          return (
+            <label
+              key={targetKey}
+              className="direct-chat__forward-option"
+            >
+              <input
+                type="checkbox"
+                checked={selectedForwardTargets.includes(targetKey)}
+                onChange={() => toggleForwardTarget(targetKey)}
+              />
+
+              <Avatar
+                name={group.name || "Group"}
+                seed={`group-${id}`}
+                isGroup
+              />
+
+              <span>{group.name || "Group"}</span>
+            </label>
+          );
+        })}
+
+        {contacts.length <= 1 && groups.length === 0 && (
+          <p className="direct-chat__empty">
+            No contacts or groups available.
+          </p>
+        )}
+      </div>
+
+      <div className="direct-chat__forward-footer">
+        <button
+          type="button"
+          className="direct-chat__forward-cancel"
+          onClick={() => {
+            setShowForwardModal(false);
+            setForwardingMessage(null);
+            setSelectedForwardTargets([]);
+          }}
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          className="direct-chat__forward-send"
+          disabled={
+            forwarding || selectedForwardTargets.length === 0
+          }
+          onClick={handleForwardMessage}
+        >
+          <Forward size={16} />
+
+          {forwarding
+            ? "Forwarding..."
+            : `Forward (${selectedForwardTargets.length})`}
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
 
             <form
               className="direct-chat__composer"

@@ -2,6 +2,45 @@ import connection from "../db.js";
 
 const db = connection.promise();
 
+const CLIENT_STATUSES = ["Active", "Inactive", "Interested", "Discontinued"];
+
+const toEnum = (values) =>
+    `ENUM(${values.map((v) => `'${v}'`).join(",")})`;
+
+// Status was created as ENUM('Active','Inactive','Potential'), so saving any
+// other status from the form failed. Widen it to the statuses the UI offers.
+const ensureStatusColumn = async () => {
+    try {
+        const [columns] = await db.query(`
+            SELECT COLUMN_TYPE
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME = 'clients'
+              AND COLUMN_NAME = 'Status'
+        `);
+
+        const current = columns[0]?.COLUMN_TYPE?.toLowerCase();
+
+        if (current && current !== toEnum(CLIENT_STATUSES).toLowerCase()) {
+            // Keep 'Potential' temporarily so existing rows can be moved over
+            await db.query(
+                `ALTER TABLE clients MODIFY Status ${toEnum([...CLIENT_STATUSES, "Potential"])} DEFAULT 'Active'`
+            );
+            await db.query(
+                "UPDATE clients SET Status = 'Interested' WHERE Status = 'Potential'"
+            );
+            await db.query(
+                `ALTER TABLE clients MODIFY Status ${toEnum(CLIENT_STATUSES)} DEFAULT 'Active'`
+            );
+            console.log("Updated clients.Status allowed values");
+        }
+    } catch (error) {
+        console.error("clients.Status column check error:", error.message);
+    }
+};
+
+ensureStatusColumn();
+
 // =====================================================
 // GET ALL CLIENTS
 // =====================================================
@@ -144,6 +183,13 @@ const createClient = async (req, res) => {
             });
         }
 
+        if (Status && !CLIENT_STATUSES.includes(Status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Status must be one of: ${CLIENT_STATUSES.join(", ")}`
+            });
+        }
+
         // Check assigned employee
         if (Assigned_Employee_ID) {
             const [employee] = await db.query(
@@ -247,6 +293,13 @@ const updateClient = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Client_Name and Company_Name are required"
+            });
+        }
+
+        if (Status && !CLIENT_STATUSES.includes(Status)) {
+            return res.status(400).json({
+                success: false,
+                message: `Status must be one of: ${CLIENT_STATUSES.join(", ")}`
             });
         }
 

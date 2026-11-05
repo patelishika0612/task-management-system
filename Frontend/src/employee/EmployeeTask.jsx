@@ -97,97 +97,111 @@ const isOverdue = (task) => {
 // EMPLOYEE HELPERS
 // =====================================================
 
-const parseEmployeeCodes = (value, fallbackCode = null) => {
-    let codes = [];
 
-    if (Array.isArray(value)) {
-        codes = value;
-    } else if (typeof value === "string" && value.trim()) {
-        try {
-            const parsed = JSON.parse(value);
-            codes = Array.isArray(parsed) ? parsed : [value];
-        } catch {
-            codes = [value];
-        }
+const parseEmployeeCodes = (taskOrValue, fallbackCode = null) => {
+  let value = taskOrValue;
+
+  // When a complete task object is passed, read its assignment fields.
+  if (
+    taskOrValue &&
+    typeof taskOrValue === "object" &&
+    !Array.isArray(taskOrValue)
+  ) {
+    fallbackCode = taskOrValue.employee_code || fallbackCode;
+    value = taskOrValue.employee_codes;
+  }
+
+  let codes = [];
+
+  if (Array.isArray(value)) {
+    codes = value;
+  } else if (typeof value === "string" && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      codes = Array.isArray(parsed) ? parsed : [value];
+    } catch {
+      codes = [value];
     }
+  }
 
-    if (!codes.length && fallbackCode) {
-        codes = [fallbackCode];
-    }
+  if (!codes.length && fallbackCode) {
+    codes = [fallbackCode];
+  }
 
-    return [...new Set(
-        codes
-            .map((code) => String(code).trim())
-            .filter(Boolean)
-    )].slice(0, 2);
+  return [...new Set(
+    codes
+      .map((code) => String(code).trim())
+      .filter(Boolean)
+  )];
 };
 
+
 const getEmployeesByCodes = async (employeeCodes = []) => {
-    if (!employeeCodes.length) return [];
+  if (!employeeCodes.length) return [];
 
-    const placeholders = employeeCodes.map(() => "?").join(",");
+  const placeholders = employeeCodes.map(() => "?").join(",");
 
-    const [rows] = await db.query(
-        `SELECT emp_id, emp_name, employee_code
+  const [rows] = await db.query(
+    `SELECT emp_id, emp_name, employee_code
          FROM employe
          WHERE employee_code IN (${placeholders})`,
-        employeeCodes
-    );
+    employeeCodes
+  );
 
-    // Maintain the same order as selected employees.
-    const employeeMap = new Map(
-        rows.map((employee) => [String(employee.employee_code), employee])
-    );
+  // Maintain the same order as selected employees.
+  const employeeMap = new Map(
+    rows.map((employee) => [String(employee.employee_code), employee])
+  );
 
-    return employeeCodes
-        .map((code) => employeeMap.get(String(code)))
-        .filter(Boolean);
+  return employeeCodes
+    .map((code) => employeeMap.get(String(code)))
+    .filter(Boolean);
 };
 
 const getEmployeeByCode = async (employeeCode) => {
-    const employees = await getEmployeesByCodes([employeeCode]);
-    return employees[0] || null;
+  const employees = await getEmployeesByCodes([employeeCode]);
+  return employees[0] || null;
 };
 
 const attachAssignedEmployees = async (rows) => {
-    if (!rows.length) return rows;
+  if (!rows.length) return rows;
 
-    const allCodes = [
-        ...new Set(
-            rows.flatMap((row) =>
-                parseEmployeeCodes(row.employee_codes, row.employee_code)
-            )
-        )
-    ];
+  const allCodes = [
+    ...new Set(
+      rows.flatMap((row) =>
+        parseEmployeeCodes(row.employee_codes, row.employee_code)
+      )
+    )
+  ];
 
-    const employees = await getEmployeesByCodes(allCodes);
+  const employees = await getEmployeesByCodes(allCodes);
 
-    const employeeMap = new Map(
-        employees.map((employee) => [
-            String(employee.employee_code),
-            employee
-        ])
+  const employeeMap = new Map(
+    employees.map((employee) => [
+      String(employee.employee_code),
+      employee
+    ])
+  );
+
+  return rows.map((row) => {
+    const employeeCodes = parseEmployeeCodes(
+      row.employee_codes,
+      row.employee_code
     );
 
-    return rows.map((row) => {
-        const employeeCodes = parseEmployeeCodes(
-            row.employee_codes,
-            row.employee_code
-        );
+    const assignedEmployees = employeeCodes
+      .map((code) => employeeMap.get(String(code)))
+      .filter(Boolean);
 
-        const assignedEmployees = employeeCodes
-            .map((code) => employeeMap.get(String(code)))
-            .filter(Boolean);
-
-        return {
-            ...row,
-            employee_codes: employeeCodes,
-            employees: assignedEmployees,
-            employee_names: assignedEmployees.map(
-                (employee) => employee.emp_name
-            )
-        };
-    });
+    return {
+      ...row,
+      employee_codes: employeeCodes,
+      employees: assignedEmployees,
+      employee_names: assignedEmployees.map(
+        (employee) => employee.emp_name
+      )
+    };
+  });
 };
 
 const parseAttachments = (task) => {
@@ -612,9 +626,9 @@ const EmployeeTask = ({ employee }) => {
                   <tr>
                     <td colSpan="9">
                       <div className="employee-task-empty">
-                        <div className="employee-task-empty-icon">
+                        {/* <div className="employee-task-empty-icon">
                           <ListChecks size={30} />
-                        </div>
+                        </div> */}
                         <strong>
                           {search || statusFilter || priorityFilter
                             ? "No matching tasks found"
@@ -791,50 +805,74 @@ const EmployeeTask = ({ employee }) => {
                       <span><FolderKanban size={14} /> Project</span>
                       <strong>{viewTask.proj_name || viewTask.project_name || "—"}</strong>
                     </div>
-                  <div className="employee-task-info-item">
-  <span>Assigned Employee</span>
-  <strong>
-    {employee?.emp_name ||
-      employee?.employee_name ||
-      employee?.name ||
-      storedEmployee?.emp_name ||
-      storedEmployee?.employee_name ||
-      storedEmployee?.name ||
-      "You"}
-  </strong>
+                
+<div className="employee-task-info-item employee-task-assigned-employees">
+  <span>Assigned Employees</span>
+
+  <div className="employee-task-assigned-list">
+    {viewTask.employees?.length > 0 ? (
+      viewTask.employees.map((assignedEmployee) => (
+        <div
+          className="employee-task-assigned-person"
+          key={
+            assignedEmployee.emp_id ||
+            assignedEmployee.employee_code
+          }
+        >
+          <span className="employee-task-assigned-avatar">
+            {getInitials(assignedEmployee.emp_name)}
+          </span>
+
+          <div>
+            <strong>
+              {assignedEmployee.emp_name || "Unknown Employee"}
+            </strong>
+            <small>{assignedEmployee.employee_code}</small>
+          </div>
+        </div>
+      ))
+    ) : (
+      <strong>
+        {viewTask.emp_name ||
+          storedEmployee?.emp_name ||
+          "You"}
+      </strong>
+    )}
+  </div>
 </div>
+
                   </div>
                 </section>
-             <section className="employee-task-detail-section">
-  <h3>Update Task Progress</h3>
+                <section className="employee-task-detail-section">
+                  <h3>Update Task Progress</h3>
 
-  <div className="employee-task-progress-actions">
+                  <div className="employee-task-progress-actions">
 
-    <div className="employee-task-progress-message">
-      <Clock3 size={18} />
-      <span>Select your current task status.</span>
-    </div>
+                    <div className="employee-task-progress-message">
+                      <Clock3 size={18} />
+                      <span>Select your current task status.</span>
+                    </div>
 
-    <select
-      className="employee-task-status-select"
-      value={normalize(viewTask.status)}
-      disabled={updatingStatus}
-      onChange={(e) =>
-        handleTaskStatusUpdate(e.target.value)
-      }
-    >
-      <option value="not started">Not Started</option>
-      <option value="in progress">In Progress</option>
-      <option value="on hold">On Hold</option>
-      <option value="completed">Completed</option>
-    </select>
+                    <select
+                      className="employee-task-status-select"
+                      value={normalize(viewTask.status)}
+                      disabled={updatingStatus}
+                      onChange={(e) =>
+                        handleTaskStatusUpdate(e.target.value)
+                      }
+                    >
+                      <option value="not started">Not Started</option>
+                      <option value="in progress">In Progress</option>
+                      <option value="on hold">On Hold</option>
+                      <option value="completed">Completed</option>
+                    </select>
 
-    {updatingStatus && (
-      <p>Updating task status...</p>
-    )}
+                    {updatingStatus && (
+                      <p>Updating task status...</p>
+                    )}
 
-  </div>
-</section>
+                  </div>
+                </section>
 
                 <section className="employee-task-detail-section">
                   <h3><FileText size={16} /> Description</h3>

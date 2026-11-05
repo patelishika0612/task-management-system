@@ -971,4 +971,507 @@ router.post("/:conversationId/messages", async (req, res) => {
     }
 });
 
+
+
+
+
+// =====================================================
+// EDIT MESSAGE
+// PUT /api/chat/:conversationId/messages/:messageId
+// body: { userId, message }
+// =====================================================
+
+router.put("/:conversationId/messages/:messageId", async (req, res) => {
+    try {
+        const conversationId = Number(req.params.conversationId);
+        const messageId = Number(req.params.messageId);
+
+        const userId = await resolveChatUserId(req.body.userId);
+        const message = typeof req.body.message === "string"
+            ? req.body.message.trim()
+            : "";
+
+        if (
+            !isValidId(conversationId) ||
+            !isValidId(messageId) ||
+            !isValidId(userId) ||
+            !message ||
+            message.length > 2000
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Valid message details are required"
+            });
+        }
+
+        // User must belong to this conversation.
+        const [members] = await db.query(
+            `SELECT user_id
+             FROM chat_conversation_members
+             WHERE conversation_id = ?
+               AND user_id = ?`,
+            [conversationId, userId]
+        );
+
+        if (!members.length) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not a member of this conversation"
+            });
+        }
+
+        // Only the original sender can edit their own text message.
+        const [existing] = await db.query(
+            `SELECT id, sender_id, message_type
+             FROM chat_messages
+             WHERE id = ?
+               AND conversation_id = ?
+               AND deleted_at IS NULL
+             LIMIT 1`,
+            [messageId, conversationId]
+        );
+
+        if (!existing.length) {
+            return res.status(404).json({
+                success: false,
+                message: "Message not found"
+            });
+        }
+
+        if (Number(existing[0].sender_id) !== Number(userId)) {
+            return res.status(403).json({
+                success: false,
+                message: "You can only edit your own messages"
+            });
+        }
+
+        if (existing[0].message_type !== "text") {
+            return res.status(400).json({
+                success: false,
+                message: "Only text messages can be edited"
+            });
+        }
+
+        await db.query(
+            `UPDATE chat_messages
+             SET message = ?
+             WHERE id = ?
+               AND conversation_id = ?
+               AND sender_id = ?
+               AND deleted_at IS NULL`,
+            [message, messageId, conversationId, userId]
+        );
+
+        const [updatedRows] = await db.query(
+            `SELECT
+                id,
+                conversation_id,
+                sender_id,
+                message_type,
+                message,
+                file_url,
+                file_name,
+                sent_at
+             FROM chat_messages
+             WHERE id = ?
+             LIMIT 1`,
+            [messageId]
+        );
+
+        const [conversationMembers] = await db.query(
+            `SELECT user_id
+             FROM chat_conversation_members
+             WHERE conversation_id = ?`,
+            [conversationId]
+        );
+
+        const updatedMessage = {
+            ...updatedRows[0],
+            conversation_type: "direct"
+        };
+
+        const io = req.app.get("io");
+
+        if (io) {
+            const rooms = [
+                `conversation:${conversationId}`,
+                ...conversationMembers.map(
+                    (member) => `chat-user:${member.user_id}`
+                )
+            ];
+
+            io.to(rooms).emit("chat:message_updated", updatedMessage);
+        }
+
+        return res.json({
+            success: true,
+            data: updatedMessage,
+            message: "Message updated successfully"
+        });
+
+    } catch (error) {
+        console.error("Edit chat message error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to edit message"
+        });
+    }
+});
+
+
+// =====================================================
+// DELETE MESSAGE
+// DELETE /api/chat/:conversationId/messages/:messageId
+// body: { userId }
+// =====================================================
+
+router.delete("/:conversationId/messages/:messageId", async (req, res) => {
+    try {
+        const conversationId = Number(req.params.conversationId);
+        const messageId = Number(req.params.messageId);
+
+        const userId = await resolveChatUserId(req.body.userId);
+
+        if (
+            !isValidId(conversationId) ||
+            !isValidId(messageId) ||
+            !isValidId(userId)
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Valid IDs are required"
+            });
+        }
+
+        // Verify conversation membership.
+        const [members] = await db.query(
+            `SELECT user_id
+             FROM chat_conversation_members
+             WHERE conversation_id = ?
+               AND user_id = ?`,
+            [conversationId, userId]
+        );
+
+        if (!members.length) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not a member of this conversation"
+            });
+        }
+
+        // Verify original sender.
+        const [existing] = await db.query(
+            `SELECT id, sender_id
+             FROM chat_messages
+             WHERE id = ?
+               AND conversation_id = ?
+               AND deleted_at IS NULL
+             LIMIT 1`,
+            [messageId, conversationId]
+        );
+
+        if (!existing.length) {
+            return res.status(404).json({
+                success: false,
+                message: "Message not found"
+            });
+        }
+
+        if (Number(existing[0].sender_id) !== Number(userId)) {
+            return res.status(403).json({
+                success: false,
+                message: "You can only delete your own messages"
+            });
+        }
+
+        // Soft delete: preserve the database record.
+        await db.query(
+            `UPDATE chat_messages
+             SET deleted_at = NOW()
+             WHERE id = ?
+               AND conversation_id = ?
+               AND sender_id = ?
+               AND deleted_at IS NULL`,
+            [messageId, conversationId, userId]
+        );
+
+        const [conversationMembers] = await db.query(
+            `SELECT user_id
+             FROM chat_conversation_members
+             WHERE conversation_id = ?`,
+            [conversationId]
+        );
+
+        const deletedPayload = {
+            id: messageId,
+            conversation_id: conversationId,
+            sender_id: userId
+        };
+
+        const io = req.app.get("io");
+
+        if (io) {
+            const rooms = [
+                `conversation:${conversationId}`,
+                ...conversationMembers.map(
+                    (member) => `chat-user:${member.user_id}`
+                )
+            ];
+
+            io.to(rooms).emit("chat:message_deleted", deletedPayload);
+        }
+
+        return res.json({
+            success: true,
+            data: deletedPayload,
+            message: "Message deleted successfully"
+        });
+
+    } catch (error) {
+        console.error("Delete chat message error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to delete message"
+        });
+    }
+});
+
+
+// =====================================================
+// FORWARD MESSAGE
+// POST /api/chat/:conversationId/messages/:messageId/forward
+// body: { userId, targetConversationIds: [] }
+// =====================================================
+
+router.post(
+    "/:conversationId/messages/:messageId/forward",
+    async (req, res) => {
+        let conn;
+
+        try {
+            const sourceConversationId = Number(req.params.conversationId);
+            const messageId = Number(req.params.messageId);
+
+            const userId = await resolveChatUserId(req.body.userId);
+
+            const targetConversationIds = [
+                ...new Set(
+                    (Array.isArray(req.body.targetConversationIds)
+                        ? req.body.targetConversationIds
+                        : [req.body.targetConversationId]
+                    ).map(Number)
+                )
+            ];
+
+            if (
+                !isValidId(sourceConversationId) ||
+                !isValidId(messageId) ||
+                !isValidId(userId) ||
+                targetConversationIds.length === 0 ||
+                targetConversationIds.length > 20 ||
+                targetConversationIds.some((id) => !isValidId(id))
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Valid source, user and target conversations are required"
+                });
+            }
+
+            conn = await db.getConnection();
+            await conn.beginTransaction();
+
+            // Verify sender belongs to source conversation.
+            const [sourceMembers] = await conn.query(
+                `SELECT user_id
+                 FROM chat_conversation_members
+                 WHERE conversation_id = ?
+                   AND user_id = ?
+                 LIMIT 1`,
+                [sourceConversationId, userId]
+            );
+
+            if (!sourceMembers.length) {
+                await conn.rollback();
+
+                return res.status(403).json({
+                    success: false,
+                    message: "You are not a member of the source conversation"
+                });
+            }
+
+            // Get original message.
+            const [originalRows] = await conn.query(
+                `SELECT
+                    id,
+                    conversation_id,
+                    sender_id,
+                    message_type,
+                    message,
+                    file_url,
+                    file_name
+                 FROM chat_messages
+                 WHERE id = ?
+                   AND conversation_id = ?
+                   AND deleted_at IS NULL
+                 LIMIT 1`,
+                [messageId, sourceConversationId]
+            );
+
+            if (!originalRows.length) {
+                await conn.rollback();
+
+                return res.status(404).json({
+                    success: false,
+                    message: "Original message not found"
+                });
+            }
+
+            const original = originalRows[0];
+
+            const forwardedMessages = [];
+
+            // Verify every target and create forwarded copies.
+            for (const targetId of targetConversationIds) {
+                const [targetMembers] = await conn.query(
+                    `SELECT user_id
+                     FROM chat_conversation_members
+                     WHERE conversation_id = ?
+                       AND user_id = ?
+                     LIMIT 1`,
+                    [targetId, userId]
+                );
+
+                if (!targetMembers.length) {
+                    throw new Error(
+                        `You are not a member of target conversation ${targetId}`
+                    );
+                }
+
+                const [targetConversation] = await conn.query(
+                    `SELECT id, type
+                     FROM chat_conversations
+                     WHERE id = ?
+                     LIMIT 1`,
+                    [targetId]
+                );
+
+                if (!targetConversation.length) {
+                    throw new Error(
+                        `Target conversation ${targetId} does not exist`
+                    );
+                }
+
+                // Create a new message; original stays unchanged.
+                const [insertResult] = await conn.query(
+                    `INSERT INTO chat_messages
+                     (
+                        conversation_id,
+                        sender_id,
+                        message_type,
+                        message,
+                        file_url,
+                        file_name
+                     )
+                     VALUES (?, ?, ?, ?, ?, ?)`,
+                    [
+                        targetId,
+                        userId,
+                        original.message_type,
+                        original.message,
+                        original.file_url,
+                        original.file_name
+                    ]
+                );
+
+                const [savedRows] = await conn.query(
+                    `SELECT
+                        id,
+                        conversation_id,
+                        sender_id,
+                        message_type,
+                        message,
+                        file_url,
+                        file_name,
+                        sent_at
+                     FROM chat_messages
+                     WHERE id = ?
+                     LIMIT 1`,
+                    [insertResult.insertId]
+                );
+
+                const [members] = await conn.query(
+                    `SELECT
+                        m.user_id,
+                        c.type
+                     FROM chat_conversation_members m
+                     INNER JOIN chat_conversations c
+                       ON c.id = m.conversation_id
+                     WHERE m.conversation_id = ?`,
+                    [targetId]
+                );
+
+                forwardedMessages.push({
+                    message: {
+                        ...savedRows[0],
+                        conversation_type: targetConversation[0].type
+                    },
+                    conversationMembers: members,
+                    conversationType: targetConversation[0].type
+                });
+            }
+
+            await conn.commit();
+
+            // Emit messages and notify target conversation members.
+            const io = req.app.get("io");
+
+            for (const item of forwardedMessages) {
+                const forwardedMessage = item.message;
+                const targetId = forwardedMessage.conversation_id;
+
+                if (io) {
+                    io.to([
+                        `conversation:${targetId}`,
+                        ...item.conversationMembers.map(
+                            (member) => `chat-user:${member.user_id}`
+                        )
+                    ]).emit("chat:message", forwardedMessage);
+                }
+
+                await sendChatNotifications({
+                    conversationId: targetId,
+                    messageId: forwardedMessage.id,
+                    senderId: userId,
+                    message: forwardedMessage.message || "",
+                    messageType: forwardedMessage.message_type,
+                    conversationType: item.conversationType,
+                    conversationMembers: item.conversationMembers
+                });
+            }
+
+            return res.status(201).json({
+                success: true,
+                data: forwardedMessages.map((item) => item.message),
+                message: "Message forwarded successfully"
+            });
+
+        } catch (error) {
+            if (conn) await conn.rollback();
+
+            console.error("Forward chat message error:", error);
+
+            return res.status(500).json({
+                success: false,
+                message: error.message || "Failed to forward message"
+            });
+
+        } finally {
+            if (conn) conn.release();
+        }
+    }
+);
+
+
 export default router;

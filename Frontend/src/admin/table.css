@@ -722,3 +722,15 @@
   color: #b91c1c;
   border: 1px solid #fecaca;
 }
+
+.admin-status-interested {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.admin-status-discontinued {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}

@@ -341,12 +341,12 @@ const EmployeeCalendar = () => {
 
                         {isProject ? (
                             <>
-                                <div className="ec-detail-row">
+                                {/* <div className="ec-detail-row">
                                     <span>Project ID</span>
                                     <strong>
                                         {item.project_id ?? "N/A"}
                                     </strong>
-                                </div>
+                                </div> */}
 
                                 <div className="ec-detail-row">
                                     <span>Project Name</span>
@@ -364,12 +364,12 @@ const EmployeeCalendar = () => {
                                     </strong>
                                 </div>
 
-                                <div className="ec-detail-row">
+                                {/* <div className="ec-detail-row">
                                     <span>Description</span>
                                     <strong>
                                         {item.description || "N/A"}
                                     </strong>
-                                </div>
+                                </div> */}
 
                                 <div className="ec-detail-row">
                                     <span>Start Date</span>

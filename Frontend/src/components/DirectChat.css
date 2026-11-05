@@ -647,3 +647,254 @@
     display: none;
   }
 }
+
+
+/* Message bubble and action menu */
+.direct-chat__bubble-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: inherit;
+  max-width: 85%;
+}
+
+.direct-chat__message-row.is-mine .direct-chat__bubble-wrapper {
+  align-items: flex-end;
+}
+
+.direct-chat__message-row.is-theirs .direct-chat__bubble-wrapper {
+  align-items: flex-start;
+}
+
+.direct-chat__bubble {
+  cursor: pointer;
+  user-select: text;
+}
+
+.direct-chat__message-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+  padding: 5px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 9px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+  z-index: 5;
+}
+
+.direct-chat__message-actions button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #374151;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.direct-chat__message-actions button:hover {
+  background: #f1f5f9;
+}
+
+.direct-chat__message-actions button.is-delete {
+  color: #dc2626;
+}
+
+.direct-chat__message-actions button.is-delete:hover {
+  background: #fee2e2;
+}
+
+/* Inline edit */
+.direct-chat__edit-box {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  width: 100%;
+}
+
+.direct-chat__edit-box input {
+  width: 180px;
+  min-width: 0;
+  padding: 7px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+}
+
+.direct-chat__edit-box button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px;
+  border: none;
+  border-radius: 6px;
+  background: #f1f5f9;
+  cursor: pointer;
+}
+
+.direct-chat__edit-box button:first-of-type {
+  color: #16a34a;
+}
+
+.direct-chat__edit-box button:last-of-type {
+  color: #dc2626;
+}
+
+.direct-chat__edit-box button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+
+/* =========================================
+   FORWARD MESSAGE MODAL
+========================================= */
+
+.direct-chat__forward-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.direct-chat__forward-modal {
+  width: 100%;
+  max-width: 430px;
+  max-height: 85vh;
+  background: #fff;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.direct-chat__forward-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.direct-chat__forward-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #1f2937;
+}
+
+.direct-chat__forward-header button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+}
+
+.direct-chat__forward-subtitle {
+  padding: 0 20px;
+  margin: 14px 0 8px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.direct-chat__forward-list {
+  padding: 0 14px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.direct-chat__forward-list h4 {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin: 14px 6px 8px;
+}
+
+.direct-chat__forward-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 8px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.direct-chat__forward-option:hover {
+  background: #f1f5f9;
+}
+
+.direct-chat__forward-option input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #5b57d1;
+}
+
+.direct-chat__forward-option span:last-child {
+  font-size: 14px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.direct-chat__forward-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 15px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.direct-chat__forward-footer button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.direct-chat__forward-cancel {
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #475569;
+}
+
+.direct-chat__forward-send {
+  border: none;
+  background: #5b57d1;
+  color: white;
+}
+
+.direct-chat__forward-send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Message action buttons */
+
+.direct-chat__message-actions button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}

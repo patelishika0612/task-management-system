@@ -13,6 +13,7 @@ import {
   Sparkles,
   Activity,
   UserPlus,
+  Flag,
 } from "lucide-react";
 import API from "../api";
 import EmployeeLayout from "../components/EmployeeLayout";
@@ -257,9 +258,9 @@ const EmployeeDashboard = () => {
 
   const stats = [
     {
-      title: "Tasks assigned to me",
-      value: myTasks.length,
-      detail: `${openTasks.length} still open`,
+      title: "My open tasks",
+      value: openTasks.length,
+      detail: `${myTasks.length} assigned in total`,
       icon: ListChecks,
       tone: "navy",
     },
@@ -341,7 +342,6 @@ const EmployeeDashboard = () => {
         const projectTasks = allTasks.filter(
           (task) => Number(task.project_id) === Number(project.project_id)
         );
-        const done = projectTasks.filter(isCompleted).length;
         const team = members.filter(
           (member) => Number(member.project_id) === Number(project.project_id)
         );
@@ -353,7 +353,6 @@ const EmployeeDashboard = () => {
           myOpenCount: openTasks.filter(
             (task) => Number(task.project_id) === Number(project.project_id)
           ).length,
-          progress: projectTasks.length ? Math.round((done / projectTasks.length) * 100) : 0,
         };
       }),
     [myProjects, allTasks, members, openTasks]
@@ -586,7 +585,8 @@ const EmployeeDashboard = () => {
                             {toTitle(task.status, "Pending")}
                           </span>
                           <span className={`ed-priority priority-${toSlug(task.priority, "low")}`}>
-                            {toTitle(task.priority, "Low")} priority
+                            <Flag size={12} />
+                            {toTitle(task.priority, "Low")}
                           </span>
                         </div>
                       </li>
@@ -631,16 +631,6 @@ const EmployeeDashboard = () => {
                         <span className={`ed-badge status-${toSlug(project.status, "pending")}`}>
                           {toTitle(project.status, "Pending")}
                         </span>
-                      </div>
-
-                      <div className="ed-progress">
-                        <div className="ed-progress-track">
-                          <div
-                            className="ed-progress-fill"
-                            style={{ width: `${project.progress}%` }}
-                          />
-                        </div>
-                        <strong>{project.progress}%</strong>
                       </div>
 
                       <div className="ed-project-meta">

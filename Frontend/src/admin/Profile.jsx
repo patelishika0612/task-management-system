@@ -39,8 +39,8 @@ const onlyDigits = (value, max) => {
 const onlyLetters = (value) =>
   String(value ?? "").replace(/[^A-Za-z .'-]/g, "");
 const isValidPhone = (v) => /^[6-9]\d{9}$/.test(String(v).trim());
-const isValidName = (v) => /^[A-Za-z][A-Za-z .'-]*$/.test(String(v).trim());
-// Props to spread on a phone <input> so only 10 digits can be typed
+const isValidName = (v) =>
+  /^[A-Za-z][A-Za-z .'-]*$/.test(String(v).trim());// Props to spread on a phone <input> so only 10 digits can be typed
 const phoneInputProps = {
   type: "tel",
   inputMode: "numeric",
@@ -122,67 +122,42 @@ const Profile = () => {
     // PROFILE
     // =====================================================
 
-    const [profile, setProfile] = useState({
+ const [profile, setProfile] = useState({
+  firstName: "",
+  lastName: "",
+  email: adminEmail,
+  phone: "",
+  employeeId: "",
+  department: "",
+  designation: "",
+  role: "",
+  joiningDate: "",
+  location: "",
+  image: "",
+  emailVerified: true,
+  accountStatus: "Active",
+  accountCreated: "",
+  lastLogin: "",
+});
 
-        firstName: "HR",
-        lastName: "Manager",
-        email: adminEmail,
-        phone: "9876543210",
-        employeeId: "HR001",
-        department: "Human Resources",
+  const formatDateTime = (dateValue) => {
+  if (!dateValue) return "";
 
+  const date = new Date(dateValue);
 
-        firstName: "",
-        lastName: "",
+  if (Number.isNaN(date.getTime())) {
+    return String(dateValue);
+  }
 
-        email: "",
-
-        phone: "",
-
-        employeeId: "",
-
-        department: "",
-
-
-        designation: "HR Manager",
-
-        joiningDate: "",
-
-        location: "Ahmedabad, Gujarat",
-
-        image: "",
-
-        emailVerified: true,
-
-        accountStatus: "Active",
-
-        accountCreated: "",
-
-        lastLogin: "Today",
-
-    });
-
-    const formatDateTime = (dateValue) => {
-        if (!dateValue) {
-            return "";
-        }
-
-        const date = new Date(dateValue);
-
-        if (Number.isNaN(date.getTime())) {
-            return String(dateValue);
-        }
-
-        return date.toLocaleString("en-GB", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-        });
-    };
-
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
     // =====================================================
     // SAVED PROFILE
     // =====================================================
@@ -308,48 +283,52 @@ const Profile = () => {
             // PROFILE DATA
             // =====================================================
 
-            const profileData = {
+        const profileData = {
+  firstName,
+  lastName,
 
-                firstName,
+  email: employee.email || adminEmail,
 
-                lastName,
+  phone: employee.phone || "",
 
-                email:
-                    employee.email || adminEmail,
+  employeeId:
+    employee.employee_code ||
+    employee.emp_id ||
+    "",
 
-                phone:
-                    employee.phone || "",
+  department: employee.department_name || "",
 
-                employeeId:
-                    employee.employee_code ||
-                    employee.emp_id ||
-                    "",
+  // Database designation field
+  designation: employee.designation || "",
 
-                department:
-                    employee.department_name ||
-                    "",
+  // Database role field
+  role:
+    employee.role ||
+    employee.user_role ||
+    employee.department_name ||
+    "",
 
-                // Current DB does not have designation
-                designation:
-                    "HR Manager",
+  joiningDate,
 
-                joiningDate,
+  location: employee.location || "",
 
-                // Current DB does not have location
-                location:
-                    "Ahmedabad, Gujarat",
+  image: employee.image || "",
 
-                image:
-                    employee.image || "",
+  emailVerified: true,
 
-                emailVerified: true,
+  accountStatus,
 
-                accountStatus,
+  // Database created_at
+accountCreated: employee.created_at
+    ? formatDateTime(employee.created_at)
+    : "",
+  lastLogin: employee.last_login
+    ? formatDateTime(employee.last_login)
+    : "",
+};
 
-                accountCreated,
-
-                lastLogin: "Today",
-            };
+setProfile(profileData);
+setSavedProfile(profileData);
 
 
             setProfile(profileData);
@@ -503,12 +482,11 @@ const Profile = () => {
             value: profile.department,
         },
 
-        {
-            icon:
-                <CalendarDays size={16} />,
-            label: "Joining Date",
-            value: profile.joiningDate,
-        },
+       {
+    icon: <CalendarDays size={18} />,
+    label: "Account Created",
+    value: profile.accountCreated || "—",
+}
 
     ];
 
@@ -770,21 +748,16 @@ const Profile = () => {
 
                             </h2>
 
+<p className="hr-profile-designation">
+  {profile.designation || "Designation not assigned"}
+</p>
 
-                            <p className="hr-profile-designation">
-
-                                {profile.designation}
-
-                            </p>
-
-
-                            <div className="hr-profile-role">
-
-                                <ShieldCheck size={15} />
-
-                                HR / Human Resources
-
-                            </div>
+{profile.role && (
+  <div className="hr-profile-role">
+    <ShieldCheck size={15} />
+    {profile.role}
+  </div>
+)}
 
                         </div>
 

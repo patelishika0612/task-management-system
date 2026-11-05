@@ -390,7 +390,7 @@ const completedTasks = filteredTasks.filter(
               <select value={filters.department}
                 onChange={(e) => updateFilter("department", e.target.value)}>
                 <option>All Departments</option>
-                {uniqueOptions("department").map((value) =>
+                {departments.map((value) =>
                   <option key={value}>{value}</option>
                 )}
               </select>
@@ -638,7 +638,9 @@ const completedTasks = filteredTasks.filter(
               <p><CalendarDays size={16} /> Start: {dateKey(selectedTask.startDate) || "—"}</p>
               <p><CalendarDays size={16} /> Deadline: {dateKey(selectedTask.endDate) || "—"}</p>
               <p><User size={16} /> Employee: {selectedTask.employee}</p>
-              <p>Department: {selectedTask.department}</p>
+              {selectedTask.source !== "task" && selectedTask.source !== "project" && (
+                <p>Department: {selectedTask.department}</p>
+              )}
               <p>Project: {selectedTask.project}</p>
               <p>Type: {selectedTask.eventType}</p>
               <p>Status: {selectedTask.status}</p>

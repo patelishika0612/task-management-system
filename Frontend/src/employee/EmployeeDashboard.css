@@ -542,33 +542,38 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--muted);
-}
-
-.ed-priority::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border-radius: 2px;
-  background: currentColor;
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--black-soft);
+  color: var(--black);
 }
 
 .ed-priority.priority-urgent {
+  background: var(--red-soft);
+  border-color: #fecaca;
   color: var(--red);
 }
 
 .ed-priority.priority-high {
-  color: var(--red);
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #ea580c;
 }
 
 .ed-priority.priority-medium {
+  background: var(--blue-soft);
+  border-color: #c7d7fe;
   color: var(--blue);
 }
 
 .ed-priority.priority-low {
-  color: var(--black);
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #16a34a;
 }
 
 /* ========== PROJECTS ========== */
@@ -598,40 +603,12 @@
   min-width: 0;
 }
 
-.ed-progress {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 12px 0 10px;
-}
-
-.ed-progress-track {
-  flex: 1;
-  height: 6px;
-  border-radius: 999px;
-  background: #eef0f6;
-  overflow: hidden;
-}
-
-.ed-progress-fill {
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--navy), var(--blue));
-  transition: width 0.4s ease;
-}
-
-.ed-progress strong {
-  min-width: 38px;
-  font-size: 12.5px;
-  color: var(--navy);
-  text-align: right;
-}
-
 .ed-project-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  margin-top: 12px;
   font-size: 12.5px;
   color: var(--muted);
 }

@@ -11,7 +11,7 @@ import {
 import API from "../api";
 import "./Task.css";
 
-const PAGE_SIZE = 4;
+const PAGE_SIZE = 10;
 
 // Must match the ENUM values of the `task` table
 const PRIORITY_OPTIONS = ["low", "medium", "high", "urgent"];
@@ -20,6 +20,7 @@ const STATUS_OPTIONS = [
   "in progress",
   "on hold",
   "completed",
+  "cancelled",
 ];
 
 const EMPTY_FORM = {
@@ -98,7 +99,7 @@ const todayString = () => {
 };
 
 const isOverdue = (task) =>
-  task.status !== "completed" &&
+  !["completed", "cancelled"].includes(task.status) &&
   !!task.due_date &&
   toDateInput(task.due_date) < todayString();
 
@@ -451,7 +452,7 @@ const Task = () => {
         project_id: data.project_id
           ? String(data.project_id)
           : "",
-employee_codes: employeeCodes,
+        employee_codes: employeeCodes,
         priority: data.priority || "low",
         status: data.status || "not started",
         start_date: toDateInput(data.start_date),
@@ -651,6 +652,14 @@ employee_codes: employeeCodes,
       icon: <AlertTriangle size={20} />,
       tone: "red",
     },
+    {
+  label: "Cancelled",
+  value: tasks.filter(
+    (task) => task.status === "cancelled"
+  ).length,
+  icon: <X size={20} />,
+  tone: "red",
+},
   ];
 
   // =====================================================
@@ -678,7 +687,15 @@ employee_codes: employeeCodes,
       !projectFilter || String(task.project_id) === projectFilter;
 
     const matchesEmployee =
-      !employeeFilter || task.employee_code === employeeFilter;
+      !employeeFilter ||
+      String(task.employee_code) === String(employeeFilter) ||
+      task.employees?.some(
+        (employee) =>
+          String(employee.employee_code) === String(employeeFilter)
+      ) ||
+      task.employee_codes?.some(
+        (code) => String(code) === String(employeeFilter)
+      );
 
     return (
       matchesSearch &&
@@ -997,35 +1014,35 @@ employee_codes: employeeCodes,
                             )}
                           </div>
                         </td>
-<td>
-    <div className="task-assignee">
-        {task.employees?.length > 0 ? (
-            task.employees.map((employee) => (
-                <div
-                    className="task-assignee"
-                    key={employee.emp_id}
-                    style={{ marginBottom: "6px" }}
-                >
-                    <span className="task-avatar">
-                        {getInitials(employee.emp_name)}
-                    </span>
+                        <td>
+                          <div className="task-assignee">
+                            {task.employees?.length > 0 ? (
+                              task.employees.map((employee) => (
+                                <div
+                                  className="task-assignee"
+                                  key={employee.emp_id}
+                                  style={{ marginBottom: "6px" }}
+                                >
+                                  <span className="task-avatar">
+                                    {getInitials(employee.emp_name)}
+                                  </span>
 
-                    <div className="task-cell-main">
-                        <strong>{employee.emp_name}</strong>
-                        <small>{employee.employee_code}</small>
-                    </div>
-                </div>
-            ))
-        ) : (
-            <div className="task-cell-main">
-                <strong>{task.emp_name || "—"}</strong>
-                {task.employee_code && (
-                    <small>{task.employee_code}</small>
-                )}
-            </div>
-        )}
-    </div>
-</td>
+                                  <div className="task-cell-main">
+                                    <strong>{employee.emp_name}</strong>
+                                    <small>{employee.employee_code}</small>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="task-cell-main">
+                                <strong>{task.emp_name || "—"}</strong>
+                                {task.employee_code && (
+                                  <small>{task.employee_code}</small>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </td>
 
                         <td>
                           <span
@@ -1547,6 +1564,7 @@ employee_codes: employeeCodes,
                       <input
                         type="date"
                         name="start_date"
+                        min={todayString()}
                         value={form.start_date}
                         onChange={handleChange}
                       />
@@ -1748,12 +1766,33 @@ employee_codes: employeeCodes,
                 <div className="admin-modal-body task-view-grid">
                   {/* LEFT COLUMN */}
                   <div className="task-view-col">
+
                     <section className="task-view-card">
-                      <h3>Task Description</h3>
-                      <p className="task-view-text">
-                        {viewTask.description || "No description provided."}
-                      </p>
+                      <h3>Assigned Employees</h3>
+
+                      {viewTask.employees?.length > 0 ? (
+                        <div className="task-view-employee-list">
+                          {viewTask.employees.map((employee) => (
+                            <div
+                              className="task-view-employee"
+                              key={employee.emp_id || employee.employee_code}
+                            >
+                              <span className="task-view-avatar">
+                                {getInitials(employee.emp_name)}
+                              </span>
+
+                              <div>
+                                <strong>{employee.emp_name || "Unknown Employee"}</strong>
+                                <small>{employee.employee_code}</small>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="task-view-empty">No employees assigned.</p>
+                      )}
                     </section>
+
                     {/* 
                     {/* {/* <section className="task-view-card">
                       <h3>Task Progress</h3>
@@ -1838,7 +1877,7 @@ employee_codes: employeeCodes,
                       </div>
                     </section>
 
-                    <section className="task-view-card">
+                    {/* <section className="task-view-card">
                       <h3>Assigned Employee</h3>
                       <div className="task-view-employee">
                         <span className="task-view-avatar">
@@ -1851,7 +1890,7 @@ employee_codes: employeeCodes,
                           )}
                         </div>
                       </div>
-                    </section>
+                    </section> */}
 
                     <section className="task-view-card">
                       <h3>Attachments</h3>

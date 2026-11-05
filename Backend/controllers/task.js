@@ -6,7 +6,16 @@ import { createNotification } from "../utils/notificationService.js";
 const db = connection.promise();
 
 const PRIORITIES = ["low", "medium", "high", "urgent"];
-const STATUSES = ["not started", "in progress", "on hold", "completed"];
+const STATUSES = [
+    "not started",
+    "in progress",
+    "on hold",
+    "completed",
+    "cancelled"
+];
+// =====================================================
+// TASK SELECT
+// =====================================================
 
 const TASK_SELECT = `
     SELECT
@@ -15,6 +24,7 @@ const TASK_SELECT = `
         t.project_id,
         p.proj_name,
         p.client_name,
+        t.employee_code,
         t.employee_codes,
         e.emp_id,
         e.emp_name,
@@ -35,7 +45,7 @@ const TASK_SELECT = `
 `;
 
 // =====================================================
-// ENSURE COMMENTS / ATTACHMENTS COLUMNS EXIST
+// ENSURE TASK COLUMNS EXIST
 // =====================================================
 
 const ensureTaskColumns = async () => {
@@ -72,8 +82,6 @@ const ensureTaskColumns = async () => {
         console.error("Task column check error:", error.message);
     }
 };
-
-ensureTaskColumns();
 
 ensureTaskColumns();
 
@@ -117,24 +125,108 @@ const cleanupUploads = (req) => {
 };
 
 // =====================================================
-// EMPLOYEE HELPER
+// EMPLOYEE HELPERS
 // =====================================================
 
-const getEmployeeByCode = async (employeeCode) => {
+const parseEmployeeCodes = (value, fallbackCode = null) => {
+    let codes = [];
+
+    if (Array.isArray(value)) {
+        codes = value;
+    } else if (typeof value === "string" && value.trim()) {
+        try {
+            const parsed = JSON.parse(value);
+            codes = Array.isArray(parsed) ? parsed : [value];
+        } catch {
+            codes = [value];
+        }
+    }
+
+    if (!codes.length && fallbackCode) {
+        codes = [fallbackCode];
+    }
+
+ return [...new Set(
+  codes
+    .map((code) => String(code).trim())
+    .filter(Boolean)
+)];
+};
+
+const getEmployeesByCodes = async (employeeCodes = []) => {
+    if (!employeeCodes.length) return [];
+
+    const placeholders = employeeCodes.map(() => "?").join(",");
+
     const [rows] = await db.query(
         `SELECT emp_id, emp_name, employee_code
          FROM employe
-         WHERE employee_code = ?
-         LIMIT 1`,
-        [String(employeeCode).trim()]
+         WHERE employee_code IN (${placeholders})`,
+        employeeCodes
     );
 
-    return rows[0] || null;
+    const employeeMap = new Map(
+        rows.map((employee) => [
+            String(employee.employee_code),
+            employee
+        ])
+    );
+
+    return employeeCodes
+        .map((code) => employeeMap.get(String(code)))
+        .filter(Boolean);
 };
 
-const employeeExists = async (employeeCode) => {
-    const employee = await getEmployeeByCode(employeeCode);
-    return Boolean(employee);
+const getEmployeeByCode = async (employeeCode) => {
+    const employees = await getEmployeesByCodes([employeeCode]);
+    return employees[0] || null;
+};
+
+const attachAssignedEmployees = async (rows) => {
+    if (!rows.length) return rows;
+
+    const allCodes = [
+        ...new Set(
+            rows.flatMap((row) =>
+                parseEmployeeCodes(
+                    row.employee_codes,
+                    row.employee_code
+                )
+            )
+        )
+    ];
+
+    const employees = await getEmployeesByCodes(allCodes);
+
+    const employeeMap = new Map(
+        employees.map((employee) => [
+            String(employee.employee_code),
+            employee
+        ])
+    );
+
+    return rows.map((row) => {
+        const employeeCodes = parseEmployeeCodes(
+            row.employee_codes,
+            row.employee_code
+        );
+
+        const assignedEmployees = employeeCodes
+            .map((code) => employeeMap.get(String(code)))
+            .filter(Boolean);
+
+        return {
+            ...row,
+            employee_code: row.employee_code || employeeCodes[0] || null,
+            employee_codes: employeeCodes,
+            employees: assignedEmployees,
+            employee_names: assignedEmployees.map(
+                (employee) => employee.emp_name
+            ),
+            emp_id: assignedEmployees[0]?.emp_id || row.emp_id || null,
+            emp_name: assignedEmployees[0]?.emp_name || row.emp_name || null
+        };
+    });
 };
 
 // =====================================================
@@ -164,7 +256,6 @@ const notifyTaskEmployee = async ({
             eventKey
         });
     } catch (error) {
-        // Notification failure must not stop task operations.
         console.error("Task notification error:", error.message);
     }
 };
@@ -232,10 +323,12 @@ const getAllTasks = async (req, res) => {
             ORDER BY t.task_id DESC
         `);
 
+        const tasksWithEmployees = await attachAssignedEmployees(rows);
+
         return res.status(200).json({
             success: true,
-            count: rows.length,
-            data: (await attachAssignedEmployees(rows)).map((row) =>
+            count: tasksWithEmployees.length,
+            data: tasksWithEmployees.map((row) =>
                 withAttachmentUrls(req, row)
             )
         });
@@ -269,12 +362,11 @@ const getTaskById = async (req, res) => {
             });
         }
 
+        const tasksWithEmployees = await attachAssignedEmployees(rows);
+
         return res.status(200).json({
             success: true,
-            data: withAttachmentUrls(
-                req,
-                (await attachAssignedEmployees(rows))[0]
-            )
+            data: withAttachmentUrls(req, tasksWithEmployees[0])
         });
     } catch (error) {
         console.error("Get task error:", error);
@@ -334,23 +426,22 @@ const createTask = async (req, res) => {
 
         const attachments = filesToAttachments(req.files);
 
-        // First create the task.
         const [result] = await db.query(
             `INSERT INTO task
-    (
-        task_name,
-        project_id,
-        employee_code,
-        employee_codes,
-        priority,
-        status,
-        start_date,
-        due_date,
-        description,
-        comments,
-        attachments
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            (
+                task_name,
+                project_id,
+                employee_code,
+                employee_codes,
+                priority,
+                status,
+                start_date,
+                due_date,
+                description,
+                comments,
+                attachments
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 String(task_name).trim(),
                 project_id,
@@ -382,7 +473,6 @@ const createTask = async (req, res) => {
             message: "Task created successfully",
             task_id: result.insertId
         });
-
     } catch (error) {
         console.error("Create task error:", error);
 
@@ -435,11 +525,16 @@ const updateTask = async (req, res) => {
             existing_attachments
         } = req.body;
 
-        // Get existing task details.
+        const selectedCodes = parseEmployeeCodes(
+            employee_codes,
+            employee_code
+        );
+
         const [currentRows] = await db.query(
             `SELECT
                 attachments,
                 employee_code,
+                employee_codes,
                 status,
                 task_name
              FROM task
@@ -459,16 +554,17 @@ const updateTask = async (req, res) => {
 
         const currentTask = currentRows[0];
 
-       const assignedEmployees = await getEmployeesByCodes(selectedCodes);
+        const assignedEmployees = await getEmployeesByCodes(selectedCodes);
 
-if (assignedEmployees.length !== selectedCodes.length) {
-    cleanupUploads(req);
+        if (assignedEmployees.length !== selectedCodes.length) {
+            cleanupUploads(req);
 
-    return res.status(400).json({
-        success: false,
-        message: "One or more selected employees do not exist"
-    });
-}
+            return res.status(400).json({
+                success: false,
+                message: "One or more selected employees do not exist"
+            });
+        }
+
         // Handle existing attachments.
         const currentAttachments = parseAttachments(
             currentTask.attachments
@@ -500,14 +596,13 @@ if (assignedEmployees.length !== selectedCodes.length) {
             ...filesToAttachments(req.files)
         ];
 
-        // Update task.
         await db.query(
             `UPDATE task
              SET
                 task_name = ?,
                 project_id = ?,
                 employee_code = ?,
-                  employee_codes = ?,
+                employee_codes = ?,
                 priority = ?,
                 status = ?,
                 start_date = ?,
@@ -520,7 +615,8 @@ if (assignedEmployees.length !== selectedCodes.length) {
             [
                 String(task_name).trim(),
                 project_id,
-                String(employee_code).trim(),
+                selectedCodes[0],
+                JSON.stringify(selectedCodes),
                 priority || "low",
                 status || "not started",
                 start_date || null,
@@ -537,40 +633,36 @@ if (assignedEmployees.length !== selectedCodes.length) {
             removeTaskFile(attachment.file);
         });
 
-        // Notify the currently assigned employee.
-        // Notify all assigned employees.
-for (const employee of assignedEmployees) {
-    await notifyTaskEmployee({
-        employeeId: employee.emp_id,
-        title: "Task Updated",
-        message: `Task "${String(task_name).trim()}" has been updated.`,
-        type: "task_updated",
-        taskId: id
-    });
-}
+        // Notify all currently assigned employees.
+        for (const employee of assignedEmployees) {
+            await notifyTaskEmployee({
+                employeeId: employee.emp_id,
+                title: "Task Updated",
+                message: `Task "${String(task_name).trim()}" has been updated.`,
+                type: "task_updated",
+                taskId: id
+            });
+        }
 
-// Notify all assigned employees if status changed.
-const newStatus = status || "not started";
+        // Notify all assigned employees if status changed.
+        const newStatus = status || "not started";
 
-if (currentTask.status !== newStatus) {
-    for (const employee of assignedEmployees) {
-        await notifyTaskEmployee({
-            employeeId: employee.emp_id,
-            title: "Task Status Updated",
-            message: `Task "${String(task_name).trim()}" status changed to ${newStatus}.`,
-            type: "task_status",
-            taskId: id
-        });
-    }
-}
-
-      
+        if (currentTask.status !== newStatus) {
+            for (const employee of assignedEmployees) {
+                await notifyTaskEmployee({
+                    employeeId: employee.emp_id,
+                    title: "Task Status Updated",
+                    message: `Task "${String(task_name).trim()}" status changed to ${newStatus}.`,
+                    type: "task_status",
+                    taskId: id
+                });
+            }
+        }
 
         return res.status(200).json({
             success: true,
             message: "Task updated successfully"
         });
-
     } catch (error) {
         console.error("Update task error:", error);
 
@@ -594,7 +686,7 @@ if (currentTask.status !== newStatus) {
 // UPDATE TASK STATUS
 // =====================================================
 
-export const updateTaskStatus = async (req, res) => {
+const updateTaskStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
@@ -613,19 +705,18 @@ export const updateTaskStatus = async (req, res) => {
             });
         }
 
-        // Fetch task before updating.
-      const [taskRows] = await db.query(
-    `SELECT
-        task_id,
-        task_name,
-        status,
-        employee_code,
-        employee_codes
-     FROM task
-     WHERE task_id = ?
-     LIMIT 1`,
-    [id]
-);
+        const [taskRows] = await db.query(
+            `SELECT
+                task_id,
+                task_name,
+                status,
+                employee_code,
+                employee_codes
+             FROM task
+             WHERE task_id = ?
+             LIMIT 1`,
+            [id]
+        );
 
         if (taskRows.length === 0) {
             return res.status(404).json({
@@ -636,7 +727,6 @@ export const updateTaskStatus = async (req, res) => {
 
         const task = taskRows[0];
 
-        // Update status.
         await db.query(
             `UPDATE task
              SET status = ?, updated_at = NOW()
@@ -644,31 +734,29 @@ export const updateTaskStatus = async (req, res) => {
             [status, id]
         );
 
-        // Notify only if the status actually changed.
-      if (task.status !== status) {
-    const employeeCodes = parseEmployeeCodes(
-        task.employee_codes,
-        task.employee_code
-    );
+        if (task.status !== status) {
+            const employeeCodes = parseEmployeeCodes(
+                task.employee_codes,
+                task.employee_code
+            );
 
-    const assignedEmployees = await getEmployeesByCodes(employeeCodes);
+            const assignedEmployees = await getEmployeesByCodes(employeeCodes);
 
-    for (const employee of assignedEmployees) {
-        await notifyTaskEmployee({
-            employeeId: employee.emp_id,
-            title: "Task Status Updated",
-            message: `Task "${task.task_name}" status changed to ${status}.`,
-            type: "task_status",
-            taskId: id
-        });
-    }
-}
+            for (const employee of assignedEmployees) {
+                await notifyTaskEmployee({
+                    employeeId: employee.emp_id,
+                    title: "Task Status Updated",
+                    message: `Task "${task.task_name}" status changed to ${status}.`,
+                    type: "task_status",
+                    taskId: id
+                });
+            }
+        }
 
         return res.status(200).json({
             success: true,
             message: "Task status updated successfully"
         });
-
     } catch (error) {
         console.error("Update task status error:", error);
 
@@ -715,7 +803,6 @@ const deleteTask = async (req, res) => {
             success: true,
             message: "Task deleted successfully"
         });
-
     } catch (error) {
         console.error("Delete task error:", error);
 

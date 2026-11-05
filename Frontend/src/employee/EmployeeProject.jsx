@@ -16,9 +16,15 @@ import {
   UserCircle2,
   Clock,
   FileText,
+  CheckCircle2,
+  PauseCircle,
+  PlayCircle,
 } from "lucide-react";
 import "./EmployeeProject.css";
 import EmployeeLayout from "../components/EmployeeLayout";
+
+
+
 
 
 
@@ -91,12 +97,13 @@ const EmployeeProject = ({ employee }) => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
-const employeeId =
-  employee?.emp_id ??
-  employee?.employee_id ??
-  employee?.id ??
-  localStorage.getItem("employeeId");
+  const employeeId =
+    employee?.emp_id ??
+    employee?.employee_id ??
+    employee?.id ??
+    localStorage.getItem("employeeId");
 
   useEffect(() => {
     if (employeeId == null) {
@@ -223,6 +230,55 @@ const employeeId =
   );
 
   const timeline = selectedProject ? getTimeline(selectedProject) : null;
+
+
+
+  const handleProjectStatusUpdate = async (newStatus) => {
+    if (!selectedProject || updatingStatus) return;
+
+    try {
+      setUpdatingStatus(true);
+      setError("");
+
+      const projectId = selectedProject.project_id;
+
+      const response = await API.patch(
+        `/projects/${projectId}/status`,
+        { status: newStatus }
+      );
+
+      const updatedProject = response.data?.data || {
+        ...selectedProject,
+        status: newStatus,
+      };
+
+      // Update project list
+      setProjects((previous) =>
+        previous.map((project) =>
+          Number(project.project_id) === Number(projectId)
+            ? { ...project, ...updatedProject, status: newStatus }
+            : project
+        )
+      );
+
+      // Update open project modal
+      setSelectedProject((previous) =>
+        previous
+          ? { ...previous, ...updatedProject, status: newStatus }
+          : null
+      );
+
+    } catch (err) {
+      console.error("Project status update error:", err);
+
+      setError(
+        err.response?.data?.message ||
+        "Unable to update project status."
+      );
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   return (
     <EmployeeLayout>
@@ -494,6 +550,53 @@ const employeeId =
                   </p>
                 </section>
 
+
+
+               <section className="employee-project-section">
+  <h3>
+    <RefreshCw size={17} />
+    Update Project Progress
+  </h3>
+
+  <div className="employee-project-progress-actions">
+
+    <div className="employee-project-progress-message">
+      <Clock size={18} />
+      <span>
+        {updatingStatus
+          ? "Updating project status..."
+          : "Select your current project status."}
+      </span>
+    </div>
+
+    <div className="employee-project-progress-status">
+      <select
+        className="employee-project-status-select"
+        value={toSlug(selectedProject.status, "not started")}
+        disabled={updatingStatus}
+        onChange={(event) =>
+          handleProjectStatusUpdate(event.target.value)
+        }
+      >
+        <option value="not started">Not Started</option>
+        <option value="in progress">In Progress</option>
+        <option value="on hold">On Hold</option>
+        <option value="completed">Completed</option>
+      </select>
+
+      <span
+        className={`employee-project-status status-${toSlug(
+          selectedProject.status,
+          "not started"
+        )}`}
+      >
+        {selectedProject.status || "Not Started"}
+      </span>
+    </div>
+
+  </div>
+</section>
+
                 <section className="employee-project-section">
                   <h3>
                     <Building2 size={16} />
@@ -506,15 +609,13 @@ const employeeId =
                       <p>{selectedProject.client_name || "—"}</p>
                     </div>
 
-                    <div>
-                      <label>Created By</label>
-                      <p>
-                        {selectedProject.created_by_name ||
-                          selectedProject.created_by ||
-                          "—"}
-                      </p>
-                    </div>
-
+            <div>
+  <label>Created By</label>
+  <p>
+    {selectedProject.created_by_name ||
+      "—"}
+  </p>
+</div>
                     <div>
                       <label>Assigned To You On</label>
                       <p>{formatDate(myAssignment?.assigned_at)}</p>
